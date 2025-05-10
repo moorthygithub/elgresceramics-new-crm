@@ -79,7 +79,7 @@ const Home = () => {
   const filteredStockDataHundered = (stockData || []).filter((item) => {
     const available =
       item.openpurch - item.closesale + (item.purch - item.sale);
-    console.log(available);
+    // console.log(available);
 
     return available > 0 && available < 100;
   });

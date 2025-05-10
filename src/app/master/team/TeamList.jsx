@@ -7,6 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -16,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
@@ -29,27 +30,28 @@ import axios from "axios";
 import { ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
 
-import { BRANCH_LIST } from "@/api";
+import { TEAM_LIST, UPDATE_TEAM_STATUS } from "@/api";
 import Loader from "@/components/loader/Loader";
 import { ButtonConfig } from "@/config/ButtonConfig";
-import BranchForm from "./BranchForm";
-// import CreateBuyer from "./CreateBuyer";
-// import EditBuyer from "./EditBuyer ";
+import moment from "moment";
+import CreateTeam from "./CreateTeam";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
-const BranchList = () => {
+const TeamList = () => {
   const {
-    data: branch,
+    data: team,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["branchs"],
+    queryKey: ["teams"],
     queryFn: async () => {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${BRANCH_LIST}`, {
+      const response = await axios.get(`${TEAM_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return response.data.branch;
+      return response.data.team;
     },
   });
 
@@ -59,6 +61,68 @@ const BranchList = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [togglingId, setTogglingId] = useState(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleToggle = async (teamId, currentStatus) => {
+    setTogglingId(teamId);
+
+    try {
+      const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+      await handleSubmit({ teamId, status: newStatus });
+
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+    } catch (error) {
+      console.error("Failed to update team status:", error);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+  const handleSubmit = async ({ teamId, status }) => {
+    if (!status) {
+      toast({
+        title: "Error",
+        description: "Status is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        `${UPDATE_TEAM_STATUS}/${teamId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response?.data.code == 200) {
+        toast({
+          title: "Success",
+          description: response.data.msg,
+        });
+        refetch();
+      } else {
+        toast({
+          title: "Error",
+          description: response.data.msg,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message || "Failed to update team status",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Define columns for the table
   const columns = [
@@ -69,26 +133,75 @@ const BranchList = () => {
     },
 
     {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => <div>{row.getValue("email")}</div>,
+    },
+    {
+      accessorKey: "mobile",
+      header: "Mobile",
+      cell: ({ row }) => <div>{row.getValue("mobile")}</div>,
+    },
+    {
+      accessorKey: "user_type",
+      header: "UserType",
+      cell: ({ getValue }) => {
+        const value = getValue();
+        let label = "Unknown";
+        let className = "bg-gray-100 text-gray-800";
+
+        if (value === 1) {
+          label = "User";
+          className = "bg-blue-100 text-blue-800";
+        } else if (value === 2) {
+          label = "Admin";
+          className = "bg-red-100 text-red-800";
+        }
+
+        return (
+          <span
+            className={`px-2 py-1 rounded text-xs font-medium ${className}`}
+          >
+            {label}
+          </span>
+        );
+      },
+    },
+
+    {
+      accessorKey: "cpassword",
+      header: "Password",
+      cell: ({ row }) => <div>{row.getValue("cpassword")}</div>,
+    },
+    {
+      accessorKey: "last_login",
+      header: "LastLogin",
+      cell: ({ row }) => {
+        const rawDate = row.getValue("last_login");
+        const formattedDate = rawDate
+          ? moment(rawDate).format("DD MMM YYYY")
+          : "";
+
+        return <div>{formattedDate}</div>;
+      },
+    },
+
+    {
       accessorKey: "branch_name",
       header: "Branch Name",
       cell: ({ row }) => <div>{row.getValue("branch_name")}</div>,
     },
-    {
-      accessorKey: "branch_whatsapp",
-      header: "Whatsapp",
-      cell: ({ row }) => <div>{row.getValue("branch_whatsapp")}</div>,
-    },
-    {
-      accessorKey: "branch_email",
-      header: "Email",
-      cell: ({ row }) => <div>{row.getValue("branch_email")}</div>,
-    },
 
     {
-      accessorKey: "branch_status",
+      accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("branch_status");
+        const status = row.getValue("status");
 
         return (
           <span
@@ -107,23 +220,45 @@ const BranchList = () => {
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const branchId = row.original.id;
+        const teamId = row.original.id;
+        const currentStatus = row.original.status;
 
         return (
-          <div className="flex flex-row">
-            <BranchForm branchId={branchId} />
-          </div>
+          <SwitchPrimitive.Root
+            checked={currentStatus == "Active"}
+            onCheckedChange={() => handleToggle(teamId, currentStatus)}
+            disabled={togglingId == teamId}
+            title={currentStatus}
+            className={`relative inline-flex items-center h-6 w-11 rounded-full
+                ${currentStatus == "Active" ? "bg-green-500" : "bg-gray-400"} 
+                ${
+                  togglingId == teamId
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
+              `}
+          >
+            <SwitchPrimitive.Thumb
+              className={`block w-4 h-4 bg-white rounded-full transform transition-transform
+                  ${
+                    currentStatus == "Active"
+                      ? "translate-x-6"
+                      : "translate-x-1"
+                  }
+                `}
+            />
+          </SwitchPrimitive.Root>
         );
       },
     },
   ];
   const filteredItems =
-    branch?.filter((item) =>
+    team?.filter((item) =>
       item.branch_name.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
   // Create the table instance
   const table = useReactTable({
-    data: branch || [],
+    data: team || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -183,10 +318,10 @@ const BranchList = () => {
         <div className="sm:hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl text-gray-800 font-medium">
-              Branch List
+              Team List
             </h1>
             <div>
-              <BranchForm />
+              <CreateTeam />
             </div>
           </div>
 
@@ -195,7 +330,7 @@ const BranchList = () => {
             <div className="relative w-full md:w-72">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search branch..."
+                placeholder="Search team..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
@@ -211,81 +346,102 @@ const BranchList = () => {
                   className="relative bg-white rounded-lg shadow-sm border-l-4 border-r border-b border-t border-yellow-500 overflow-hidden"
                 >
                   <div className="p-2 flex flex-col gap-2">
-                    {/* Sl No and Item Name */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <div className="bg-gray-100 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center text-xs font-medium">
                           {index + 1}
                         </div>
-                        <h3 className="font-medium flex flex-col text-sm text-gray-800">
-                          <span>{item.branch_name}</span>
-                          {/* <span className="text-xs">{item.buyer_city}</span> */}
+                        <h3 className="font-medium text-sm text-gray-800">
+                          {item.name}
                         </h3>
                       </div>
                       <div className="flex items-center justify-between gap-2 ">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.branch_status === "Active"
+                            item.status === "Active"
                               ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
-                          {item.branch_status}
+                          {item.status}
                         </span>
+                      </div>
+                      <SwitchPrimitive.Root
+                        checked={item.status == "Active"}
+                        onCheckedChange={() =>
+                          handleToggle(item.id, item.status)
+                        }
+                        disabled={togglingId == item?.id}
+                        title={item.status}
+                        className={`relative inline-flex items-center h-6 w-11 rounded-full
+                ${item.status == "Active" ? "bg-green-500" : "bg-gray-400"} 
+                ${
+                  togglingId == item?.id
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
+              `}
+                      >
+                        <SwitchPrimitive.Thumb
+                          className={`block w-4 h-4 bg-white rounded-full transform transition-transform
+                  ${
+                    item?.status == "Active" ? "translate-x-6" : "translate-x-1"
+                  }
+                `}
+                        />
+                      </SwitchPrimitive.Root>
+                    </div>
+                    <Separator />
 
-                        <BranchForm branchId={item.id} />
+                    <div className="flex flex-row items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Mobile:</span>
+                        <span className="text-xs font-medium text-gray-800">
+                          {item.mobile}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Email:</span>
+                        <span className="text-xs font-medium text-gray-800">
+                          {item.email}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-wrap justify-between gap-1">
-                      {item.branch_whatsapp && (
-                        <div className="inline-flex items-center bg-green-100 rounded-full px-2 py-1">
-                          <svg
-                            class="w-[12px] h-[12px] text-green-800 dark:text-white"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              fill="currentColor"
-                              fill-rule="evenodd"
-                              d="M12 4a8 8 0 0 0-6.895 12.06l.569.718-.697 2.359 2.32-.648.379.243A8 8 0 1 0 12 4ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.96 9.96 0 0 1-5.016-1.347l-4.948 1.382 1.426-4.829-.006-.007-.033-.055A9.958 9.958 0 0 1 2 12Z"
-                              clip-rule="evenodd"
-                            />
-                            <path
-                              fill="currentColor"
-                              d="M16.735 13.492c-.038-.018-1.497-.736-1.756-.83a1.008 1.008 0 0 0-.34-.075c-.196 0-.362.098-.49.291-.146.217-.587.732-.723.886-.018.02-.042.045-.057.045-.013 0-.239-.093-.307-.123-1.564-.68-2.751-2.313-2.914-2.589-.023-.04-.024-.057-.024-.057.005-.021.058-.074.085-.101.08-.079.166-.182.249-.283l.117-.14c.121-.14.175-.25.237-.375l.033-.066a.68.68 0 0 0-.02-.64c-.034-.069-.65-1.555-.715-1.711-.158-.377-.366-.552-.655-.552-.027 0 0 0-.112.005-.137.005-.883.104-1.213.311-.35.22-.94.924-.94 2.16 0 1.112.705 2.162 1.008 2.561l.041.06c1.161 1.695 2.608 2.951 4.074 3.537 1.412.564 2.081.63 2.461.63.16 0 .288-.013.4-.024l.072-.007c.488-.043 1.56-.599 1.804-1.276.192-.534.243-1.117.115-1.329-.088-.144-.239-.216-.43-.308Z"
-                            />
-                          </svg>
+                    <div className="flex flex-row items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Branch:</span>
+                        <span className="text-xs font-medium text-gray-800">
+                          {item.branch_name}
+                        </span>
+                      </div>
 
-                          <span className="text-xs text-green-700">
-                            {item.branch_whatsapp}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded ${
+                            item.user_type === 1
+                              ? "bg-blue-100 text-blue-800"
+                              : item.user_type === 2
+                              ? "bg-red-100 text-red-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {item.user_type === 1
+                            ? "User"
+                            : item.user_type === 2
+                            ? "Admin"
+                            : "Unknown"}
+                        </span>
+                      </div>
 
-                      {item.branch_email && (
-                        <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
-                          <svg
-                            class="w-[12px] h-[12px] text-gray-800 dark:text-white"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M17 6h-2V5h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2h-.541A5.965 5.965 0 0 1 14 10v4a1 1 0 1 1-2 0v-4c0-2.206-1.794-4-4-4-.075 0-.148.012-.22.028C7.686 6.022 7.596 6 7.5 6A4.505 4.505 0 0 0 3 10.5V16a1 1 0 0 0 1 1h7v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3h5a1 1 0 0 0 1-1v-6c0-2.206-1.794-4-4-4Zm-9 8.5H7a1 1 0 1 1 0-2h1a1 1 0 1 1 0 2Z" />
-                          </svg>
-
-                          <span className="text-xs text-gray-700">
-                            {item.branch_email}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Password:</span>
+                        <span className="text-xs font-medium text-gray-800">
+                          {item.cpassword}
+                        </span>
+                      </div>
                     </div>
+                    {/* Action */}
                   </div>
                 </div>
               ))
@@ -341,7 +497,7 @@ const BranchList = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <BranchForm />
+              <CreateTeam />
             </div>
           </div>
           {/* table  */}
@@ -429,4 +585,4 @@ const BranchList = () => {
   );
 };
 
-export default BranchList;
+export default TeamList;

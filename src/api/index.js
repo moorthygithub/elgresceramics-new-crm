@@ -1,7 +1,9 @@
 import { decryptId, encryptId } from "@/components/common/Encryption";
 import BASE_URL from "@/config/BaseUrl";
 import axios from "axios";
-
+//PROFILE
+export const PROFILE = `${BASE_URL}/api/fetch-profile`;
+export const EDIT_PROFILE = `${BASE_URL}/api/updateprofile`;
 // PURCHASE
 export const PURCHASE_LIST = `${BASE_URL}/api/purchases-list`;
 export const PURCHASE_EDIT_LIST = `${BASE_URL}/api/purchases`;
@@ -24,8 +26,15 @@ export const BUYER_EDIT_GET = `${BASE_URL}/api/buyers`;
 export const BUYER_EDIT_SUMBIT = `${BASE_URL}/api/buyers`;
 export const BUYER_CREATE = `${BASE_URL}/api/buyers`;
 //MASTER-BRANCH
+export const BRANCH_LIST_FETCH = `${BASE_URL}/api/fetch-branch`;
 export const BRANCH_LIST = `${BASE_URL}/api/branch-list`;
-
+export const BRANCH_CREATE = `${BASE_URL}/api/createbranch`;
+export const BRANCH_EDIT_GET = `${BASE_URL}/api/fetch-branch-by-id`;
+export const BRANCH_EDIT_SUMBIT = `${BASE_URL}/api/updatebranch`;
+//MASTER-TEAM
+export const TEAM_LIST = `${BASE_URL}/api/fetch-team-list`;
+export const CREATE_TEAM = `${BASE_URL}/api/createteam`;
+export const UPDATE_TEAM_STATUS = `${BASE_URL}/api/updateteamstatus`;
 //REPORT STOCK -BUYER
 export const BUYER_REPORT = `${BASE_URL}/api/report-buyer-data`;
 export const BUYER_DOWNLOAD = `${BASE_URL}/api/download-buyer-data`;

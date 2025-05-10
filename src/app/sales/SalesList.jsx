@@ -96,6 +96,7 @@ const SalesList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const UserId = localStorage.getItem("userType");
   const { toast } = useToast();
+  const whatsapp = localStorage.getItem("whatsapp-number");
   const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(
     moment().format("YYYY-MM-DD")
@@ -170,19 +171,17 @@ const SalesList = () => {
       sales_buyer_city,
       sales_vehicle_no,
     } = sales;
+    const salesNo = sales_ref_no?.split("-").pop();
 
-    const itemLine = salesSub.map((item) => {
-      const size = item.item_size.padEnd(10, " ");
-      const box = item.sales_sub_box.toString().padStart(4, " ");
-      return `${size} ${box}`;
-    });
+    // const itemLine = salesSub.map((item) => {
+    //   const size = item.item_size.padEnd(10, " ");
+    //   const box = item.sales_sub_box.toString().padStart(4, " ");
+    //   return `${size} ${box}`;
+    // });
 
     const itemLines = salesSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
-      const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(
-        6,
-        " "
-      );
+      const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
       return `${name}${qty}`;
     });
 
@@ -192,22 +191,20 @@ const SalesList = () => {
     }, 0);
 
     const message = `=== DispatchList ===
-  No.        : ${sales_ref_no}
+  No.        : ${salesNo}
   Date       : ${moment(sales_date).format("DD-MM-YYYY")}
   Party      : ${sales_buyer_name}
   City       : ${sales_buyer_city}
   VEHICLE NO : ${sales_vehicle_no}
-  ===============================
+  ======================
   Product    [SIZE]   (QTY)
-  ===============================
-${itemLine.map((line) => "  " + line).join("\n")}
-  ===============================
+  ======================
 ${itemLines.map((line) => "  " + line).join("\n")}
-  ===============================
-  Total QTY: ${totalQty}
-  ===============================`;
+  ======================
+  *Total QTY: ${totalQty}*
+  ======================`;
 
-    const phoneNumber = "919680053300";
+    const phoneNumber = `${whatsapp}`;
     // const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;

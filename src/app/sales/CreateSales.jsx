@@ -599,8 +599,14 @@ const CreateSales = () => {
                 <div className="mt-2 text-xs text-gray-500 flex items-center">
                   <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mr-1"></span>
                   Total Items: {invoiceData.length}
-                  <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mx-1 "></span>
-                  Avaiable Box: {availablebox}
+                  {/* <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mx-1 "></span>
+                  Avaiable Box: {availablebox} */}
+                  {invoiceData.some((row) => row.sales_sub_box) && (
+                    <>
+                      <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mx-1 "></span>
+                      <>Avaiable Box: {availablebox}</>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -825,8 +831,10 @@ const CreateSales = () => {
                             />
                             {row.sales_sub_item && (
                               <div className="text-sm text-black mt-1">
-                                • {row.sales_sub_brand}• Available Box{" "}
-                                {availablebox}
+                                • {row.sales_sub_brand}
+                                {row.sales_sub_box && (
+                                  <>• Available Box {availablebox}</>
+                                )}
                               </div>
                             )}
                           </TableCell>

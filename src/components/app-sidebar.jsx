@@ -91,6 +91,14 @@ export function AppSidebar({ ...props }) {
                       },
                     ]
                   : []),
+                ...(id == 3
+                  ? [
+                      {
+                        title: "Team",
+                        url: "/master/team",
+                      },
+                    ]
+                  : []),
               ],
             },
           ]
