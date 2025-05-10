@@ -70,10 +70,9 @@ const SalesView = () => {
     0
   );
   const totalSaleWeight = salessubData.reduce(
-    (total, row) => total + row.sales_sub_weight * row.sales_sub_box,
+    (total, row) => total + row.item_weight * row.sales_sub_box,
     0
   );
-  
 
   const handleSaveAsPdf = () => {
     if (!containerRef.current) {
@@ -165,15 +164,9 @@ const SalesView = () => {
           <tbody>
             {salessubData.map((row, index) => (
               <tr key={index} className="border border-black">
-                <td className="p-2 border border-black">
-                  {row.sales_sub_item}
-                </td>
-                <td className="p-2 border border-black">
-                  {row.sales_sub_size}
-                </td>
-                <td className="p-2 border border-black">
-                  {row.sales_sub_brand}
-                </td>
+                <td className="p-2 border border-black">{row.item_name}</td>
+                <td className="p-2 border border-black">{row.item_size}</td>
+                <td className="p-2 border border-black">{row.item_brand}</td>
                 <td className="p-2 border border-black text-right">
                   {row.sales_sub_box}
                 </td>
@@ -194,9 +187,11 @@ const SalesView = () => {
 
         {/* Footer Details */}
         <div className="mt-2 text-sm border border-black">
-          <p className="py-1 px-2 border-b border-black">
-            WEIGHT : {totalSaleWeight} KG
-          </p>
+          {totalSaleWeight && (
+            <p className="py-1 px-2 border-b border-black">
+              WEIGHT : {totalSaleWeight} KG
+            </p>
+          )}
           <p className="py-1 px-2 border-b border-black">
             VEHICLE : {sales.sales_vehicle_no}
           </p>

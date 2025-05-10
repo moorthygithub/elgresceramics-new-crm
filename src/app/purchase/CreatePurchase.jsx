@@ -234,13 +234,6 @@ const CreatePurchase = () => {
 
       focusBoxInput(rowIndex);
 
-      // {
-      //   (
-      //     item.openpurch -
-      //     item.closesale +
-      //     (item.purch - item.sale)
-      //   ).toLocaleString();
-      // }
       setInvoiceData(updatedData);
     } else {
       if (["purchase_sub_weight", "purchase_sub_box"].includes(fieldName)) {
@@ -613,8 +606,12 @@ const CreatePurchase = () => {
                 <div className="mt-2 text-xs text-gray-500 flex items-center">
                   <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mr-1"></span>
                   Total Items: {invoiceData.length}
-                  <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mx-1 "></span>
-                  Avaiable Box: {availablebox}
+                  {invoiceData.some((row) => row.purchase_sub_box) && (
+                    <>
+                      <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mx-1 "></span>
+                      <>Avaiable Box: {availablebox}</>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -853,8 +850,10 @@ const CreatePurchase = () => {
                             />
                             {row.purchase_sub_item && (
                               <div className="text-sm text-black mt-1">
-                                • {row.purchase_sub_brand}• Available Box{" "}
-                                {availablebox}
+                                • {row.purchase_sub_brand}{" "}
+                                {row.purchase_sub_box && (
+                                  <>• Available Box {availablebox} </>
+                                )}
                               </div>
                             )}
                           </TableCell>

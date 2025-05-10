@@ -1,6 +1,3 @@
-import React, { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,12 +8,14 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import BASE_URL from "@/config/BaseUrl";
-import { motion, AnimatePresence } from "framer-motion";
-import { ContextPanel } from "@/lib/ContextPanel";
-import logo from "../../assets/logo.png";
 import { ButtonConfig } from "@/config/ButtonConfig";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import logo from "../../assets/logo.png";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");

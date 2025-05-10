@@ -8,14 +8,14 @@ import {
   Home,
   ChevronUp,
   X,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function AppBottombar() {
   const location = useLocation();
   const [activeDropdown, setActiveDropdown] = React.useState(null);
-  
+  const id = localStorage.getItem("userType");
 
   const navItems = [
     {
@@ -23,28 +23,48 @@ export function AppBottombar() {
       url: "/home",
       icon: Home,
     },
-    {
-      title: "Master",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "Category",
-          url: "/master/category",
-        },
-        {
-          title: "Item",
-          url: "/master/item",
-        },
-        {
-          title: "Buyer",
-          url: "/master/buyer",
-        },
-      ],
-    },
+    ...(id != 1
+      ? [
+          {
+            title: "Master",
+            url: "#",
+            icon: Settings2,
+            items: [
+              {
+                title: "Category",
+                url: "/master/category",
+              },
+              {
+                title: "Item",
+                url: "/master/item",
+              },
+              {
+                title: "Buyer",
+                url: "/master/buyer",
+              },
+              ...(id == 3
+                ? [
+                    {
+                      title: "Branch",
+                      url: "/master/branch",
+                    },
+                  ]
+                : []),
+              ...(id == 3
+                ? [
+                    {
+                      title: "Team",
+                      url: "/master/team",
+                    },
+                  ]
+                : []),
+            ],
+          },
+        ]
+      : []),
     {
       title: "Purchase",
-      url: "/purchase", 
+      url: "/purchase",
       icon: ShoppingBag,
     },
     {
@@ -61,14 +81,26 @@ export function AppBottombar() {
           title: "Stock",
           url: "/report/stock",
         },
-        {
-          title: "Buyer",
-          url: "/report/buyer",
-        },
+        ...(id != 1
+          ? [
+              {
+                title: "Buyer",
+                url: "/report/buyer",
+              },
+            ]
+          : []),
         {
           title: "Single Item Stock",
           url: "/report/single-item-stock",
         },
+        ...(id != 1
+          ? [
+              {
+                title: "Dispatch",
+                url: "/report/dispatch",
+              },
+            ]
+          : []),
       ],
     },
   ];
@@ -88,13 +120,17 @@ export function AppBottombar() {
       return true;
     }
     if (item.items) {
-      return item.items.some(subItem => location.pathname.startsWith(subItem.url));
+      return item.items.some((subItem) =>
+        location.pathname.startsWith(subItem.url)
+      );
     }
     return false;
   };
 
   // Get the current active dropdown menu if any availabe for master and report
-  const activeMenu = activeDropdown ? navItems.find(item => item.title === activeDropdown) : null;
+  const activeMenu = activeDropdown
+    ? navItems.find((item) => item.title === activeDropdown)
+    : null;
 
   return (
     <>
@@ -105,16 +141,14 @@ export function AppBottombar() {
             const IconComponent = item.icon;
             const isActive = isItemActive(item);
             const hasDropdown = !!item.items;
-            
+
             return (
-              <Link 
+              <Link
                 key={item.title}
                 to={hasDropdown ? "#" : item.url}
                 onClick={(e) => handleItemClick(item, e)}
                 className={`flex flex-col items-center justify-center p-1  rounded-lg relative ${
-                  isActive 
-                    ? "text-yellow-600" 
-                    : "text-gray-500"
+                  isActive ? "text-yellow-600" : "text-gray-500"
                 }`}
               >
                 <div className="relative">
@@ -123,17 +157,23 @@ export function AppBottombar() {
                       layoutId="bottomNavIndicator"
                       className="absolute -bottom-1 left-0 right-0 h-[2px] bg-yellow-500 rounded-full"
                       initial={false}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30,
+                      }}
                     />
                   )}
                   <IconComponent className="h-4 w-4" />
                 </div>
                 <span className="text-xs mt-1 font-medium">{item.title}</span>
-                
+
                 {hasDropdown && (
-                  <span className={`absolute top-0 right-0 w-1.5 h-1.5 rounded-full ${
-                    isActive ? "bg-yellow-500" : "bg-gray-400"
-                  }`} />
+                  <span
+                    className={`absolute top-0 right-0 w-1.5 h-1.5 rounded-full ${
+                      isActive ? "bg-yellow-500" : "bg-gray-400"
+                    }`}
+                  />
                 )}
               </Link>
             );
@@ -144,34 +184,36 @@ export function AppBottombar() {
       {/* master and report*/}
       <AnimatePresence>
         {activeMenu && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-end"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActiveDropdown(null)}
           >
-            <motion.div 
+            <motion.div
               className="w-full bg-white rounded-t-xl overflow-hidden"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col">
                 {/* Handle bar for swipe gestures */}
                 <div className="w-full flex justify-center pt-2 pb-4">
                   <div className="w-12 h-1 bg-gray-300 rounded-full" />
                 </div>
-                
+
                 <div className="px-4 pb-2">
                   <h3 className="font-medium text-base flex items-center">
-                    {React.createElement(activeMenu.icon, { className: "h-4 w-4 mr-2 text-yellow-600" })}
+                    {React.createElement(activeMenu.icon, {
+                      className: "h-4 w-4 mr-2 text-yellow-600",
+                    })}
                     {activeMenu.title}
                   </h3>
                 </div>
-                
+
                 <div className="max-h-64 overflow-y-auto">
                   {activeMenu.items.map((subItem, index) => (
                     <motion.div
@@ -195,9 +237,9 @@ export function AppBottombar() {
                     </motion.div>
                   ))}
                 </div>
-                
+
                 <div className="p-4">
-                  <button 
+                  <button
                     onClick={() => setActiveDropdown(null)}
                     className="w-full py-1 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm flex items-center justify-center"
                   >

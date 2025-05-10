@@ -1,4 +1,4 @@
-import { ChevronsUpDown, Key, LogOut } from "lucide-react";
+import { ArrowRight, ChevronsUpDown, Key, LogOut, User } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -18,16 +18,28 @@ import {
 import { useNavigate } from "react-router-dom";
 import ChangePassword from "@/app/auth/ChangePassword";
 import { useState } from "react";
+import Profile from "@/app/auth/Profile";
+import VersionCheck from "@/utils/VersionCheck";
 
 export function NavUser({ user }) {
   const [open, setOpen] = useState(false);
+  const [openprofile, setOpenProfile] = useState(false);
 
   const { isMobile } = useSidebar();
   const navigate = useNavigate();
   const user_position = localStorage.getItem("user_position");
+  const localVersion = localStorage.getItem("version");
+  const serverVersion = localStorage.getItem("serverversion");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const showDialog = localVersion !== serverVersion ? true : false;
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
+  };
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
   };
 
   const splitUser = user.name;
@@ -41,33 +53,25 @@ export function NavUser({ user }) {
     <>
       <SidebarMenu>
         <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg bg-yellow-500 text-black">
-                    {intialsChar}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user_position}</span>
-                </div>
-                <ChevronsUpDown className="ml-auto size-4" />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-              side={isMobile ? "bottom" : "right"}
-              align="end"
-              sideOffset={4}
+          {showDialog ? (
+            <div
+              className="rounded-lg bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black px-4 py-2 animate-pulse w-full cursor-pointer h-10"
+              onClick={handleOpenDialog}
             >
-              <DropdownMenuLabel className="p-0 font-normal">
-                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <div className="grid text-left text-sm leading-tight">
+                <span className="flex items-center gap-1 font-semibold truncate text-base">
+                  V{localVersion}
+                  <ArrowRight className="w-4 h-4" />V{serverVersion}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback className="rounded-lg bg-yellow-500 text-black">
@@ -76,27 +80,62 @@ export function NavUser({ user }) {
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">{user.name}</span>
-                    <span className="truncate text-xs">{user.email}</span>
+                    <span className="truncate text-xs">{user_position}</span>
                   </div>
-                </div>
-              </DropdownMenuLabel>
+                  <ChevronsUpDown className="ml-auto size-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                side={isMobile ? "bottom" : "right"}
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                      <AvatarFallback className="rounded-lg bg-yellow-500 text-black">
+                        {intialsChar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {user.name}
+                      </span>
+                      <span className="truncate text-xs">{user.email}</span>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
 
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setOpen(true)}>
-                <Key />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setOpenProfile(true)}>
+                  <User />
 
-                <span className=" cursor-pointer">Change Password</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>
-                <LogOut />
+                  <span className=" cursor-pointer">Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpen(true)}>
+                  <Key />
 
-                <span className=" cursor-pointer">Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <span className=" cursor-pointer">Change Password</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut />
+
+                  <span className=" cursor-pointer">Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </SidebarMenuItem>
       </SidebarMenu>
       <ChangePassword setOpen={setOpen} open={open} />
+      <Profile setOpen={setOpenProfile} open={openprofile} />
+      <VersionCheck
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+      />
     </>
   );
 }

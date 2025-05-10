@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { ContextPanel } from "@/lib/ContextPanel";
 import BASE_URL from "@/config/BaseUrl";
 import logo from "../../assets/logo.png";
 import { ButtonConfig } from "@/config/ButtonConfig";
@@ -69,7 +68,6 @@ export default function LoginAuth() {
         }
 
         const { UserInfo } = res.data;
-
         console.log("Saving user details to local storage...");
         localStorage.setItem("token", UserInfo.token);
         localStorage.setItem("id", UserInfo.user.id);
@@ -77,6 +75,11 @@ export default function LoginAuth() {
         localStorage.setItem("userType", UserInfo.user.user_type);
         localStorage.setItem("email", UserInfo.user.email);
         localStorage.setItem("token-expire-time", UserInfo.token_expires_at);
+        localStorage.setItem(
+          "whatsapp-number",
+          res?.data?.branch?.branch_whatsapp
+        );
+        localStorage.setItem("version", res?.data?.version?.version_panel);
 
         const redirectPath = window.innerWidth < 768 ? "/home" : "/stock-view";
         console.log(`✅ Login successful! Redirecting to ${redirectPath}...`);

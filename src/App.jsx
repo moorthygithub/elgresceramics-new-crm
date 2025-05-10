@@ -6,6 +6,8 @@ import SessionTimeoutTracker from "./components/SessionTimeoutTracker/SessionTim
 import DisabledRightClick from "./components/common/DisabledRightClick";
 
 import AppRoutes from "./routes/AppRoutes";
+import VersionCheck from "./utils/VersionCheck";
+import { useState } from "react";
 
 function App() {
   const navigate = useNavigate();
@@ -14,9 +16,15 @@ function App() {
     localStorage.clear();
     navigate("/");
   };
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
     <>
       {/* <DisabledRightClick /> */}
+      <VersionCheck
+        isDialogOpen={isDialogOpen}
+        setIsDialogOpen={setIsDialogOpen}
+      />
       <Toaster />
       <SessionTimeoutTracker expiryTime={time} onLogout={handleLogout} />
       <AppRoutes />

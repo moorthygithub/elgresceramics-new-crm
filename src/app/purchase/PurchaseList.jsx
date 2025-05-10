@@ -88,7 +88,7 @@ const PurchaseList = () => {
   const { toast } = useToast();
   const UserId = localStorage.getItem("userType");
   const queryClient = useQueryClient();
-
+  const whatsapp = localStorage.getItem("whatsapp-number");
   const navigate = useNavigate();
   const handleDeleteRow = (productId) => {
     setDeleteItemId(productId);
@@ -162,50 +162,44 @@ const PurchaseList = () => {
       purchase_buyer_city,
       purchase_vehicle_no,
     } = purchase;
+    const purchaseNo = purchase_ref_no?.split("-").pop();
 
-    const itemLine = purchaseSub.map((item) => {
-      const size = item.item_size.padEnd(10, " ");
-      const box = item.purchase_sub_box.toString().padStart(4, " ");
-      return `${size} ${box}`;
-    });
+    // const itemLine = purchaseSub.map((item) => {
+    //   const size = item.item_size.padEnd(10, " ");
+    //   const box = item.purchase_sub_box.toString().padStart(4, " ");
+    //   return `${size} ${box}`;
+    // });
 
     const itemLines = purchaseSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
-      const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(
-        6,
-        " "
-      );
+      const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
       return `${name}${qty}`;
     });
 
     const totalQty = purchaseSub.reduce((sum, item) => {
-      const qty =
-        parseInt(item.item_category.replace(/\D/g, ""), 10) || 0;
+      const qty = parseInt(item.item_category.replace(/\D/g, ""), 10) || 0;
       return sum + qty;
     }, 0);
 
     const message = `=== PackList ===
-  No.        : ${purchase_ref_no}
+  No.        : ${purchaseNo}
   Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
   Party      : ${purchase_buyer_name}
   City       : ${purchase_buyer_city}
   VEHICLE NO : ${purchase_vehicle_no}
-  ===============================
+  ======================
   Product    [SIZE]   (QTY)
-  ===============================
-${itemLine.map((line) => "  " + line).join("\n")}
-  ===============================
+  ======================
 ${itemLines.map((line) => "  " + line).join("\n")}
-  ===============================
-  Total QTY: ${totalQty}
-  ===============================`;
+  ======================
+  *Total QTY: ${totalQty}*
+  ======================`;
 
-    const phoneNumber = "919680053300";
+    // const phoneNumber = `${whatsapp}`;
+    const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
-    // const whatsappUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-    // window.open(whatsappUrl, "_blank");
   };
 
   const columns = [
