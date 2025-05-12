@@ -24,15 +24,16 @@ const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    if (serverVersion) {
-      localStorage.setItem("version", serverVersion);
-    }
+    // if (serverVersion) {
+    //   localStorage.setItem("version", serverVersion);
+    // }
   };
 
   const handleLogout = () => {
     try {
       localStorage.clear();
       navigate("/");
+      setIsDialogOpen(false);
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -45,10 +46,11 @@ const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
       try {
         const statusRes = await axios.get(`${BASE_URL}/api/panelCheck`);
         const serverVer = statusRes?.data?.version?.version_panel;
-        localStorage.setItem("serverversion", serverVer);
 
         setServerVersion(serverVer);
         if (token && statusRes.data?.msg == "success") {
+          localStorage.setItem("serverversion", serverVer);
+
           if (localVersion !== serverVer) {
             setIsDialogOpen(true);
           } else {
@@ -61,7 +63,7 @@ const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
     };
 
     checkVersion();
-  }, [token]);
+  }, [token,navigate]);
 
   useEffect(() => {
     if (retryPopup) {
