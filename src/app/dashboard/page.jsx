@@ -37,6 +37,7 @@ export default function Page({ children }) {
   const nameL = localStorage.getItem("name");
   const emailL = localStorage.getItem("email");
   const [openprofile, setOpenProfile] = useState(false);
+  const localVersion = localStorage.getItem("version");
 
   const handleBackClick = (e) => {
     e.preventDefault();
@@ -139,6 +140,24 @@ export default function Page({ children }) {
               </DropdownMenuLabel>
 
               <DropdownMenuSeparator className="bg-yellow-200" />
+              <DropdownMenuItem
+                size="lg"
+                className="hover:bg-yellow-100 focus:bg-yellow-100 rounded-md p-0 m-0"
+              >
+                <div className="rounded-lg bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black px-4 py-2 w-full  h-10">
+                  <div className="flex justify-between items-center h-full w-full text-xs leading-tight text-center">
+                    <span className="flex items-center gap-1 font-semibold">
+                      <span>
+                        <span className="text-[10px]">V </span>
+                        {localVersion}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1 font-semibold">
+                      Updated on :12/05/2025
+                    </span>
+                  </div>
+                </div>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setOpenProfile(true)}
                 className="hover:bg-yellow-100 focus:bg-yellow-100 rounded-md my-0.5 mx-1"
