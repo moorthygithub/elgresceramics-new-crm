@@ -58,9 +58,9 @@ export function NavUser({ user }) {
               className="rounded-lg bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black px-4 py-2 animate-pulse w-full cursor-pointer h-10"
               onClick={handleOpenDialog}
             >
-              <div className="grid text-left text-sm leading-tight">
-                <span className="flex items-center gap-1 font-semibold truncate text-base">
-                  V{localVersion}
+              <div className="flex justify-center items-center h-full w-full text-xs leading-tight text-center">
+                <span className="flex items-center gap-1 font-semibold">
+                  New Updated : V{localVersion}
                   <ArrowRight className="w-4 h-4" />V{serverVersion}
                 </span>
               </div>
@@ -68,6 +68,7 @@ export function NavUser({ user }) {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
+                {/* <div className="flex flex-col w-full"> */}
                 <SidebarMenuButton
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
@@ -84,7 +85,26 @@ export function NavUser({ user }) {
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
+                {/* </div> */}
               </DropdownMenuTrigger>
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground p-0 cursor-text"
+              >
+                <div className="rounded-lg bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black px-4 py-2 w-full  h-10">
+                  <div className="flex justify-between items-center h-full w-full text-xs leading-tight text-center">
+                    <span className="flex items-center gap-1 font-semibold">
+                      <span>
+                        <span className="text-[10px]">V </span>
+                        {localVersion}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-1 font-semibold">
+                      Updated on :12/05/2025
+                    </span>
+                  </div>
+                </div>
+              </SidebarMenuButton>
               <DropdownMenuContent
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                 side={isMobile ? "bottom" : "right"}

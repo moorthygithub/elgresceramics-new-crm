@@ -35,10 +35,9 @@ const Profile = ({ open, setOpen }) => {
       setFormData(response.data.profile);
       return response.data.profile;
     },
-    enabled: false, // don't fetch on mount
+    enabled: false,
   });
 
-  // ✅ Refetch only when dialog is opened
   useEffect(() => {
     if (open) {
       refetch();
@@ -131,6 +130,7 @@ const Profile = ({ open, setOpen }) => {
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Enter Name"
+              disabled
             />
           </div>
           <div className="grid gap-2">
