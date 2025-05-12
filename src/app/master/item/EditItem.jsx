@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import BASE_URL from "@/config/BaseUrl";
 import { Loader2, Edit, AlertCircle, RefreshCcw } from "lucide-react";
@@ -35,6 +35,8 @@ const EditItem = ({ ItemId }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
+    item_category: "",
+    item_name: "",
     item_size: "",
     item_brand: "",
     item_weight: "",
@@ -42,6 +44,19 @@ const EditItem = ({ ItemId }) => {
   });
   const [originalData, setOriginalData] = useState(null);
   // Fetch state data
+  const { data: categoryData } = useQuery({
+    queryKey: ["categorys"],
+    queryFn: async () => {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${BASE_URL}/api/categorys`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch categorys");
+      return response.json();
+    },
+  });
   const fetchItemData = async () => {
     setIsFetching(true);
     try {
@@ -53,6 +68,8 @@ const EditItem = ({ ItemId }) => {
       const itemData = response.data.items || {};
 
       setFormData({
+        item_category: itemData.item_category || "",
+        item_name: itemData.item_name || "",
         item_size: itemData.item_size || "",
         item_brand: itemData.item_brand || "",
         item_weight: itemData.item_weight || "",
@@ -60,6 +77,8 @@ const EditItem = ({ ItemId }) => {
       });
 
       setOriginalData({
+        item_category: itemData.item_category || "",
+        item_name: itemData.item_name || "",
         item_size: itemData.item_size || "",
         item_brand: itemData.item_brand || "",
         item_weight: itemData.item_weight || "",
@@ -142,11 +161,26 @@ const EditItem = ({ ItemId }) => {
       setIsLoading(false);
     }
   };
-
+  const handleInputChange = (e, key, value) => {
+    if (e && e.target) {
+      const { name, value } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    }
+  };
   // Check if there are changes
   const hasChanges =
     originalData &&
-    (formData.item_size !== originalData.item_size ||
+    (formData.item_category !== originalData.item_category ||
+      formData.item_name !== originalData.item_name ||
+      formData.item_size !== originalData.item_size ||
       formData.item_brand !== originalData.item_brand ||
       formData.item_weight !== originalData.item_weight ||
       formData.item_status !== originalData.item_status);
@@ -169,14 +203,16 @@ const EditItem = ({ ItemId }) => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`transition-all duration-200 ${isHovered ? "bg-blue-50" : ""
-                      }`}
+                    className={`transition-all duration-200 ${
+                      isHovered ? "bg-blue-50" : ""
+                    }`}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                   >
                     <Edit
-                      className={`h-4 w-4 transition-all duration-200 ${isHovered ? "text-blue-500" : ""
-                        }`}
+                      className={`h-4 w-4 transition-all duration-200 ${
+                        isHovered ? "text-blue-500" : ""
+                      }`}
                     />
                   </Button>
                 </div>
@@ -202,135 +238,175 @@ const EditItem = ({ ItemId }) => {
               </p>
             </div>
             <div className="grid gap-2">
-              <div className="grid gap-1">
-                <label htmlFor="item_size" className="text-sm font-medium">
-                  Item Size
-                </label>
-                <div className="relative">
-                  <Input
-                    id="item_size"
-                    placeholder="Enter Item Size"
-                    value={formData.item_size}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        item_size: e.target.value,
-                      }))
-                    }
-                    className={hasChanges ? "pr-8 border-blue-200" : ""}
-                  />
-                  {hasChanges &&
-                    formData.item_size !== originalData.item_size && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                        <RefreshCcw
-                          className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              item_size: originalData.item_size,
-                            }))
-                          }
-                        />
-                      </div>
-                    )}
-                </div>
-              </div>
-              <div className="grid gap-1">
-                <label htmlFor="item_brand" className="text-sm font-medium">
-                  Item Brand
-                </label>
-                <div className="relative">
-                  <Input
-                    id="item_brand"
-                    placeholder="Enter Item Brand"
-                    value={formData.item_brand}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        item_brand: e.target.value,
-                      }))
-                    }
-                    className={hasChanges ? "pr-8 border-blue-200" : ""}
-                  />
-                  {hasChanges &&
-                    formData.item_brand !== originalData.item_brand && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                        <RefreshCcw
-                          className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              item_brand: originalData.item_brand,
-                            }))
-                          }
-                        />
-                      </div>
-                    )}
-                </div>
-              </div>
-              <div className="grid gap-1">
-                <label htmlFor="item_weight" className="text-sm font-medium">
-                  Item Weight
-                </label>
-                <div className="relative">
-                  <Input
-                    id="item_weight"
-                    placeholder="Enter Item Weight"
-                    value={formData.item_weight}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        item_weight: e.target.value,
-                      }))
-                    }
-                    className={hasChanges ? "pr-8 border-blue-200" : ""}
-                  />
-                  {hasChanges &&
-                    formData.item_weight !== originalData.item_weight && (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                        <RefreshCcw
-                          className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              item_weight: originalData.item_weight,
-                            }))
-                          }
-                        />
-                      </div>
-                    )}
-                </div>
-              </div>
-              <div className="grid gap-1">
-                <label htmlFor="item_status" className="text-sm font-medium">
-                  Status
-                </label>
+              <label htmlFor="item_category" className="text-sm font-medium">
+                Item Category
+              </label>
+              <div>
                 <Select
-                  value={formData.item_status}
+                  value={formData.item_category}
                   onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, item_status: value }))
+                    handleInputChange(null, "item_category", value)
                   }
                 >
-                  <SelectTrigger
-                    className={hasChanges ? "border-blue-200" : ""}
-                  >
-                    <SelectValue placeholder="Select status" />
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Select Item Category " />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-                        Active
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="Inactive">
-                      <div className="flex items-center">
-                        <div className="w-2 h-2 rounded-full bg-gray-400 mr-2" />
-                        Inactive
-                      </div>
-                    </SelectItem>
+                  <SelectContent className="bg-white">
+                    {categoryData?.category?.map((product, index) => (
+                      <SelectItem key={index} value={product.category}>
+                        {product.category}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <label htmlFor="item_name" className="text-sm font-medium">
+                Item Name
+              </label>
+              <Input
+                id="item_name"
+                placeholder="Enter Item Name"
+                value={formData.item_name}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    item_name: e.target.value,
+                  }))
+                }
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-1">
+                  <label htmlFor="item_brand" className="text-sm font-medium">
+                    Item Brand
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="item_brand"
+                      placeholder="Enter Item Brand"
+                      value={formData.item_brand}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          item_brand: e.target.value,
+                        }))
+                      }
+                      className={hasChanges ? "pr-8 border-blue-200" : ""}
+                    />
+                    {hasChanges &&
+                      formData.item_brand !== originalData.item_brand && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <RefreshCcw
+                            className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                item_brand: originalData.item_brand,
+                              }))
+                            }
+                          />
+                        </div>
+                      )}
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <label htmlFor="item_weight" className="text-sm font-medium">
+                    Item Weight
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="item_weight"
+                      placeholder="Enter Item Weight"
+                      value={formData.item_weight}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          item_weight: e.target.value,
+                        }))
+                      }
+                      className={hasChanges ? "pr-8 border-blue-200" : ""}
+                    />
+                    {hasChanges &&
+                      formData.item_weight !== originalData.item_weight && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <RefreshCcw
+                            className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                item_weight: originalData.item_weight,
+                              }))
+                            }
+                          />
+                        </div>
+                      )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="grid gap-1">
+                  <label htmlFor="item_size" className="text-sm font-medium">
+                    Item Size
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="item_size"
+                      placeholder="Enter Item Size"
+                      value={formData.item_size}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          item_size: e.target.value,
+                        }))
+                      }
+                      className={hasChanges ? "pr-8 border-blue-200" : ""}
+                    />
+                    {hasChanges &&
+                      formData.item_size !== originalData.item_size && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <RefreshCcw
+                            className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                item_size: originalData.item_size,
+                              }))
+                            }
+                          />
+                        </div>
+                      )}
+                  </div>
+                </div>
+                <div className="grid gap-1">
+                  <label htmlFor="item_status" className="text-sm font-medium">
+                    Status
+                  </label>
+                  <Select
+                    value={formData.item_status}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, item_status: value }))
+                    }
+                  >
+                    <SelectTrigger
+                      className={hasChanges ? "border-blue-200" : ""}
+                    >
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                          Active
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Inactive">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 rounded-full bg-gray-400 mr-2" />
+                          Inactive
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {hasChanges && (
@@ -345,10 +421,11 @@ const EditItem = ({ ItemId }) => {
               <Button
                 onClick={handleSubmit}
                 disabled={isLoading || !hasChanges}
-                className={`mt-2 relative overflow-hidden ${hasChanges
+                className={`mt-2 relative overflow-hidden ${
+                  hasChanges
                     ? `${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}  `
                     : ""
-                  }`}
+                }`}
               >
                 {isLoading ? (
                   <>

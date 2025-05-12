@@ -155,7 +155,7 @@ const SalesView = () => {
             <tr className="border border-black">
               <th className="p-2 border border-black">ITEM NAME</th>
               <th className="p-2 border border-black">SIZE</th>
-              <th className="p-2 border border-black">BRAND</th>
+              {/* <th className="p-2 border border-black">BRAND</th> */}
               <th className="p-2 border border-black">QUANTITY</th>
             </tr>
           </thead>
@@ -166,7 +166,7 @@ const SalesView = () => {
               <tr key={index} className="border border-black">
                 <td className="p-2 border border-black">{row.item_name}</td>
                 <td className="p-2 border border-black">{row.item_size}</td>
-                <td className="p-2 border border-black">{row.item_brand}</td>
+                {/* <td className="p-2 border border-black">{row.item_brand}</td> */}
                 <td className="p-2 border border-black text-right">
                   {row.sales_sub_box}
                 </td>
@@ -177,7 +177,7 @@ const SalesView = () => {
             <tr className="border border-black bg-gray-200 font-semibold">
               <td className="p-2 border border-black">TOTAL</td>
               <td className="p-2 border border-black"></td>
-              <td className="p-2 border border-black"></td>
+              {/* <td className="p-2 border border-black"></td> */}
               <td className="p-2 border border-black text-right">
                 {totalSalesSubBox}
               </td>
