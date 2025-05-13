@@ -66,54 +66,60 @@ const ItemList = () => {
   // Define columns for the table
   const columns = [
     {
-      accessorKey: "index",
+      id: "index",
       header: "Sl No",
       cell: ({ row }) => <div>{row.index + 1}</div>,
     },
     {
+      id: "Category",
       accessorKey: "item_category",
       header: "Category",
-      cell: ({ row }) => <div>{row.getValue("item_category")}</div>,
+      cell: ({ row }) => <div>{row.original.item_category}</div>,
     },
     {
+      id: "Name",
       accessorKey: "item_name",
       header: "Name",
-      cell: ({ row }) => <div>{row.getValue("item_name")}</div>,
+      cell: ({ row }) => <div>{row.original.item_name}</div>,
     },
     {
+      id: "Size",
       accessorKey: "item_size",
       header: "Size",
-      cell: ({ row }) => <div>{row.getValue("item_size")}</div>,
+      cell: ({ row }) => <div>{row.original.item_size}</div>,
     },
     {
+      id: "Brand",
       accessorKey: "item_brand",
       header: "Brand",
-      cell: ({ row }) => <div>{row.getValue("item_brand")}</div>,
+      cell: ({ row }) => <div>{row.original.item_brand}</div>,
     },
     {
+      id: "Weight",
       accessorKey: "item_weight",
       header: "Weight",
-      cell: ({ row }) => <div>{row.getValue("item_weight")}</div>,
+      cell: ({ row }) => <div>{row.original.item_weight}</div>,
     },
     ...(UserId == 3
       ? [
           {
+            id: "Branch Name",
             accessorKey: "branch_name",
             header: "Branch Name",
-            cell: ({ row }) => <div>{row.getValue("branch_name")}</div>,
+            cell: ({ row }) => <div>{row.original.branch_name}</div>,
           },
         ]
       : []),
     {
+      id: "Status",
       accessorKey: "item_status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("item_status");
-
+        const status = row.original.item_status;
         return (
           <span
             className={`px-2 py-1 rounded text-xs ${
-              status == "Active"
+              status === "Active"
                 ? "bg-green-100 text-green-800"
                 : "bg-gray-100 text-gray-800"
             }`}
@@ -130,7 +136,6 @@ const ItemList = () => {
             header: "Action",
             cell: ({ row }) => {
               const ItemId = row.original.id;
-
               return (
                 <div className="flex flex-row">
                   <EditItem ItemId={ItemId} />

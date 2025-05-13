@@ -217,45 +217,47 @@ ${itemLines.map((line) => "  " + line).join("\n")}
       header: "Sl No",
       cell: ({ row }) => <div>{row.index + 1}</div>,
     },
-
     {
       accessorKey: "purchase_date",
       header: "Date",
+      id: "Date",
       cell: ({ row }) => {
-        const date = row.getValue("purchase_date");
+        const date = row.original.purchase_date;
         return moment(date).format("DD-MMM-YYYY");
       },
     },
     {
       accessorKey: "purchase_buyer_name",
-      header: " Buyer Name",
-      cell: ({ row }) => <div>{row.getValue("purchase_buyer_name")}</div>,
+      header: "Buyer Name",
+      id: "Buyer Name",
+      cell: ({ row }) => <div>{row.original.purchase_buyer_name}</div>,
     },
     {
       accessorKey: "purchase_ref_no",
       header: "Ref No",
-      cell: ({ row }) => <div>{row.getValue("purchase_ref_no")}</div>,
+      id: "Ref No",
+      cell: ({ row }) => <div>{row.original.purchase_ref_no}</div>,
     },
     {
       accessorKey: "purchase_vehicle_no",
       header: "Vehicle No",
-      cell: ({ row }) => <div>{row.getValue("purchase_vehicle_no")}</div>,
+      id: "Vehicle No",
+      cell: ({ row }) => <div>{row.original.purchase_vehicle_no}</div>,
     },
     ...(UserId == 3
       ? [
           {
             accessorKey: "branch_name",
             header: "Branch Name",
-            cell: ({ row }) => <div>{row.getValue("branch_name")}</div>,
+            cell: ({ row }) => <div>{row.original.branch_name}</div>,
           },
         ]
       : []),
-
     {
       accessorKey: "purchase_status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("purchase_status");
+        const status = row.original.purchase_status;
         const statusId = row.original.id;
         return (
           <StatusToggle
@@ -268,7 +270,6 @@ ${itemLines.map((line) => "  " + line).join("\n")}
         );
       },
     },
-
     {
       id: "actions",
       header: "Action",
@@ -340,6 +341,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
       },
     },
   ];
+
   const filteredItems =
     purchase?.filter((item) =>
       item.purchase_buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -365,7 +367,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
     },
     initialState: {
       pagination: {
-        pageSize: 7,
+        pageSize: 20,
       },
     },
   });

@@ -135,15 +135,17 @@ const CategoryList = () => {
     {
       accessorKey: "category_status",
       header: "Status",
+      id: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("category_status");
+        const status = row.original.category_status;
 
         return (
           <span
-            className={`px-2 py-1 rounded text-xs ${status == "Active"
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-100 text-gray-800"
-              }`}
+            className={`px-2 py-1 rounded text-xs ${
+              status == "Active"
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
           >
             {status}
           </span>
@@ -164,15 +166,17 @@ const CategoryList = () => {
             title={currentStatus}
             className={`relative inline-flex items-center h-6 w-11 rounded-full
               ${currentStatus === "Active" ? "bg-green-500" : "bg-gray-400"} 
-              ${togglingId == categoryId
-                ? "opacity-50 cursor-not-allowed"
-                : "cursor-pointer"
+              ${
+                togglingId == categoryId
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
               }
             `}
           >
             <SwitchPrimitive.Thumb
               className={`block w-4 h-4 bg-white rounded-full transform transition-transform
-                ${currentStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                ${
+                  currentStatus === "Active" ? "translate-x-6" : "translate-x-1"
                 }
               `}
             />
@@ -182,9 +186,10 @@ const CategoryList = () => {
     },
   ];
 
-  const filteredCategories = category?.filter(item =>
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredCategories =
+    category?.filter((item) =>
+      item.category.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   // Create the table instance
   const table = useReactTable({
@@ -251,7 +256,7 @@ const CategoryList = () => {
             <h1 className="text-xl md:text-2xl text-gray-800 font-medium">
               Category List
             </h1>
-            <div >
+            <div>
               <CreateCategory />
             </div>
           </div>
@@ -264,62 +269,70 @@ const CategoryList = () => {
                 placeholder="Search category..."
                 value={searchQuery}
                 onChange={(event) => {
-
                   setSearchQuery(event.target.value);
-
-
                 }}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
               />
             </div>
-
-
           </div>
           <div className="space-y-3">
             {filteredCategories.length > 0 ? (
               filteredCategories.map((item, index) => (
-                <div key={item.id} className="relative bg-white rounded-lg shadow-sm border-l-4 border-r border-b border-t  border-yellow-500 overflow-hidden">
+                <div
+                  key={item.id}
+                  className="relative bg-white rounded-lg shadow-sm border-l-4 border-r border-b border-t  border-yellow-500 overflow-hidden"
+                >
                   <div className="p-2 flex justify-between items-center border-b border-gray-50">
                     <div className=" flex items-center space-x-2">
                       <div className="bg-gray-100 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center text-xs font-medium">
                         {index + 1}
                       </div>
                       <h3 className="font-medium text-sm text-gray-800">
-
                         {item.category}
-
                       </h3>
-
                     </div>
                     <div className="flex items-center justify-between gap-5">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${item.category_status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          item.category_status === "Active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
                         }`}
-                    >
-                      {item.category_status}
-                    </span>
-                   
+                      >
+                        {item.category_status}
+                      </span>
 
                       <SwitchPrimitive.Root
                         checked={item.category_status === "Active"}
-                        onCheckedChange={() => handleToggle(item.id, item.category_status)}
+                        onCheckedChange={() =>
+                          handleToggle(item.id, item.category_status)
+                        }
                         disabled={togglingId === item.id}
                         className={`relative inline-flex items-center h-4 w-10 rounded
-                   ${item.category_status === "Active" ? "bg-green-500" : "bg-gray-400"} 
-                   ${togglingId === item.id ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                   ${
+                     item.category_status === "Active"
+                       ? "bg-green-500"
+                       : "bg-gray-400"
+                   } 
+                   ${
+                     togglingId === item.id
+                       ? "opacity-50 cursor-not-allowed"
+                       : "cursor-pointer"
+                   }
                  `}
                       >
                         <SwitchPrimitive.Thumb
                           className={`block w-3 h-3 bg-black  rounded transform transition-transform
-                     ${item.category_status === "Active" ? "translate-x-6" : "translate-x-1"}
+                     ${
+                       item.category_status === "Active"
+                         ? "translate-x-6"
+                         : "translate-x-1"
+                     }
                    `}
                         />
                       </SwitchPrimitive.Root>
                     </div>
                   </div>
-
                 </div>
               ))
             ) : (
@@ -392,9 +405,9 @@ const CategoryList = () => {
                           {header.isPlaceholder
                             ? null
                             : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                         </TableHead>
                       );
                     })}
@@ -434,7 +447,7 @@ const CategoryList = () => {
           {/* row slection and pagintaion button  */}
           <div className="flex items-center justify-end space-x-2 py-4">
             <div className="flex-1 text-sm text-muted-foreground">
-              Total Category  : &nbsp;
+              Total Category : &nbsp;
               {table.getFilteredRowModel().rows.length}
             </div>
             <div className="space-x-2">
