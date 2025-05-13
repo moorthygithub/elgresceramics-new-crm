@@ -24,9 +24,6 @@ const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    // if (serverVersion) {
-    //   localStorage.setItem("version", serverVersion);
-    // }
   };
 
   const handleLogout = () => {
@@ -63,7 +60,7 @@ const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
     };
 
     checkVersion();
-  }, [token,navigate]);
+  }, [token, navigate]);
 
   useEffect(() => {
     if (retryPopup) {

@@ -71,7 +71,7 @@ export const fetchPurchaseById = async (encryptedId) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("res data", response.data);
+    // console.log("res data", response.data);
     return response.data;
   } catch (error) {
     throw new Error(
@@ -90,7 +90,7 @@ export const fetchSalesById = async (encryptedId) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("res data", response.data);
+    // console.log("res data", response.data);
     return response.data;
   } catch (error) {
     throw new Error(

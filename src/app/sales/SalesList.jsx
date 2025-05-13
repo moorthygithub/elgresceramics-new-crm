@@ -108,9 +108,17 @@ const SalesList = () => {
   };
   const confirmDelete = async () => {
     try {
+      const token = localStorage.getItem("token"); 
+
       const response = await axios.delete(
-        `${BASE_URL}/api/sales/${deleteItemId}`
+        `${BASE_URL}/api/sales/${deleteItemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       const data = response.data;
 
       if (data.code === 200) {
