@@ -61,7 +61,7 @@ const Home = () => {
   const getYears = () => {
     const currentYear = new Date().getFullYear();
     const years = [];
-    for (let year = 2025; year <= currentYear ; year++) {
+    for (let year = 2025; year <= currentYear; year++) {
       years.push(year.toString());
     }
 
@@ -455,7 +455,7 @@ const Home = () => {
                             </th>
                           </tr>
                         </thead>
-                        {filteredItems && (
+                        {filteredItems && filteredItems.length > 0 ? (
                           <tbody>
                             {filteredItems.map((item, index) => (
                               <>
@@ -480,6 +480,17 @@ const Home = () => {
                                 </tr>
                               </>
                             ))}
+                          </tbody>
+                        ) : (
+                          <tbody>
+                            <tr>
+                              <td
+                                colSpan="4"
+                                className="text-center py-4 text-gray-500"
+                              >
+                                Data Not Available
+                              </td>
+                            </tr>
                           </tbody>
                         )}
                       </table>
@@ -621,7 +632,7 @@ const Home = () => {
                             </th>
                           </tr>
                         </thead>
-                        {filteredItemsZero && (
+                        {filteredItemsZero && filteredItemsZero.length > 0 ? (
                           <tbody>
                             {filteredItemsZero.map((item, index) => (
                               <>
@@ -644,7 +655,18 @@ const Home = () => {
                               </>
                             ))}
                           </tbody>
-                        )}
+                        ) : (
+                          <tbody>
+                            <tr>
+                              <td
+                                colSpan="4"
+                                className="text-center py-4 text-gray-500"
+                              >
+                                Data Not Available
+                              </td>
+                            </tr>
+                          </tbody>
+                        )}{" "}
                       </table>
                     </div>
                   ) : (
@@ -785,7 +807,8 @@ const Home = () => {
                             </th>
                           </tr>
                         </thead>
-                        {filteredItemsHundered && (
+                        {filteredItemsHundered &&
+                        filteredItemsHundered.length > 0 ? (
                           <tbody>
                             {filteredItemsHundered.map((item, index) => (
                               <>
@@ -808,7 +831,18 @@ const Home = () => {
                               </>
                             ))}
                           </tbody>
-                        )}
+                        ) : (
+                          <tbody>
+                            <tr>
+                              <td
+                                colSpan="4"
+                                className="text-center py-4 text-gray-500"
+                              >
+                                Data Not Available
+                              </td>
+                            </tr>
+                          </tbody>
+                        )}{" "}
                       </table>
                     </div>
                   ) : (
@@ -973,13 +1007,13 @@ const Home = () => {
                 <tr
                   className={`text-[14px] sticky top-[40px]  z-10 ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
                 >
-                  <th className="border-b px-2 py-2 text-left">Index</th>
+                  <th className="border-b px-2 py-2 text-left">S.No</th>
                   <th className="border-b px-2 py-2 text-left">Item Name</th>
                   <th className="border-b px-2 py-2 text-left">Category</th>
                   <th className="border-b px-2 py-2 text-left">Available</th>
                 </tr>
               </thead>
-              {filteredStockDataZero && (
+              {filteredStockDataZero && filteredStockDataZero.length > 0 ? (
                 <tbody>
                   {filteredStockDataZero.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50 text-[14px]">
@@ -998,7 +1032,15 @@ const Home = () => {
                     </tr>
                   ))}
                 </tbody>
-              )}
+              ) : (
+                <tbody>
+                  <tr>
+                    <td colSpan="4" className="text-center py-4 text-gray-500">
+                      Data Not Available
+                    </td>
+                  </tr>
+                </tbody>
+              )}{" "}
             </table>
           </div>
 
@@ -1018,13 +1060,14 @@ const Home = () => {
                 <tr
                   className={`text-[14px] sticky top-[40px]  z-10 ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
                 >
-                  <th className="border-b  px-2 py-2 text-left">Index</th>
+                  <th className="border-b px-2 py-2 text-left">S.No</th>
                   <th className="border-b  px-2 py-2 text-left">Item Name</th>
                   <th className="border-b  px-2 py-2 text-left">Category</th>
                   <th className="border-b  px-2 py-2 text-left">Available</th>
                 </tr>
               </thead>
-              {filteredStockDataHundered && (
+              {filteredStockDataHundered &&
+              filteredStockDataHundered.length > 0 ? (
                 <tbody>
                   {filteredStockDataHundered.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50 text-[14px]">
@@ -1044,7 +1087,15 @@ const Home = () => {
                     </tr>
                   ))}
                 </tbody>
-              )}
+              ) : (
+                <tbody>
+                  <tr>
+                    <td colSpan="4" className="text-center py-4 text-gray-500">
+                      Data Not Available
+                    </td>
+                  </tr>
+                </tbody>
+              )}{" "}
             </table>{" "}
           </div>
         </>

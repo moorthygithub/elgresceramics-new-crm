@@ -151,7 +151,6 @@ const PurchaseList = () => {
         queryFn: () => fetchPurchaseById(purchaseId),
       });
 
-
       if (data?.purchase && data?.purchaseSub) {
         handleSendWhatsApp(data.purchase, data.purchaseSub);
       } else {
@@ -184,10 +183,9 @@ const PurchaseList = () => {
     });
 
     const totalQty = purchaseSub.reduce((sum, item) => {
-      const qty = parseInt(item.item_category.replace(/\D/g, ""), 10) || 0;
+      const qty = parseInt(item.purchase_sub_box, 10) || 0;
       return sum + qty;
     }, 0);
-
     const message = `=== PackList ===
   No.        : ${purchaseNo}
   Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
