@@ -179,7 +179,8 @@ const PurchaseList = () => {
     const itemLines = purchaseSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
       const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
-      return `${name}${qty}`;
+      const box = item.purchase_sub_box.toString().padStart(4, " ");
+      return `${name}${qty}      ${box}`;
     });
 
     const totalQty = purchaseSub.reduce((sum, item) => {
