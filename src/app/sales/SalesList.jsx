@@ -194,9 +194,11 @@ const SalesList = () => {
     // });
     const itemLines = salesSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
-      const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
-      const box = item.sales_sub_box.toString().padStart(4, " ");
-      return `${name}${qty}      ${box}`;
+      const box = `(${String(item.sales_sub_box).replace(/\D/g, "")})`.padStart(
+        4,
+        " "
+      );
+      return `${name}   ${box}`;
     });
 
     const totalQty = salesSub.reduce((sum, item) => {
