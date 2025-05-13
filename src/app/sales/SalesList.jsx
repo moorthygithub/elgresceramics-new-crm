@@ -187,10 +187,16 @@ const SalesList = () => {
     //   return `${size} ${box}`;
     // });
 
+    // const itemLines = salesSub.map((item) => {
+    //   const name = item.item_name.padEnd(25, " ");
+    //   const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
+    //   return `${name}${qty}`;
+    // });
     const itemLines = salesSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
       const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
-      return `${name}${qty}`;
+      const box = item.sales_sub_box.toString().padStart(4, " ");
+      return `${name}${qty}      ${box}`;
     });
 
     const totalQty = salesSub.reduce((sum, item) => {
