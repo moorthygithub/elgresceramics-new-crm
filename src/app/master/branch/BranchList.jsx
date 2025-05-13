@@ -69,31 +69,34 @@ const BranchList = () => {
     },
 
     {
+      id: "Branch Name",
       accessorKey: "branch_name",
       header: "Branch Name",
-      cell: ({ row }) => <div>{row.getValue("branch_name")}</div>,
+      cell: ({ row }) => <div>{row.original.branch_name}</div>,
     },
     {
+      id: "Whatsapp",
       accessorKey: "branch_whatsapp",
       header: "Whatsapp",
-      cell: ({ row }) => <div>{row.getValue("branch_whatsapp")}</div>,
+      cell: ({ row }) => <div>{row.original.branch_whatsapp}</div>,
     },
     {
+      id: "Email",
       accessorKey: "branch_email",
       header: "Email",
-      cell: ({ row }) => <div>{row.getValue("branch_email")}</div>,
+      cell: ({ row }) => <div>{row.original.branch_email}</div>,
     },
-
     {
+      id: "Status",
       accessorKey: "branch_status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("branch_status");
+        const status = row.original.branch_status;
 
         return (
           <span
             className={`px-2 py-1 rounded text-xs ${
-              status == "Active"
+              status === "Active"
                 ? "bg-green-100 text-green-800"
                 : "bg-gray-100 text-gray-800"
             }`}

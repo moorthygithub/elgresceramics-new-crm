@@ -194,9 +194,11 @@ const SalesList = () => {
     // });
     const itemLines = salesSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
-      const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
-      const box = item.sales_sub_box.toString().padStart(4, " ");
-      return `${name}${qty}      ${box}`;
+      const box = `(${String(item.sales_sub_box).replace(/\D/g, "")})`.padStart(
+        4,
+        " "
+      );
+      return `${name}   ${box}`;
     });
 
     const totalQty = salesSub.reduce((sum, item) => {
@@ -228,46 +230,53 @@ ${itemLines.map((line) => "  " + line).join("\n")}
     {
       accessorKey: "index",
       header: "Sl No",
+      id: "Sl No",
       cell: ({ row }) => <div>{row.index + 1}</div>,
     },
     {
       accessorKey: "sales_date",
       header: "Date",
+      id: "Date",
       cell: ({ row }) => {
-        const date = row.getValue("sales_date");
+        const date = row.original.sales_date;
         return moment(date).format("DD-MMM-YYYY");
       },
     },
-
     {
       accessorKey: "sales_buyer_name",
       header: "Buyer Name",
-      cell: ({ row }) => <div>{row.getValue("sales_buyer_name")}</div>,
+      id: "Buyer Name",
+      cell: ({ row }) => <div>{row.original.sales_buyer_name}</div>,
     },
     {
       accessorKey: "sales_ref_no",
       header: "Ref No",
-      cell: ({ row }) => <div>{row.getValue("sales_ref_no")}</div>,
+      id: "Ref No",
+      cell: ({ row }) => <div>{row.original.sales_ref_no}</div>,
     },
     {
       accessorKey: "sales_vehicle_no",
       header: "Vehicle No",
-      cell: ({ row }) => <div>{row.getValue("sales_vehicle_no")}</div>,
+      id: "Vehicle No",
+      cell: ({ row }) => <div>{row.original.sales_vehicle_no}</div>,
     },
     ...(UserId == 3
       ? [
           {
             accessorKey: "branch_name",
             header: "Branch Name",
-            cell: ({ row }) => <div>{row.getValue("branch_name")}</div>,
+            id: "Branch Name",
+
+            cell: ({ row }) => <div>{row.original.branch_name}</div>,
           },
         ]
       : []),
     {
       accessorKey: "sales_status",
       header: "Status",
+      id: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("sales_status");
+        const status = row.original.sales_status;
         const statusId = row.original.id;
         return (
           <StatusToggle
@@ -403,7 +412,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
     },
     initialState: {
       pagination: {
-        pageSize: 7,
+        pageSize: 20,
       },
     },
   });

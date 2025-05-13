@@ -133,25 +133,29 @@ const TeamList = () => {
     },
 
     {
+      id: "Name",
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }) => <div>{row.original.name}</div>,
     },
     {
+      id: "Email",
       accessorKey: "email",
       header: "Email",
-      cell: ({ row }) => <div>{row.getValue("email")}</div>,
+      cell: ({ row }) => <div>{row.original.email}</div>,
     },
     {
+      id: "Mobile",
       accessorKey: "mobile",
       header: "Mobile",
-      cell: ({ row }) => <div>{row.getValue("mobile")}</div>,
+      cell: ({ row }) => <div>{row.original.mobile}</div>,
     },
     {
+      id: "UserType",
       accessorKey: "user_type",
       header: "UserType",
-      cell: ({ getValue }) => {
-        const value = getValue();
+      cell: ({ row }) => {
+        const value = row.original.user_type;
         let label = "Unknown";
         let className = "bg-gray-100 text-gray-800";
 
@@ -172,17 +176,18 @@ const TeamList = () => {
         );
       },
     },
-
     {
+      id: "Password",
       accessorKey: "cpassword",
       header: "Password",
-      cell: ({ row }) => <div>{row.getValue("cpassword")}</div>,
+      cell: ({ row }) => <div>{row.original.cpassword}</div>,
     },
     {
+      id: "LastLogin",
       accessorKey: "last_login",
       header: "LastLogin",
       cell: ({ row }) => {
-        const rawDate = row.getValue("last_login");
+        const rawDate = row.original.last_login;
         const formattedDate = rawDate
           ? moment(rawDate).format("DD MMM YYYY")
           : "";
@@ -190,23 +195,23 @@ const TeamList = () => {
         return <div>{formattedDate}</div>;
       },
     },
-
     {
+      id: "Branch Name",
       accessorKey: "branch_name",
       header: "Branch Name",
-      cell: ({ row }) => <div>{row.getValue("branch_name")}</div>,
+      cell: ({ row }) => <div>{row.original.branch_name}</div>,
     },
-
     {
+      id: "Status",
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status");
+        const status = row.original.status;
 
         return (
           <span
             className={`px-2 py-1 rounded text-xs ${
-              status == "Active"
+              status === "Active"
                 ? "bg-green-100 text-green-800"
                 : "bg-gray-100 text-gray-800"
             }`}
