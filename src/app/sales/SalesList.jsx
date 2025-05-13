@@ -108,7 +108,7 @@ const SalesList = () => {
   };
   const confirmDelete = async () => {
     try {
-      const token = localStorage.getItem("token"); 
+      const token = localStorage.getItem("token");
 
       const response = await axios.delete(
         `${BASE_URL}/api/sales/${deleteItemId}`,
@@ -194,7 +194,7 @@ const SalesList = () => {
     });
 
     const totalQty = salesSub.reduce((sum, item) => {
-      const qty = parseInt(item.item_category.replace(/\D/g, ""), 10) || 0;
+      const qty = parseInt(item.sales_sub_box, 10) || 0;
       return sum + qty;
     }, 0);
 
