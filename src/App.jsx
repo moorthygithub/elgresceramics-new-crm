@@ -16,15 +16,15 @@ function App() {
     localStorage.clear();
     navigate("/");
   };
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
     <>
       <DisabledRightClick />
-      <VersionCheck
+      {/* <VersionCheck
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
-      />
+      /> */}
       <Toaster />
       <SessionTimeoutTracker expiryTime={time} onLogout={handleLogout} />
       <AppRoutes />

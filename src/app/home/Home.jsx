@@ -1,4 +1,4 @@
-import { STOCK_REPORT } from "@/api";
+import { DASHBOARD_LIST, STOCK_REPORT } from "@/api";
 import Page from "@/app/dashboard/page";
 import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,27 @@ import ExcelJS from "exceljs";
 import { ChevronDown, Download, Printer, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
+import SalesBarChart from "./SalesBarChart";
 const tabs = [
   { value: "stock-view", label: "Stock View" },
   { value: "purchase", label: "Stock < 0" },
   { value: "dispatch", label: "Stock < 100" },
+  { value: "graph", label: "Graph" },
+];
+
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 const Home = () => {
   const containerRef = useRef();
@@ -36,7 +53,52 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchQueryZero, setSearchQueryZero] = useState("");
   const [searchQueryHundered, setSearchQueryHundered] = useState("");
+  const currentDates = new Date();
+  const currentYear = currentDates.getFullYear();
+  const currentMonthIndex = currentDates.getMonth();
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
+  const [selectedMonth, setSelectedMonth] = useState(months[currentMonthIndex]);
+  const getYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let year = 2025; year <= currentYear ; year++) {
+      years.push(year.toString());
+    }
+
+    return years;
+  };
+
+  // Usage:
+  const years = getYears();
   /*--------------------------------stock view-------------- */
+  const fetchDashboardData = async () => {
+    const token = localStorage.getItem("token");
+    const year_month = `${selectedMonth} ${selectedYear}`;
+
+    const response = await axios.post(
+      `${DASHBOARD_LIST}`,
+
+      {
+        year_month,
+      },
+
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data.sales;
+  };
+  const {
+    data: dashbordstock,
+    isLoading: isLoadingdashboord,
+    isError: isErrordashboord,
+    refetch: refetchdashboord,
+  } = useQuery({
+    queryKey: ["dashboardData", selectedYear, selectedMonth],
+    queryFn: fetchDashboardData,
+  });
   const fetchStockData = async () => {
     const token = localStorage.getItem("token");
     const response = await axios.post(
@@ -65,6 +127,11 @@ const Home = () => {
     queryFn: fetchStockData,
   });
 
+  const handleChange = (year, month) => {
+    setSelectedYear(year);
+    setSelectedMonth(month);
+    refetchdashboord();
+  };
   /*--------------------------------stock view-------------- */
   // State for table management
 
@@ -79,7 +146,6 @@ const Home = () => {
   const filteredStockDataHundered = (stockData || []).filter((item) => {
     const available =
       item.openpurch - item.closesale + (item.purch - item.sale);
-    // console.log(available);
 
     return available > 0 && available < 100;
   });
@@ -254,7 +320,7 @@ const Home = () => {
         {/* tabs for mobile screen for purchase and summary  */}
         <>
           <Tabs defaultValue="stock-view" className="sm:hidden">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               {tabs.map((tab) => (
                 <TabsTrigger key={tab.value} value={tab.value}>
                   {tab.label}
@@ -768,11 +834,128 @@ const Home = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+            {/* Grapg Tab Content */}
+
+            <TabsContent value="graph">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold text-black">
+                  Graph
+                </CardTitle>
+                <div className="flex space-x-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-32 truncate">
+                        <span>{selectedYear}</span>
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {years.map((year) => (
+                        <DropdownMenuItem
+                          key={year}
+                          onSelect={() => handleChange(year, selectedMonth)}
+                        >
+                          {year}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Month Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-32 truncate">
+                        <span>{selectedMonth}</span>
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {months.map((month, index) => {
+                        const isDisabled =
+                          Number(selectedYear) === currentYear &&
+                          index > currentMonthIndex;
+                        return (
+                          <DropdownMenuItem
+                            key={month}
+                            disabled={isDisabled}
+                            onSelect={() => handleChange(selectedYear, month)}
+                          >
+                            {month}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+              <div className="w-full h-[500px]">
+                <SalesBarChart
+                  sales={dashbordstock}
+                  isLoadingdashboord={isLoadingdashboord}
+                  isErrordashboord={isErrordashboord}
+                />
+              </div>
+            </TabsContent>
           </Tabs>
         </>
 
         <>
-          {/* median screen  */}
+          <div className="hidden sm:block rounded-md border max-h-[500px] overflow-y-auto mb-4">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-black">
+                  Graph
+                </CardTitle>
+                <div className="flex space-x-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-32 truncate">
+                        <span>{selectedYear}</span>
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {years.map((year) => (
+                        <DropdownMenuItem
+                          key={year}
+                          onSelect={() => handleChange(year, selectedMonth)}
+                        >
+                          {year}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Month Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-32 truncate">
+                        <span>{selectedMonth}</span>
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {months.map((month, index) => {
+                        const isDisabled =
+                          Number(selectedYear) === currentYear &&
+                          index > currentMonthIndex;
+                        return (
+                          <DropdownMenuItem
+                            key={month}
+                            disabled={isDisabled}
+                            onSelect={() => handleChange(selectedYear, month)}
+                          >
+                            {month}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>{" "}
+              <SalesBarChart sales={dashbordstock} />
+            </div>
+          </div>
 
           <div className="hidden sm:block rounded-md border max-h-[500px] overflow-y-auto mb-4">
             <table className="w-full border-collapse border">

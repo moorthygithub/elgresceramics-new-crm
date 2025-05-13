@@ -96,9 +96,17 @@ const PurchaseList = () => {
   };
   const confirmDelete = async () => {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.delete(
-        `${BASE_URL}/api/purchases/${deleteItemId}`
+        `${BASE_URL}/api/purchases/${deleteItemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       const data = response.data;
 
       if (data.code === 200) {
@@ -143,7 +151,6 @@ const PurchaseList = () => {
         queryFn: () => fetchPurchaseById(purchaseId),
       });
 
-      console.log("Purchase Data:", data);
 
       if (data?.purchase && data?.purchaseSub) {
         handleSendWhatsApp(data.purchase, data.purchaseSub);

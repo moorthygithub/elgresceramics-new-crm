@@ -75,6 +75,7 @@ export default function LoginAuth() {
         localStorage.setItem("userType", UserInfo.user.user_type);
         localStorage.setItem("email", UserInfo.user.email);
         localStorage.setItem("token-expire-time", UserInfo.token_expires_at);
+        localStorage.setItem("sidebar:state", true);
         localStorage.setItem(
           "whatsapp-number",
           res?.data?.branch?.branch_whatsapp

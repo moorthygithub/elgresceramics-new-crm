@@ -37,9 +37,9 @@ export function NavUser({ user }) {
     localStorage.clear();
     navigate("/");
   };
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true);
-  };
+  // const handleOpenDialog = () => {
+  //   setIsDialogOpen(true);
+  // };
 
   const splitUser = user.name;
   const intialsChar = splitUser
@@ -55,7 +55,7 @@ export function NavUser({ user }) {
           {showDialog ? (
             <div
               className="rounded-lg bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black px-4 py-2 animate-pulse w-full cursor-pointer h-10"
-              onClick={handleOpenDialog}
+              // onClick={() => handleOpenDialog()}
             >
               <div className="flex justify-center items-center h-full w-full text-xs leading-tight text-center">
                 <span className="flex items-center gap-1 font-semibold">
@@ -101,7 +101,7 @@ export function NavUser({ user }) {
                       </span>
                     </span>
                     <span className="flex items-center gap-1 font-semibold">
-                      Updated on :12/05/2025
+                      Updated on :13/05/2025
                     </span>
                   </div>
                 </div>
