@@ -45,6 +45,7 @@ const productRowSchema = z.object({
 const contractFormSchema = z.object({
   purchase_date: z.string().min(1, "Purchase Date is required"),
   purchase_buyer_name: z.string().min(1, "Buyer Name is required"),
+  purchase_buyer_id: z.number().min(1, "Buyer Id is required"),
   purchase_buyer_city: z.string().min(1, "City is required"),
   purchase_ref_no: z.string().min(1, "Ref is required"),
   purchase_vehicle_no: z.any().optional(),
@@ -94,12 +95,14 @@ const CreatePurchase = () => {
   const [availablebox, setAvailableBox] = useState("");
   const [formData, setFormData] = useState({
     purchase_date: today,
+    purchase_buyer_id: "",
     purchase_buyer_name: "",
     purchase_buyer_city: "",
     purchase_ref_no: "",
     purchase_vehicle_no: "",
     purchase_remark: "",
   });
+  console.log(formData);
   const [invoiceData, setInvoiceData] = useState([
     {
       purchase_sub_category: "",
@@ -260,6 +263,7 @@ const CreatePurchase = () => {
 
       if (selectedBuyer) {
         updatedFormData.purchase_buyer_city = selectedBuyer.buyer_city;
+        updatedFormData.purchase_buyer_id = selectedBuyer.id;
       } else {
         updatedFormData.purchase_buyer_city = "";
       }
@@ -271,6 +275,7 @@ const CreatePurchase = () => {
   const fieldLabels = {
     purchase_date: "Purchase Date",
     purchase_buyer_name: "Buyer Name",
+    purchase_buyer_id: "Buyer Id",
     purchase_buyer_city: "Buyer City",
     purchase_ref_no: "Bill Ref No",
     purchase_vehicle_no: "Vehicle No",
@@ -285,10 +290,12 @@ const CreatePurchase = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log(formData, "1");
       const validatedData = contractFormSchema.parse({
         ...formData,
         purchase_product_data: invoiceData,
       });
+      console.log(formData, "2");
 
       createBranchMutation.mutate(validatedData);
     } catch (error) {

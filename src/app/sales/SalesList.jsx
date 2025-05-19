@@ -163,7 +163,7 @@ const SalesList = () => {
       });
 
       if (data?.sales && data?.salesSub) {
-        handleSendWhatsApp(data.sales, data.salesSub);
+        handleSendWhatsApp(data.sales, data.salesSub, data.buyer);
       } else {
         console.error("Incomplete data received");
       }
@@ -171,14 +171,14 @@ const SalesList = () => {
       console.error("Failed to fetch purchase data or send WhatsApp:", error);
     }
   };
-  const handleSendWhatsApp = (sales, salesSub) => {
+  const handleSendWhatsApp = (sales, salesSub, buyer) => {
     const {
       sales_ref_no,
       sales_date,
-      sales_buyer_name,
-      sales_buyer_city,
+
       sales_vehicle_no,
     } = sales;
+    const { buyer_name, buyer_city } = buyer;
     const salesNo = sales_ref_no?.split("-").pop();
 
     // const itemLine = salesSub.map((item) => {
@@ -209,8 +209,8 @@ const SalesList = () => {
     const message = `=== DispatchList ===
   No.        : ${salesNo}
   Date       : ${moment(sales_date).format("DD-MM-YYYY")}
-  Party      : ${sales_buyer_name}
-  City       : ${sales_buyer_city}
+  Party      : ${buyer_name}
+  City       : ${buyer_city}
   VEHICLE NO : ${sales_vehicle_no}
   ======================
   Product    [SIZE]   (QTY)
@@ -243,10 +243,10 @@ ${itemLines.map((line) => "  " + line).join("\n")}
       },
     },
     {
-      accessorKey: "sales_buyer_name",
+      accessorKey: "buyer_name",
       header: "Buyer Name",
       id: "Buyer Name",
-      cell: ({ row }) => <div>{row.original.sales_buyer_name}</div>,
+      cell: ({ row }) => <div>{row.original.buyer_name}</div>,
     },
     {
       accessorKey: "sales_ref_no",
@@ -385,7 +385,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
     return sales.filter((item) => {
       const itemDate = moment(item.sales_date).format("YYYY-MM-DD");
       const matchesDate = !selectedDate || itemDate === selectedDate;
-      const matchesSearch = item.sales_buyer_name
+      const matchesSearch = item.buyer_name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
 
@@ -506,7 +506,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
                           {index + 1}
                         </div>
                         <h3 className="font-medium text-sm text-gray-800">
-                          {item.sales_buyer_name}
+                          {item.buyer_name}
                         </h3>
                       </div>
                       <div className="flex items-center justify-between gap-2 ">

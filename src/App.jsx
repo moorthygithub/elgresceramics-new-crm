@@ -20,7 +20,7 @@ function App() {
 
   return (
     <>
-      {/* <DisabledRightClick /> */}
+      <DisabledRightClick />
       {/* <VersionCheck
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
