@@ -38,7 +38,7 @@ const productRowSchema = z.object({
   purchase_sub_item: z.string().min(1, "item data is required"),
   purchase_sub_size: z.string().min(1, "Size data is required"),
   purchase_sub_brand: z.string().min(1, "Brand data is required"),
-  purchase_sub_weight: z.number().min(1, "Weight data is required"),
+  purchase_sub_weight: z.number().nonnegative("Weight must be 0 or more"),
   purchase_sub_box: z.string().min(1, "Box data is required"),
 });
 
@@ -290,12 +290,10 @@ const CreatePurchase = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log(formData, "1");
       const validatedData = contractFormSchema.parse({
         ...formData,
         purchase_product_data: invoiceData,
       });
-      console.log(formData, "2");
 
       createBranchMutation.mutate(validatedData);
     } catch (error) {
