@@ -152,7 +152,7 @@ const PurchaseList = () => {
       });
 
       if (data?.purchase && data?.purchaseSub) {
-        handleSendWhatsApp(data.purchase, data.purchaseSub);
+        handleSendWhatsApp(data.purchase, data.purchaseSub, data.buyer);
       } else {
         console.error("Incomplete data received");
       }
@@ -160,29 +160,17 @@ const PurchaseList = () => {
       console.error("Failed to fetch purchase data or send WhatsApp:", error);
     }
   };
-  const handleSendWhatsApp = (purchase, purchaseSub) => {
-    const {
-      purchase_ref_no,
-      purchase_date,
-      purchase_buyer_name,
-      purchase_buyer_city,
-      purchase_vehicle_no,
-    } = purchase;
+  const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
+    const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
+
+    const { buyer_name, buyer_city } = buyer;
     const purchaseNo = purchase_ref_no?.split("-").pop();
-
-    // const itemLine = purchaseSub.map((item) => {
-    //   const size = item.item_size.padEnd(10, " ");
-    //   const box = item.purchase_sub_box.toString().padStart(4, " ");
-    //   return `${size} ${box}`;
-    // });
-
     const itemLines = purchaseSub.map((item) => {
       const name = item.item_name.padEnd(25, " ");
       const box = `(${String(item.purchase_sub_box).replace(
         /\D/g,
         ""
       )})`.padStart(4, " ");
-      // const box = item.purchase_sub_box.toString().padStart(4, " ");
       return `${name}      ${box}`;
     });
 
@@ -193,8 +181,8 @@ const PurchaseList = () => {
     const message = `=== PackList ===
   No.        : ${purchaseNo}
   Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-  Party      : ${purchase_buyer_name}
-  City       : ${purchase_buyer_city}
+  Party      : ${buyer_name}
+  City       : ${buyer_city}
   VEHICLE NO : ${purchase_vehicle_no}
   ======================
   Product    [SIZE]   (QTY)
@@ -227,10 +215,10 @@ ${itemLines.map((line) => "  " + line).join("\n")}
       },
     },
     {
-      accessorKey: "purchase_buyer_name",
+      accessorKey: "buyer_name",
       header: "Buyer Name",
       id: "Buyer Name",
-      cell: ({ row }) => <div>{row.original.purchase_buyer_name}</div>,
+      cell: ({ row }) => <div>{row.original.buyer_name}</div>,
     },
     {
       accessorKey: "purchase_ref_no",
@@ -344,7 +332,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
 
   const filteredItems =
     purchase?.filter((item) =>
-      item.purchase_buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
+      item.buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
   // Create the table instance
@@ -454,7 +442,7 @@ ${itemLines.map((line) => "  " + line).join("\n")}
                           {index + 1}
                         </div>
                         <h3 className="font-medium text-sm text-gray-800">
-                          {item.purchase_buyer_name}
+                          {item.buyer_name}
                         </h3>
                       </div>
                       <div className="flex items-center justify-between gap-2 ">

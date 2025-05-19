@@ -35,6 +35,7 @@ const EditBuyer = ({ buyerId }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
+    buyer_name: "",
     buyer_city: "",
     buyer_status: "Active",
   });
@@ -53,11 +54,13 @@ const EditBuyer = ({ buyerId }) => {
       setFormData({
         buyer_city: buyerData.buyer_city || "",
         buyer_status: buyerData.buyer_status || "Active",
+        buyer_name: buyerData.buyer_name || "",
       });
 
       setOriginalData({
         buyer_city: buyerData.buyer_city || "",
         buyer_status: buyerData.buyer_status || "Active",
+        buyer_name: buyerData.buyer_name || "",
       });
     } catch (error) {
       toast({
@@ -140,15 +143,15 @@ const EditBuyer = ({ buyerId }) => {
   const hasChanges =
     originalData &&
     (formData.buyer_city !== originalData.buyer_city ||
-      formData.buyer_status !== originalData.buyer_status);
+      formData.buyer_status !== originalData.buyer_status ||
+      formData.buyer_name !== originalData.buyer_name);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
-
- <div>
+              <div>
                 <div className="sm:hidden">
                   <button
                     variant="default"
@@ -158,23 +161,22 @@ const EditBuyer = ({ buyerId }) => {
                   </button>
                 </div>
                 <div className="hidden sm:block">
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`transition-all duration-200 ${
-                  isHovered ? "bg-blue-50" : ""
-                }`}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-              >
-                <Edit
-                  className={`h-4 w-4 transition-all duration-200 ${
-                    isHovered ? "text-blue-500" : ""
-                  }`}
-                />
-              </Button>
-              </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`transition-all duration-200 ${
+                      isHovered ? "bg-blue-50" : ""
+                    }`}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                  >
+                    <Edit
+                      className={`h-4 w-4 transition-all duration-200 ${
+                        isHovered ? "text-blue-500" : ""
+                      }`}
+                    />
+                  </Button>
+                </div>
               </div>
             </PopoverTrigger>
           </TooltipTrigger>
@@ -197,6 +199,39 @@ const EditBuyer = ({ buyerId }) => {
               </p>
             </div>
             <div className="grid gap-2">
+              <div className="grid gap-1">
+                <label htmlFor="buyer_name" className="text-sm font-medium">
+                  Buyer Name
+                </label>
+                <div className="relative">
+                  <Input
+                    id="buyer_name"
+                    placeholder="Enter buyer city"
+                    value={formData.buyer_name}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        buyer_name: e.target.value,
+                      }))
+                    }
+                    className={hasChanges ? "pr-8 border-blue-200" : ""}
+                  />
+                  {hasChanges &&
+                    formData.buyer_name !== originalData.buyer_name && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                        <RefreshCcw
+                          className="h-4 w-4 text-blue-500 cursor-pointer hover:rotate-180 transition-all duration-300"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              buyer_name: originalData.buyer_name,
+                            }))
+                          }
+                        />
+                      </div>
+                    )}
+                </div>
+              </div>
               <div className="grid gap-1">
                 <label htmlFor="buyer_city" className="text-sm font-medium">
                   Buyer City

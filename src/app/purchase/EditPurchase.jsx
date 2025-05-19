@@ -74,6 +74,7 @@ const EditPurchase = () => {
   const [formData, setFormData] = useState({
     purchase_date: "",
     purchase_buyer_name: "",
+    purchase_buyer_id: "",
     purchase_buyer_city: "",
     purchase_ref_no: "",
     purchase_vehicle_no: "",
@@ -188,8 +189,9 @@ const EditPurchase = () => {
         // Set form data
         setFormData({
           purchase_date: purchaseByid.purchase.purchase_date || "",
-          purchase_buyer_name: purchaseByid.purchase.purchase_buyer_name || "",
-          purchase_buyer_city: purchaseByid.purchase.purchase_buyer_city || "",
+          purchase_buyer_name: purchaseByid.buyer.buyer_name || "",
+          purchase_buyer_id: purchaseByid.purchase.purchase_buyer_id || "",
+          purchase_buyer_city: purchaseByid.buyer.buyer_city || "",
           purchase_ref_no: purchaseByid.purchase.purchase_ref_no || "",
           purchase_vehicle_no: purchaseByid.purchase.purchase_vehicle_no || "",
           purchase_remark: purchaseByid.purchase.purchase_remark || "",
@@ -271,16 +273,18 @@ const EditPurchase = () => {
 
   const handleInputChange = (e, field) => {
     const value = e.target ? e.target.value : e;
-
     let updatedFormData = { ...formData, [field]: value };
 
-    if (field === "purchase_buyer_name") {
+    if (field == "purchase_buyer_name") {
+      console.log(value, "value");
+
       const selectedBuyer = buyerData?.buyers.find(
-        (buyer) => buyer.buyer_name === value
+        (buyer) => buyer.buyer_name == value
       );
 
       if (selectedBuyer) {
         updatedFormData.purchase_buyer_city = selectedBuyer.buyer_city;
+        updatedFormData.purchase_buyer_id = selectedBuyer.id;
       } else {
         updatedFormData.purchase_buyer_city = "";
       }
@@ -379,6 +383,7 @@ const EditPurchase = () => {
     const missingFields = [];
     if (!formData.purchase_date) missingFields.push("Purchase Date");
     if (!formData.purchase_buyer_name) missingFields.push("Buyer Name");
+    if (!formData.purchase_buyer_id) missingFields.push("Buyer Id");
     if (!formData.purchase_buyer_city) missingFields.push("Buyer City");
     if (!formData.purchase_ref_no) missingFields.push("Bill Ref No");
     if (!formData.purchase_status) missingFields.push("Status");
@@ -463,7 +468,7 @@ const EditPurchase = () => {
       });
     }
   };
-
+  console.log(formData.purchase_buyer_name, "purchase_buyer_name");
   return (
     <Page>
       <div className="p-0 md:p-4">
@@ -532,7 +537,7 @@ const EditPurchase = () => {
                     }
                     options={
                       buyerData?.buyers?.map((buyer) => ({
-                        value: buyer.buyer_name,
+                        value: buyer.id,
                         label: buyer.buyer_name,
                       })) || []
                     }

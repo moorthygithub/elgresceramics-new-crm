@@ -79,6 +79,7 @@ const EditSales = () => {
   const [formData, setFormData] = useState({
     sales_date: "",
     sales_buyer_name: "",
+    sales_buyer_id: "",
     sales_buyer_city: "",
     sales_ref_no: "",
     sales_vehicle_no: "",
@@ -149,8 +150,9 @@ const EditSales = () => {
         // Set form data
         setFormData({
           sales_date: SalesId.sales.sales_date || "",
-          sales_buyer_name: SalesId.sales.sales_buyer_name || "",
-          sales_buyer_city: SalesId.sales.sales_buyer_city || "",
+          sales_buyer_name: SalesId.buyer.buyer_name || "",
+          sales_buyer_id: SalesId.sales.sales_buyer_id || "",
+          sales_buyer_city: SalesId.buyer.buyer_city || "",
           sales_ref_no: SalesId.sales.sales_ref_no || "",
           sales_vehicle_no: SalesId.sales.sales_vehicle_no || "",
           sales_remark: SalesId.sales.sales_remark || "",
@@ -170,7 +172,6 @@ const EditSales = () => {
             };
           });
 
-          console.log("Final mapped invoiceData:", mappedData);
           setInvoiceData(mappedData);
         } else {
           console.warn("sale_sub is missing or not an array");
@@ -201,6 +202,7 @@ const EditSales = () => {
 
       if (selectedBuyer) {
         updatedFormData.sales_buyer_city = selectedBuyer.buyer_city;
+        updatedFormData.sales_buyer_id = selectedBuyer.id;
       } else {
         updatedFormData.sales_buyer_city = "";
       }
@@ -341,6 +343,7 @@ const EditSales = () => {
     const missingFields = [];
     if (!formData.sales_date) missingFields.push("Date");
     if (!formData.sales_buyer_name) missingFields.push("Name");
+    if (!formData.sales_buyer_id) missingFields.push("Id");
     if (!formData.sales_buyer_city) missingFields.push("Buyer");
     if (!formData.sales_ref_no) missingFields.push("Ref No");
     if (!formData.sales_status) missingFields.push("Status");

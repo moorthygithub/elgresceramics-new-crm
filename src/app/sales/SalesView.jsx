@@ -16,6 +16,7 @@ const SalesView = () => {
   const decryptedId = decryptId(id);
   const containerRef = useRef();
   const [sales, setSales] = useState({});
+  const [buyers, setBuyers] = useState({});
   const [salessubData, setSalesSubData] = useState([]);
   const handlePrintPdf = useReactToPrint({
     content: () => containerRef.current,
@@ -62,6 +63,7 @@ const SalesView = () => {
   useEffect(() => {
     if (SalesId) {
       setSales(SalesId.sales);
+      setBuyers(SalesId.buyer);
       setSalesSubData(SalesId.salesSub);
     }
   }, [SalesId]);
@@ -129,8 +131,7 @@ const SalesView = () => {
         <div className="w-full border border-black mb-4 grid grid-cols-2">
           <div className="border-r border-black">
             <div className="p-2 border-b border-black">
-              <span className="font-medium">Name:</span>{" "}
-              {sales.sales_buyer_name}
+              <span className="font-medium">Name:</span> {buyers?.buyer_name}
             </div>
             <div className="p-2">
               <span className="font-medium">Ref No:</span> {sales.sales_ref_no}
@@ -138,8 +139,7 @@ const SalesView = () => {
           </div>
           <div>
             <div className="p-2 border-b border-black">
-              <span className="font-medium">City:</span>{" "}
-              {sales.sales_buyer_city}
+              <span className="font-medium">City:</span> {buyers?.buyer_city}
             </div>
             <div className="p-2">
               <span className="font-medium">Date:</span>{" "}

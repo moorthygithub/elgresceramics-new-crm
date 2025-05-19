@@ -45,6 +45,7 @@ const productRowSchema = z.object({
 const contractFormSchema = z.object({
   sales_date: z.string().min(1, "P Date is required"),
   sales_buyer_name: z.string().min(1, "Buyer Name is required"),
+  sales_buyer_id: z.number().min(1, "Buyer Id is required"),
   sales_buyer_city: z.string().min(1, "City is required"),
   sales_ref_no: z.string().min(1, "Ref is required"),
   sales_vehicle_no: z.any().optional(),
@@ -96,6 +97,7 @@ const CreateSales = () => {
   const [formData, setFormData] = useState({
     sales_date: today,
     sales_buyer_name: "",
+    sales_buyer_id: "",
     sales_buyer_city: "",
     sales_ref_no: "",
     sales_vehicle_no: "",
@@ -163,6 +165,7 @@ const CreateSales = () => {
       setFormData({
         sales_date: "",
         sales_buyer_name: "",
+        sales_buyer_id: "",
         sales_buyer_city: "",
         sales_ref_no: "",
         sales_vehicle_no: "",
@@ -258,6 +261,7 @@ const CreateSales = () => {
 
       if (selectedBuyer) {
         updatedFormData.sales_buyer_city = selectedBuyer.buyer_city;
+        updatedFormData.sales_buyer_id = selectedBuyer.id;
       } else {
         updatedFormData.sales_buyer_city = "";
       }
@@ -268,6 +272,7 @@ const CreateSales = () => {
   const fieldLabels = {
     sales_date: "Sales Date",
     sales_buyer_name: "Buyer Name",
+    sales_buyer_id: "Sales Id",
     sales_buyer_city: "Buyer City",
     sales_ref_no: "Ref No",
     sales_vehicle_no: "Vehicle No",
@@ -286,7 +291,8 @@ const CreateSales = () => {
         ...formData,
         sales_product_data: invoiceData,
       });
-
+      console.log(validatedData, "validatedData");
+      console.log(formData, "formData");
       createBranchMutation.mutate(validatedData);
     } catch (error) {
       if (error instanceof z.ZodError) {
