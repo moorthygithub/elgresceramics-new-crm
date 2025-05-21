@@ -10,8 +10,9 @@ import { ButtonConfig } from "@/config/ButtonConfig";
 import { useReactToPrint } from "react-to-print";
 import moment from "moment";
 import html2pdf from "html2pdf.js";
+import { fetchSalesReturnById } from "@/api";
 
-const SalesView = () => {
+const SalesReturnView = () => {
   const { id } = useParams();
   const decryptedId = decryptId(id);
   const containerRef = useRef();
@@ -20,7 +21,7 @@ const SalesView = () => {
   const [salessubData, setSalesSubData] = useState([]);
   const handlePrintPdf = useReactToPrint({
     content: () => containerRef.current,
-    documentTitle: "Dispatch",
+    documentTitle: "Dispatch-return",
     pageStyle: `
       @page {
     size: A4 portrait;
@@ -47,17 +48,8 @@ const SalesView = () => {
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["salesByid", decryptedId],
-    queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${BASE_URL}/api/sales/${decryptedId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error("Failed to fetch sales order");
-      return response.json();
-    },
+    queryKey: ["salesByid", id],
+    queryFn: () => fetchSalesReturnById(id),
   });
 
   useEffect(() => {
@@ -86,7 +78,7 @@ const SalesView = () => {
       .from(containerRef.current)
       .set({
         margin: 10, // Standard margin
-        filename: "Dispatch.pdf",
+        filename: "Dispatch Return.pdf",
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
@@ -102,7 +94,7 @@ const SalesView = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Title Section */}
           <h1 className="text-lg sm:text-xl font-bold text-center sm:text-left">
-            Dispatch
+            Dispatch Return
           </h1>
 
           {/* Button Section */}
@@ -202,4 +194,4 @@ const SalesView = () => {
   );
 };
 
-export default SalesView;
+export default SalesReturnView;

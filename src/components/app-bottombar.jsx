@@ -62,16 +62,38 @@ export function AppBottombar() {
           },
         ]
       : []),
+
     {
       title: "Purchase",
-      url: "/purchase",
+      url: "#",
       icon: ShoppingBag,
+      items: [
+        {
+          title: "Purchase",
+          url: "/purchase",
+        },
+        {
+          title: "Purchase Return",
+          url: "/purchase-return",
+        },
+      ],
     },
     {
       title: "Dispatch",
-      url: "/dispatch",
+      url: "#",
       icon: ShoppingBag,
+      items: [
+        {
+          title: "Dispatch",
+          url: "/dispatch",
+        },
+        {
+          title: "Dispatch Return",
+          url: "/dispatch-return",
+        },
+      ],
     },
+
     {
       title: "Report",
       url: "#",

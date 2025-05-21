@@ -42,6 +42,16 @@ export const useFetchItems = () => {
 export const useFetchPurchaseRef = () => {
   return useQuery(createQueryConfig(["purchasesref"], "/api/purchases-ref"));
 };
+export const useFetchPurchaseReturnRef = () => {
+  return useQuery(
+    createQueryConfig(["purchasesreturnref"], "/api/purchases-return-ref")
+  );
+};
 export const useFetchSalesRef = () => {
   return useQuery(createQueryConfig(["salesref"], "/api/sales-ref"));
+};
+export const useFetchSalesReturnRef = () => {
+  return useQuery(
+    createQueryConfig(["salesreturnref"], "/api/sales-return-ref")
+  );
 };

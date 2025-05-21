@@ -21,6 +21,7 @@ const CreateBuyer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     buyer_name: "",
+    buyer_mobile: "",
     buyer_city: "",
   });
   const { toast } = useToast();
@@ -87,7 +88,6 @@ const CreateBuyer = () => {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         {pathname === "/master/buyer" ? (
-
           <div>
             <div className="sm:hidden">
               <Button
@@ -132,6 +132,20 @@ const CreateBuyer = () => {
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, buyer_name: e.target.value }))
               }
+            />
+            <Input
+              id="buyer_mobile"
+              placeholder="Enter Mobile"
+              value={formData.buyer_mobile}
+              onChange={(e) => {
+                const onlyDigits = e.target.value
+                  .replace(/\D/g, "")
+                  .slice(0, 10);
+                setFormData((prev) => ({
+                  ...prev,
+                  buyer_mobile: onlyDigits,
+                }));
+              }}
             />
             <Input
               id="buyer_city"

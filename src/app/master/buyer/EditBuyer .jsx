@@ -36,6 +36,7 @@ const EditBuyer = ({ buyerId }) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     buyer_name: "",
+    buyer_mobile: "",
     buyer_city: "",
     buyer_status: "Active",
   });
@@ -55,12 +56,14 @@ const EditBuyer = ({ buyerId }) => {
         buyer_city: buyerData.buyer_city || "",
         buyer_status: buyerData.buyer_status || "Active",
         buyer_name: buyerData.buyer_name || "",
+        buyer_mobile: buyerData.buyer_mobile || "",
       });
 
       setOriginalData({
         buyer_city: buyerData.buyer_city || "",
         buyer_status: buyerData.buyer_status || "Active",
         buyer_name: buyerData.buyer_name || "",
+        buyer_mobile: buyerData.buyer_mobile || "",
       });
     } catch (error) {
       toast({
@@ -144,7 +147,8 @@ const EditBuyer = ({ buyerId }) => {
     originalData &&
     (formData.buyer_city !== originalData.buyer_city ||
       formData.buyer_status !== originalData.buyer_status ||
-      formData.buyer_name !== originalData.buyer_name);
+      formData.buyer_name !== originalData.buyer_name ||
+      formData.buyer_mobile !== originalData.buyer_mobile);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <TooltipProvider>
@@ -232,6 +236,26 @@ const EditBuyer = ({ buyerId }) => {
                     )}
                 </div>
               </div>
+              <div className="grid gap-1">
+                <label htmlFor="buyer_mobile" className="text-sm font-medium">
+                  Buyer Mobile
+                </label>
+                <Input
+                  id="buyer_mobile"
+                  placeholder="Enter Mobile"
+                  value={formData.buyer_mobile}
+                  onChange={(e) => {
+                    const onlyDigits = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 10);
+                    setFormData((prev) => ({
+                      ...prev,
+                      buyer_mobile: onlyDigits,
+                    }));
+                  }}
+                />
+              </div>
+
               <div className="grid gap-1">
                 <label htmlFor="buyer_city" className="text-sm font-medium">
                   Buyer City
