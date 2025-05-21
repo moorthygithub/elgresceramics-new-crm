@@ -181,7 +181,6 @@ const SingleItemStock = () => {
     const stock = reportData.stock[0];
     const openingStock = parseInt(stock.openpurch) - parseInt(stock.closesale);
 
-    // Process transactions -- ui things
     const purchaseTransactions = reportData.purchase.map((p) => {
       const refParts = p.purchase_ref.split("-");
       const simpleRef = refParts[refParts.length - 1];
@@ -206,12 +205,10 @@ const SingleItemStock = () => {
       };
     });
 
-    // Combine and sort transactions by date
     const allTransactions = [...purchaseTransactions, ...saleTransactions].sort(
       (a, b) => a.rawDate - b.rawDate
     );
 
-    // Calculate running balance
     let runningBalance = openingStock;
     const transactionsWithBalance = allTransactions.map((t) => {
       if (t.type === "purchase") {

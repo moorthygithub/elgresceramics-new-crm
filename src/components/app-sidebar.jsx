@@ -110,17 +110,31 @@ export function AppSidebar({ ...props }) {
         isActive: false,
       },
       {
+        title: "Purchase Return",
+        url: "/purchase-return",
+        icon: ShoppingBag,
+        isActive: false,
+      },
+      {
         title: "Dispatch",
         url: "/dispatch",
         icon: ShoppingBag,
         isActive: false,
       },
       {
+        title: "Dispatch Return",
+        url: "/dispatch-return",
+        icon: ShoppingBag,
+        isActive: false,
+      },
+
+      {
         title: "Stock View",
         url: "/stock-view",
         icon: Package,
         isActive: false,
       },
+
       {
         title: "Report",
         url: "#",

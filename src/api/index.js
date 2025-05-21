@@ -8,10 +8,18 @@ export const EDIT_PROFILE = `${BASE_URL}/api/updateprofile`;
 export const PURCHASE_LIST = `${BASE_URL}/api/purchases-list`;
 export const PURCHASE_EDIT_LIST = `${BASE_URL}/api/purchases`;
 export const PURCHASE_CREATE = `${BASE_URL}/api/purchases`;
+// PURCHASE -RETURN
+export const PURCHASE_RETURN_LIST = `${BASE_URL}/api/purchases-return-list`;
+export const PURCHASE_RETURN_EDIT_LIST = `${BASE_URL}/api/purchases-return`;
+export const PURCHASE_RETURN_CREATE = `${BASE_URL}/api/purchases-return`;
 //SALES
 export const SALES_LIST = `${BASE_URL}/api/sales-list`;
 export const SALES_EDIT_LIST = `${BASE_URL}/api/sales`;
 export const SALES_CREATE = `${BASE_URL}/api/sales`;
+//SALES -RETURN
+export const SALES_RETURN_LIST = `${BASE_URL}/api/sales-return-list`;
+export const SALES_RETURN_EDIT_LIST = `${BASE_URL}/api/sales-return`;
+export const SALES_RETURN_CREATE = `${BASE_URL}/api/sales-return`;
 //DASHBOARD
 export const DASHBOARD_LIST = `${BASE_URL}/api/dashboard`;
 //MASTER-CATEGORY-ITEM-BUYER
@@ -46,18 +54,30 @@ export const SALES_REPORT = `${BASE_URL}/api/report-sales-data`;
 // ROUTE CONFIGURATION
 export const ROUTES = {
   PURCHASE_EDIT: (id) => `/purchase/edit/${encryptId(id)}`,
+  PURCHASE_RETURN_EDIT: (id) => `/purchase-return/edit/${encryptId(id)}`,
   SALES_EDIT: (id) => `/dispatch/edit/${encryptId(id)}`,
+  SALES_RETURN_EDIT: (id) => `/dispatch-return/edit/${encryptId(id)}`,
   SALES_VIEW: (id) => `/dispatch/view/${encryptId(id)}`,
+  SALES_RETURN_VIEW: (id) => `/dispatch-return/view/${encryptId(id)}`,
 };
 
 export const navigateToPurchaseEdit = (navigate, purchaseId) => {
   navigate(ROUTES.PURCHASE_EDIT(purchaseId));
+};
+export const navigateToPurchaseReturnEdit = (navigate, purchaseId) => {
+  navigate(ROUTES.PURCHASE_RETURN_EDIT(purchaseId));
 };
 export const navigateTOSalesEdit = (navigate, salesId) => {
   navigate(ROUTES.SALES_EDIT(salesId));
 };
 export const navigateTOSalesView = (navigate, salesId) => {
   navigate(ROUTES.SALES_VIEW(salesId));
+};
+export const navigateTOSalesReturnEdit = (navigate, salesId) => {
+  navigate(ROUTES.SALES_RETURN_EDIT(salesId));
+};
+export const navigateTOSalesReturnView = (navigate, salesId) => {
+  navigate(ROUTES.SALES_RETURN_VIEW(salesId));
 };
 
 export const fetchPurchaseById = async (encryptedId) => {
@@ -79,6 +99,25 @@ export const fetchPurchaseById = async (encryptedId) => {
     );
   }
 };
+export const fetchPurchaseReturnById = async (encryptedId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    const id = decryptId(encryptedId);
+    const response = await axios.get(`${PURCHASE_RETURN_EDIT_LIST}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // console.log("res data", response.data);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch purchase details"
+    );
+  }
+};
 export const fetchSalesById = async (encryptedId) => {
   try {
     const token = localStorage.getItem("token");
@@ -86,6 +125,25 @@ export const fetchSalesById = async (encryptedId) => {
 
     const id = decryptId(encryptedId);
     const response = await axios.get(`${SALES_EDIT_LIST}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // console.log("res data", response.data);
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch purchase details"
+    );
+  }
+};
+export const fetchSalesReturnById = async (encryptedId) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    const id = decryptId(encryptedId);
+    const response = await axios.get(`${SALES_RETURN_EDIT_LIST}/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -124,7 +182,53 @@ export const updatePurchaseEdit = async (encryptedId, data) => {
     throw error.response?.data || error;
   }
 };
+export const updatePurchaseReturnEdit = async (encryptedId, data) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    // const id = encryptedId;
+    const id = decryptId(encryptedId);
+
+    const requestData = data.data || data;
+
+    const response = await axios.put(
+      `${SALES_RETURN_EDIT_LIST}/${id}`,
+      requestData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 export const updateSalesEdit = async (encryptedId, data) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No authentication token found");
+
+    // const id = encryptedId;
+    const id = decryptId(encryptedId);
+
+    const requestData = data.data || data;
+
+    const response = await axios.put(`${SALES_EDIT_LIST}/${id}`, requestData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+export const updateSalesReturnEdit = async (encryptedId, data) => {
   try {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("No authentication token found");

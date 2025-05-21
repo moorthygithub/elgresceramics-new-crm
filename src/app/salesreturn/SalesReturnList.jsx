@@ -45,9 +45,9 @@ import { useNavigate } from "react-router-dom";
 
 import {
   fetchSalesById,
-  navigateTOSalesEdit,
-  navigateTOSalesView,
-  SALES_LIST,
+  navigateTOSalesReturnEdit,
+  navigateTOSalesReturnView,
+  SALES_RETURN_LIST
 } from "@/api";
 import { encryptId } from "@/components/common/Encryption";
 import Loader from "@/components/loader/Loader";
@@ -68,17 +68,17 @@ import { useToast } from "@/hooks/use-toast";
 import moment from "moment";
 import { RiWhatsappFill } from "react-icons/ri";
 
-const SalesList = () => {
+const SalesReturnList = () => {
   const {
     data: sales,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["sales"],
+    queryKey: ["salesreturn"],
     queryFn: async () => {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${SALES_LIST}`, {
+      const response = await axios.get(`${SALES_RETURN_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.sales;
@@ -111,7 +111,7 @@ const SalesList = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.delete(
-        `${BASE_URL}/api/sales/${deleteItemId}`,
+        `${BASE_URL}/api/sales-return/${deleteItemId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -171,7 +171,6 @@ const SalesList = () => {
       console.error("Failed to fetch purchase data or send WhatsApp:", error);
     }
   };
- 
 
   const handleSendWhatsApp = (sales, salesSub, buyer) => {
     const { sales_ref_no, sales_date, sales_vehicle_no } = sales;
@@ -202,7 +201,7 @@ ${itemLines.join("\n")}
 ======================
 *Total QTY: ${totalQty}*
 ======================`;
-// const phoneNumber = "919360485526";
+    // const phoneNumber = "919360485526";
     const phoneNumber = `${whatsapp}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -288,7 +287,7 @@ ${itemLines.join("\n")}
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        navigateTOSalesEdit(navigate, salesId);
+                        navigateTOSalesReturnEdit(navigate, salesId);
                       }}
                     >
                       <Edit />
@@ -308,7 +307,7 @@ ${itemLines.join("\n")}
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      navigateTOSalesView(navigate, salesId);
+                      navigateTOSalesReturnView(navigate, salesId);
                     }}
                   >
                     <View />
@@ -418,7 +417,7 @@ ${itemLines.join("\n")}
         <Card className="w-full max-w-md mx-auto mt-10">
           <CardHeader>
             <CardTitle className="text-destructive">
-              Error Fetching Dispatch
+              Error Fetching Dispatch Return
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -437,16 +436,16 @@ ${itemLines.join("\n")}
         <div className="sm:hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl text-gray-800 font-medium">
-              Dispatch List
+              Dispatch Return List
             </h1>
             {UserId != 3 && (
               <div>
                 <Button
                   variant="default"
                   className={`md:ml-2 bg-yellow-400 hover:bg-yellow-600 text-black rounded-l-full`}
-                  onClick={() => navigate("/dispatch/create")}
+                  onClick={() => navigate("/dispatch-return/create")}
                 >
-                  <SquarePlus className="h-4 w-4 " /> Dispatch
+                  <SquarePlus className="h-4 w-4 " /> Dispatch Return
                 </Button>
               </div>
             )}
@@ -457,7 +456,7 @@ ${itemLines.join("\n")}
             <div className="relative w-full md:w-72">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search dispatch..."
+                placeholder="Search dispatch return..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
@@ -477,7 +476,7 @@ ${itemLines.join("\n")}
                 <div
                   key={item.id}
                   onClick={() => {
-                    navigateTOSalesView(navigate, item.id);
+                    navigateTOSalesReturnView(navigate, item.id);
                   }}
                   className="relative bg-white rounded-lg shadow-sm border-l-4 border-r border-b border-t border-yellow-500 overflow-hidden"
                 >
@@ -514,7 +513,7 @@ ${itemLines.join("\n")}
                             className={`px-2 py-1 bg-yellow-400 hover:bg-yellow-600 rounded-lg text-black text-xs`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              navigateTOSalesEdit(navigate, item.id);
+                              navigateTOSalesReturnEdit(navigate, item.id);
                             }}
                           >
                             <Edit className="w-4 h-4" />
@@ -671,14 +670,14 @@ ${itemLines.join("\n")}
 
         <div className="hidden sm:block">
           <div className="flex text-left text-2xl text-gray-800 font-[400]">
-            Dispatch List
+            Dispatch Return List
           </div>
           <div className="flex flex-col md:flex-row md:items-center py-4 gap-2">
             {/* Search Input */}
             <div className="relative w-full md:w-72">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search Dispatch..."
+                placeholder="Search Dispatch Return..."
                 value={table.getState().globalFilter || ""}
                 onChange={(event) => table.setGlobalFilter(event.target.value)}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
@@ -724,9 +723,9 @@ ${itemLines.join("\n")}
                   <Button
                     variant="default"
                     className={`w-full md:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
-                    onClick={() => navigate("/dispatch/create")}
+                    onClick={() => navigate("/dispatch-return/create")}
                   >
-                    <SquarePlus className="h-4 w-4 mr-2" /> Dispatch
+                    <SquarePlus className="h-4 w-4 mr-2" /> Dispatch Return
                   </Button>
                 </>
               )}
@@ -820,7 +819,7 @@ ${itemLines.join("\n")}
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              disapatch.
+              disapatch return.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -838,4 +837,4 @@ ${itemLines.join("\n")}
   );
 };
 
-export default SalesList;
+export default SalesReturnList;

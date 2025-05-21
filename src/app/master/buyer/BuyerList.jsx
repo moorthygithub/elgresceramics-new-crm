@@ -74,6 +74,12 @@ const BuyerList = () => {
       cell: ({ row }) => <div>{row.original.buyer_name}</div>,
     },
     {
+      id: "Mobile",
+      accessorKey: "buyer_mobile",
+      header: "Mobile",
+      cell: ({ row }) => <div>{row.original.buyer_mobile}</div>,
+    },
+    {
       id: "City",
       accessorKey: "buyer_city",
       header: "City",
@@ -216,7 +222,9 @@ const BuyerList = () => {
                         <h3 className="font-medium flex flex-col text-sm text-gray-800">
                           <span>{item.buyer_name}</span>
                           <span className="text-xs">{item.buyer_city}</span>
+                          <span className="text-xs">{item.buyer_mobile}</span>
                         </h3>
+                   
                       </div>
                       <div className="flex items-center justify-between gap-2 ">
                         <span
