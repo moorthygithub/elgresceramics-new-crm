@@ -28,7 +28,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavMainUser } from "./nav-main-user";
-
+import companyname from "../json/company.json";
 export function AppSidebar({ ...props }) {
   const nameL = localStorage.getItem("name");
   const emailL = localStorage.getItem("email");
@@ -41,7 +41,7 @@ export function AppSidebar({ ...props }) {
     },
     teams: [
       {
-        name: `Elgres Cermaic`,
+        name: `${companyname?.CompanyName}`,
         logo: GalleryVerticalEnd,
         plan: "",
       },

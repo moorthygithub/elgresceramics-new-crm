@@ -161,7 +161,6 @@ const SingleItemStock = () => {
       cell.font = { bold: true };
     });
 
-    // Generate and download Excel file
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -175,7 +174,6 @@ const SingleItemStock = () => {
     link.click();
     URL.revokeObjectURL(url);
   };
-  // Calculate opening and closing stock
   const { openingStock, closingStock, transactions } = useMemo(() => {
     if (!reportData)
       return { openingStock: 0, closingStock: 0, transactions: [] };

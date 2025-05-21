@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import BASE_URL from "@/config/BaseUrl";
 import logo from "../../assets/logo.png";
 import { ButtonConfig } from "@/config/ButtonConfig";
+import Logo from "@/json/logo";
 export default function LoginAuth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -123,7 +124,8 @@ export default function LoginAuth() {
           className={`w-72 md:w-80 max-w-md ${ButtonConfig.loginBackground} ${ButtonConfig.loginText}`}
         >
           <CardHeader>
-            <img src={logo} alt="logo" className="w-[200px] mx-auto" />
+            {/* <img src={logo} alt="logo" className="w-[200px] mx-auto" /> */}
+            <Logo />
             <CardTitle
               className={`text-2xl text-center${ButtonConfig.loginText}`}
             >

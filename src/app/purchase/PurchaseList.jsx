@@ -160,39 +160,73 @@ const PurchaseList = () => {
       console.error("Failed to fetch purchase data or send WhatsApp:", error);
     }
   };
+  //   const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
+  //     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
+
+  //     const { buyer_name, buyer_city } = buyer;
+  //     const purchaseNo = purchase_ref_no?.split("-").pop();
+
+  //     const itemLines = purchaseSub.map((item) => {
+  //       const name = item.item_name;
+  //       const qty = String(item.purchase_sub_box).replace(/\D/g, "");
+  //       const box = `(${qty})`;
+  //       return `${name}   ${box}`;
+  //     });
+
+  //     const totalQty = purchaseSub.reduce((sum, item) => {
+  //       const qty = parseInt(item.purchase_sub_box, 10) || 0;
+  //       return sum + qty;
+  //     }, 0);
+  //     const message = `=== PackList ===
+  //   No.     : ${purchaseNo}
+  //   Date   : ${moment(purchase_date).format("DD-MM-YYYY")}
+  //   Party   : ${buyer_name}
+  //   City     : ${buyer_city}
+  //   VEHICLE NO : ${purchase_vehicle_no}
+  //   ======================
+  //   Product    [SIZE]   (QTY)
+  //   ======================
+  // ${itemLines.map((line) => "" + line).join("\n")}
+  //   ======================
+  //   *Total QTY: ${totalQty}*
+  //   ======================`;
+
+  //     // const phoneNumber = `${whatsapp}`;
+  //     const phoneNumber = "919360485526";
+  //     const encodedMessage = encodeURIComponent(message);
+  //     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+  //     window.open(whatsappUrl, "_blank");
+  //   };
   const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
-
     const { buyer_name, buyer_city } = buyer;
     const purchaseNo = purchase_ref_no?.split("-").pop();
+
     const itemLines = purchaseSub.map((item) => {
-      const name = item.item_name.padEnd(25, " ");
-      const box = `(${String(item.purchase_sub_box).replace(
-        /\D/g,
-        ""
-      )})`.padStart(4, " ");
-      return `${name}      ${box}`;
+      const name = item.item_name.trim();
+      const qty = String(item.purchase_sub_box).replace(/\D/g, "");
+      return `${name}   (${qty})`;
     });
 
     const totalQty = purchaseSub.reduce((sum, item) => {
       const qty = parseInt(item.purchase_sub_box, 10) || 0;
       return sum + qty;
     }, 0);
-    const message = `=== PackList ===
-  No.        : ${purchaseNo}
-  Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-  Party      : ${buyer_name}
-  City       : ${buyer_city}
-  VEHICLE NO : ${purchase_vehicle_no}
-  ======================
-  Product    [SIZE]   (QTY)
-  ======================
-${itemLines.map((line) => "  " + line).join("\n")}
-  ======================
-  *Total QTY: ${totalQty}*
-  ======================`;
 
-    const phoneNumber = `${whatsapp}`;
+    const message = `=== PackList ===
+No       : ${purchaseNo}
+Date     : ${moment(purchase_date).format("DD-MM-YYYY")}
+Party    : ${buyer_name}
+City     : ${buyer_city}
+Vehicle  : ${purchase_vehicle_no}
+======================
+Product [SIZE] (QTY)
+======================
+${itemLines.join("\n")}
+======================
+*Total QTY: ${totalQty}*
+======================`;
+       const phoneNumber = `${whatsapp}`;
     // const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;

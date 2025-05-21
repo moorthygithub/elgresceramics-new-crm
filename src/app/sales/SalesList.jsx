@@ -171,34 +171,59 @@ const SalesList = () => {
       console.error("Failed to fetch purchase data or send WhatsApp:", error);
     }
   };
-  const handleSendWhatsApp = (sales, salesSub, buyer) => {
-    const {
-      sales_ref_no,
-      sales_date,
+  //   const handleSendWhatsApp = (sales, salesSub, buyer) => {
+  //     const {
+  //       sales_ref_no,
+  //       sales_date,
 
-      sales_vehicle_no,
-    } = sales;
+  //       sales_vehicle_no,
+  //     } = sales;
+  //     const { buyer_name, buyer_city } = buyer;
+  //     const salesNo = sales_ref_no?.split("-").pop();
+  //     const itemLines = salesSub.map((item) => {
+  //       const name = item.item_name.padEnd(25, " ");
+  //       const box = `(${String(item.sales_sub_box).replace(/\D/g, "")})`.padStart(
+  //         4,
+  //         " "
+  //       );
+  //       return `${name}   ${box}`;
+  //     });
+
+  //     const totalQty = salesSub.reduce((sum, item) => {
+  //       const qty = parseInt(item.sales_sub_box, 10) || 0;
+  //       return sum + qty;
+  //     }, 0);
+
+  //     const message = `=== DispatchList ===
+  //   No.        : ${salesNo}
+  //   Date       : ${moment(sales_date).format("DD-MM-YYYY")}
+  //   Party      : ${buyer_name}
+  //   City       : ${buyer_city}
+  //   VEHICLE NO : ${sales_vehicle_no}
+  //   ======================
+  //   Product    [SIZE]   (QTY)
+  //   ======================
+  // ${itemLines.map((line) => "  " + line).join("\n")}
+  //   ======================
+  //   *Total QTY: ${totalQty}*
+  //   ======================`;
+
+  //     const phoneNumber = `${whatsapp}`;
+  //     // const phoneNumber = "919360485526";
+  //     const encodedMessage = encodeURIComponent(message);
+  //     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+  //     window.open(whatsappUrl, "_blank");
+  //   };
+
+  const handleSendWhatsApp = (sales, salesSub, buyer) => {
+    const { sales_ref_no, sales_date, sales_vehicle_no } = sales;
     const { buyer_name, buyer_city } = buyer;
     const salesNo = sales_ref_no?.split("-").pop();
 
-    // const itemLine = salesSub.map((item) => {
-    //   const size = item.item_size.padEnd(10, " ");
-    //   const box = item.sales_sub_box.toString().padStart(4, " ");
-    //   return `${size} ${box}`;
-    // });
-
-    // const itemLines = salesSub.map((item) => {
-    //   const name = item.item_name.padEnd(25, " ");
-    //   const qty = `(${item.item_category.replace(/\D/g, "")})`.padStart(6, " ");
-    //   return `${name}${qty}`;
-    // });
     const itemLines = salesSub.map((item) => {
-      const name = item.item_name.padEnd(25, " ");
-      const box = `(${String(item.sales_sub_box).replace(/\D/g, "")})`.padStart(
-        4,
-        " "
-      );
-      return `${name}   ${box}`;
+      const name = item.item_name.trim();
+      const qty = String(item.sales_sub_box).replace(/\D/g, "");
+      return `${name}   (${qty})`;
     });
 
     const totalQty = salesSub.reduce((sum, item) => {
@@ -207,25 +232,25 @@ const SalesList = () => {
     }, 0);
 
     const message = `=== DispatchList ===
-  No.        : ${salesNo}
-  Date       : ${moment(sales_date).format("DD-MM-YYYY")}
-  Party      : ${buyer_name}
-  City       : ${buyer_city}
-  VEHICLE NO : ${sales_vehicle_no}
-  ======================
-  Product    [SIZE]   (QTY)
-  ======================
-${itemLines.map((line) => "  " + line).join("\n")}
-  ======================
-  *Total QTY: ${totalQty}*
-  ======================`;
-
+No       : ${salesNo}
+Date     : ${moment(sales_date).format("DD-MM-YYYY")}
+Party    : ${buyer_name}
+City     : ${buyer_city}
+Vehicle  : ${sales_vehicle_no}
+======================
+Product [SIZE] (QTY)
+======================
+${itemLines.join("\n")}
+======================
+*Total QTY: ${totalQty}*
+======================`;
+// const phoneNumber = "919360485526";
     const phoneNumber = `${whatsapp}`;
-    // const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
+
   const columns = [
     {
       accessorKey: "index",
