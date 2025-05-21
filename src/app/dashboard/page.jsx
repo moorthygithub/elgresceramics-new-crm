@@ -27,6 +27,7 @@ import ChangePassword from "../auth/ChangePassword";
 import { useState } from "react";
 import logo from "../../assets/el.png";
 import Profile from "../auth/Profile";
+import Logo from "@/json/logo";
 
 // eslint-disable-next-line react/prop-types
 export default function Page({ children }) {
@@ -96,7 +97,7 @@ export default function Page({ children }) {
 
         <div className="sm:hidden sticky top-0 flex justify-between items-center px-4 py-2  border-b z-40 bg-white  rounded-b-lg shadow-sm">
           <div className="font-semibold flex items-center space-x-2">
-            <img src={logo} alt="logo" className="h-8 w-full" />
+            <Logo showLogo="true" />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -153,7 +154,7 @@ export default function Page({ children }) {
                       </span>
                     </span>
                     <span className="flex items-center gap-1 font-semibold">
-                      Updated on :19/05/2025
+                      Updated on :21/05/2025
                     </span>
                   </div>
                 </div>

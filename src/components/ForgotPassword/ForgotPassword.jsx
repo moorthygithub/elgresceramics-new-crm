@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.png";
+import Logo from "@/json/logo";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");
@@ -121,7 +122,8 @@ export default function ForgotPassword() {
             <CardTitle
               className={`text-2xl text-center${ButtonConfig.loginText}`}
             >
-              <img src={logo} alt="logo" className="w-[200px] mx-auto" />
+              {/* <img src={logo} alt="logo" className="w-[200px] mx-auto" /> */}
+              <Logo />
               Forgot Password
             </CardTitle>
           </CardHeader>
