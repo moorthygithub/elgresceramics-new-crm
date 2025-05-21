@@ -14,6 +14,8 @@ import moment from "moment";
 import { Input } from "@/components/ui/input";
 import { STOCK_REPORT } from "@/api";
 import Loader from "@/components/loader/Loader";
+import { RiFileExcel2Line, RiFileExcelLine } from "react-icons/ri";
+import ExcelJS from "exceljs";
 
 const Stock = () => {
   const containerRef = useRef();
@@ -69,6 +71,73 @@ const Stock = () => {
       }
     `,
   });
+
+  const downloadExcel = async () => {
+    if (!buyerData || buyerData.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Stock Report");
+    worksheet.addRow(["Stock Report"]).font = { bold: true };
+    worksheet.addRow([
+      `From: ${moment(formData.from_date).format("DD-MM-YYYY")} To: ${moment(
+        formData.to_date
+      ).format("DD-MM-YYYY")}`,
+    ]);
+    worksheet.addRow([]);
+    const headers = [
+      "Item Name",
+      "Opening Balance",
+      "Purchase",
+      "Dispatch",
+      "Closing Balance",
+    ];
+    const headerRow = worksheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F3F4F6" },
+      };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+      };
+    });
+    buyerData.forEach((transaction) => {
+      const opening = transaction.openpurch - transaction.closesale;
+      const purchase = transaction.purch;
+      const dispatch = transaction.sale;
+      const closing = opening + (purchase - dispatch);
+
+      worksheet.addRow([
+        transaction.item_name,
+        opening,
+        purchase,
+        dispatch,
+        closing,
+      ]);
+    });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Stock_Report_${moment().format("YYYY-MM-DD")}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (isLoading) {
     return (
@@ -155,14 +224,24 @@ const Stock = () => {
             />
           </div>
         </div>
-
-        {/* Print Button */}
-        <div className="flex justify-center md:justify-end w-full md:w-auto">
+        <div className="flex gap-2  mt-5">
           <Button
+            type="button"
+            size="sm"
             className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
+            // className="h-8 w-24"
             onClick={handlePrintPdf}
           >
-            <Printer className="h-4 w-4 mr-1" /> Print
+            <Printer className="h-3 w-3 mr-1" /> Print
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
+            // className="h-8 w-24"
+            onClick={downloadExcel}
+          >
+            <RiFileExcel2Line className="h-3 w-3 mr-1" /> Excel
           </Button>
         </div>
       </div>
@@ -172,22 +251,36 @@ const Stock = () => {
   return (
     <Page>
       <div className="p-0 md:p-4">
-
-
         <div className="sm:hidden">
-          <div className={`sm:sticky relative top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm p-3 mb-2`}>
+          <div
+            className={`sm:sticky relative top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm px-3 pb-3 mb-2`}
+          >
             <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
-              {/* Title Section */}
-              <div className="flex-1 text-center md:text-left">
-                <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+              <div className="flex justify-between items-center">
+                <h1 className="text-base font-bold text-gray-800 px-2">
                   Stock Summary
                 </h1>
+                <div className="flex gap-[2px]">
+                  <button
+                    className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-b-md `}
+                    onClick={downloadExcel}
+                  >
+                    <RiFileExcel2Line className="h-3 w-3 " />
+                  </button>
+                  <button
+                    className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-b-md `}
+                    onClick={handlePrintPdf}
+                  >
+                    <Printer className="h-3 w-3 " />
+                  </button>
+                </div>
               </div>
-
               {/* Date Inputs */}
               <div className="flex  flex-row items-center gap-2 w-full md:w-auto">
                 <div className="w-full sm:w-auto">
-                  <label className={`block ${ButtonConfig.cardLabel} text-xs mb-1 font-medium`}>
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-xs mb-1 font-medium`}
+                  >
                     From Date <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -200,7 +293,9 @@ const Stock = () => {
                 </div>
 
                 <div className="w-full sm:w-auto">
-                  <label className={`block ${ButtonConfig.cardLabel} text-xs mb-1 font-medium`}>
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-xs mb-1 font-medium`}
+                  >
                     To Date <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -214,23 +309,21 @@ const Stock = () => {
               </div>
 
               {/* Print Button */}
-              <div className="absolute top-0 right-0 ">
+              {/* <div className="absolute top-0 right-0 ">
                 <button
                   className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-bl-2xl `}
                   onClick={handlePrintPdf}
                 >
-                  <Printer className="h-3 w-3 " /> 
+                  <Printer className="h-3 w-3 " />
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
-        
+
         <div className="hidden sm:block">
           <BranchHeader />
-
         </div>
-
 
         <div
           className="overflow-x-auto text-[11px] grid grid-cols-1"
@@ -307,7 +400,6 @@ const Stock = () => {
             )}
           </table>
         </div>
-
       </div>
     </Page>
   );

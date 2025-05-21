@@ -20,6 +20,9 @@ import { ChevronDown, Download, Printer, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import SalesBarChart from "./SalesBarChart";
+import { useToast } from "@/hooks/use-toast";
+import moment from "moment";
+import { RiFileExcel2Line } from "react-icons/ri";
 const tabs = [
   { value: "stock-view", label: "Stock View" },
   { value: "purchase", label: "Stock < 0" },
@@ -44,6 +47,7 @@ const months = [
 const Home = () => {
   const containerRef = useRef();
   const currentDate = getTodayDate();
+  const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedCategoryZero, setSelectedCategoryZero] =
     useState("All Categories");
@@ -283,7 +287,114 @@ const Home = () => {
     link.click();
     URL.revokeObjectURL(url);
   };
+  const downloadLessThanZeroExcel = async () => {
+    if (!filteredItemsZero || filteredItemsZero.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Stock < 0 Report");
+    worksheet.addRow(["Stock Report"]).font = { bold: true };
+    worksheet.addRow([]);
+    const headers = ["Item Name", "Category", "Avaiable"];
+    const headerRow = worksheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F3F4F6" },
+      };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+      };
+    });
+    filteredItemsZero.forEach((transaction) => {
+      const opening = transaction.item_name;
+      const purchase = transaction.item_category;
+
+      const dispatch =
+        transaction.openpurch -
+        transaction.closesale +
+        (transaction.purch - transaction.sale);
+
+      worksheet.addRow([opening, purchase, dispatch]);
+    });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Stock_Report_Less Than Zero_${moment().format(
+      "YYYY-MM-DD"
+    )}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  const downloadLessThanHunderedExcel = async () => {
+    if (!filteredItemsHundered || filteredItemsHundered.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Stock < 100 Report");
+    worksheet.addRow(["Stock Report"]).font = { bold: true };
+    worksheet.addRow([]);
+    const headers = ["Item Name", "Category", "Avaiable"];
+    const headerRow = worksheet.addRow(headers);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "F3F4F6" },
+      };
+      cell.alignment = { horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" },
+        bottom: { style: "thin" },
+      };
+    });
+    filteredItemsHundered.forEach((transaction) => {
+      const opening = transaction.item_name;
+      const purchase = transaction.item_category;
+
+      const dispatch =
+        transaction.openpurch -
+        transaction.closesale +
+        (transaction.purch - transaction.sale);
+
+      worksheet.addRow([opening, purchase, dispatch]);
+    });
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Stock_Report-Less Then Hundered_${moment().format(
+      "YYYY-MM-DD"
+    )}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
   if (isLoadingStock) {
     return (
       <Page>
@@ -577,6 +688,12 @@ const Home = () => {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        <button
+                          className={`flex items-center justify-center sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-2 rounded-lg`}
+                          onClick={downloadLessThanZeroExcel}
+                        >
+                          <RiFileExcel2Line className="h-4 w-4 mr-1" />
+                        </button>{" "}
                       </div>
                     </div>
 
@@ -752,6 +869,12 @@ const Home = () => {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+                        <button
+                          className={`flex items-center justify-center sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-2 rounded-lg`}
+                          onClick={downloadLessThanHunderedExcel}
+                        >
+                          <RiFileExcel2Line className="h-4 w-4 mr-1" />
+                        </button>{" "}
                       </div>
                     </div>
 
@@ -998,10 +1121,24 @@ const Home = () => {
               >
                 <tr>
                   <th
-                    colSpan="4"
+                    colSpan="3"
                     className={`text-left sticky top-0  z-10 px-2 py-2 border-b ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
                   >
                     Stock Less Than 0
+                  </th>
+                  <th
+                    colSpan="1"
+                    className={`text-right sticky top-0  z-10 px-2 py-2 border-b ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
+                  >
+                    <Button
+                      type="button"
+                      size="sm"
+                      className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
+                      // className="h-8 w-24"
+                      onClick={downloadLessThanZeroExcel}
+                    >
+                      <RiFileExcel2Line className="h-3 w-3 mr-1" /> Excel
+                    </Button>
                   </th>
                 </tr>
                 <tr
@@ -1051,10 +1188,24 @@ const Home = () => {
               >
                 <tr>
                   <th
-                    colSpan="4"
+                    colSpan="3"
                     className={`text-left sticky top-0  z-10 px-2 py-2 border-b ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
                   >
                     Stock Less Than 100
+                  </th>
+                  <th
+                    colSpan="1"
+                    className={`text-right sticky top-0  z-10 px-2 py-2 border-b ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
+                  >
+                    <Button
+                      type="button"
+                      size="sm"
+                      className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
+                      // className="h-8 w-24"
+                      onClick={downloadLessThanHunderedExcel}
+                    >
+                      <RiFileExcel2Line className="h-3 w-3 mr-1" /> Excel
+                    </Button>
                   </th>
                 </tr>
                 <tr

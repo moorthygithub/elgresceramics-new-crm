@@ -226,8 +226,8 @@ ${itemLines.join("\n")}
 ======================
 *Total QTY: ${totalQty}*
 ======================`;
-  //     // const phoneNumber = `${whatsapp}`;
-    const phoneNumber = "919360485526";
+       const phoneNumber = `${whatsapp}`;
+    // const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
