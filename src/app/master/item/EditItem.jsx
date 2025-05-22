@@ -105,6 +105,7 @@ const EditItem = ({ ItemId }) => {
   // Handle form submission
   const handleSubmit = async () => {
     const missingFields = [];
+    if (!formData.item_name) missingFields.push("Item Name");
     if (!formData.item_size) missingFields.push("Size");
     if (!formData.item_brand) missingFields.push("Brand");
     if (!formData.item_status) missingFields.push("Status");
@@ -249,7 +250,7 @@ const EditItem = ({ ItemId }) => {
                   }
                 >
                   <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Select Item Category " />
+                    <SelectValue placeholder="Select Item Category *" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
                     {categoryData?.category?.map((product, index) => (
@@ -261,11 +262,11 @@ const EditItem = ({ ItemId }) => {
                 </Select>
               </div>
               <label htmlFor="item_name" className="text-sm font-medium">
-                Item Name
+                Item Name *
               </label>
               <Input
                 id="item_name"
-                placeholder="Enter Item Name"
+                placeholder="Enter Item Name "
                 value={formData.item_name}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -277,12 +278,12 @@ const EditItem = ({ ItemId }) => {
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <label htmlFor="item_brand" className="text-sm font-medium">
-                    Item Brand
+                    Item Brand *
                   </label>
                   <div className="relative">
                     <Input
                       id="item_brand"
-                      placeholder="Enter Item Brand"
+                      placeholder="Enter Item Brand *"
                       value={formData.item_brand}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -310,7 +311,7 @@ const EditItem = ({ ItemId }) => {
                 </div>
                 <div className="grid gap-1">
                   <label htmlFor="item_weight" className="text-sm font-medium">
-                    Item Weight
+                    Item Weight 
                   </label>
                   <div className="relative">
                     <Input
@@ -345,7 +346,7 @@ const EditItem = ({ ItemId }) => {
               <div className="grid grid-cols-2 gap-2">
                 <div className="grid gap-1">
                   <label htmlFor="item_size" className="text-sm font-medium">
-                    Item Size
+                    Item Size *
                   </label>
                   <div className="relative">
                     <Input
@@ -378,7 +379,7 @@ const EditItem = ({ ItemId }) => {
                 </div>
                 <div className="grid gap-1">
                   <label htmlFor="item_status" className="text-sm font-medium">
-                    Status
+                    Status *
                   </label>
                   <Select
                     value={formData.item_status}

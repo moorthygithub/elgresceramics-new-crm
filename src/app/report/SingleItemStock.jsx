@@ -179,7 +179,12 @@ const SingleItemStock = () => {
       return { openingStock: 0, closingStock: 0, transactions: [] };
 
     const stock = reportData.stock[0];
-    const openingStock = parseInt(stock.openpurch) - parseInt(stock.closesale);
+    // const openingStock = parseInt(stock.openpurch) - parseInt(stock.closesale);
+    const openingStock =
+      parseInt(stock.openpurch) -
+      parseInt(stock.closesale) -
+      parseInt(stock.purchR) +
+      parseInt(stock.saleR);
 
     const purchaseTransactions = reportData.purchase.map((p) => {
       const refParts = p.purchase_ref.split("-");
@@ -291,7 +296,7 @@ const SingleItemStock = () => {
                     <th className="border border-gray-300 px-2 py-2"></th>
                     <th className="border border-gray-300 px-2 py-2"></th>
                     <th className="border border-gray-300 px-2 py-2 text-right border-l border-r">
-                    Inward
+                      Inward
                     </th>
                     <th className="border border-gray-300 px-2 py-2 text-right">
                       Outward

@@ -11,6 +11,7 @@ import { useReactToPrint } from "react-to-print";
 import moment from "moment";
 import html2pdf from "html2pdf.js";
 import { fetchSalesReturnById } from "@/api";
+import Loader from "@/components/loader/Loader";
 
 const SalesReturnView = () => {
   const { id } = useParams();
@@ -85,7 +86,15 @@ const SalesReturnView = () => {
       })
       .save();
   };
-
+  if (isLoading) {
+    return (
+      <Page>
+        <div className="flex justify-center items-center h-full">
+          <Loader />
+        </div>
+      </Page>
+    );
+  }
   return (
     <Page>
       <div

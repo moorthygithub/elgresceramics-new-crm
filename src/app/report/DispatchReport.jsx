@@ -18,6 +18,7 @@ import { useReactToPrint } from "react-to-print";
 import Page from "../dashboard/page";
 const DispatchReport = () => {
   const containerRef = useRef(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [formData, setFormData] = useState({
     from_date: moment().startOf("month").format("YYYY-MM-DD"),
     to_date: moment().format("YYYY-MM-DD"),
@@ -32,7 +33,7 @@ const DispatchReport = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    setHasSearched(true);
     refetch();
   };
 
@@ -53,10 +54,11 @@ const DispatchReport = () => {
   const {
     data: reportData,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["salesdata", formData],
+    queryKey: ["salesdata"],
     queryFn: DispatchStock,
     enabled: false,
   });
@@ -86,8 +88,11 @@ const DispatchReport = () => {
       }
     `,
   });
+
   const downloadExcel = async () => {
-    if (reportData?.sales?.length == 0) {
+    const { sales = [], salesReturn = [] } = reportData || {};
+
+    if (sales.length === 0 && salesReturn.length === 0) {
       toast({
         title: "No Data",
         description: "No data available to export",
@@ -95,44 +100,45 @@ const DispatchReport = () => {
       });
       return;
     }
+
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Dispatch");
+    const worksheet = workbook.addWorksheet("Dispatch & Return");
 
-    // Add title and metadata
-    worksheet.addRow([`Dispatch Report`]);
-    worksheet.addRow([
-      `From: ${moment(formData.from_date).format("DD-MM-YYYY")} To: ${moment(
-        formData.to_date
-      ).format("DD-MM-YYYY")}`,
-    ]);
-    worksheet.addRow([]);
+    const addSection = (sectionTitle, data) => {
+      if (!data || data.length === 0) return;
 
-    // Add headers
-    const headers = ["Ref", "Date", "Buyer", "Vehicle No", "Box"];
-    const headerRow = worksheet.addRow(headers);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "F3F4F6" },
-      };
-      cell.alignment = { horizontal: "center" };
-    });
-
-    // Add transactions
-    reportData?.sales?.forEach((transaction) => {
+      worksheet.addRow([sectionTitle]);
       worksheet.addRow([
-        transaction.sales_ref_no,
-        moment(transaction.sales_date).format("DD MMM YYYY"),
-        transaction.buyer_name,
-        transaction.sales_vehicle_no,
-
-        transaction.sum_sales_sub_box,
+        `From: ${moment(formData.from_date).format("DD-MM-YYYY")} To: ${moment(
+          formData.to_date
+        ).format("DD-MM-YYYY")}`,
       ]);
-    });
+      worksheet.addRow([]);
+      const headers = ["Ref", "Date", "Buyer", "Vehicle No", "Box"];
+      const headerRow = worksheet.addRow(headers);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "F3F4F6" },
+        };
+        cell.alignment = { horizontal: "center" };
+      });
+      data.forEach((transaction) => {
+        worksheet.addRow([
+          transaction.sales_ref_no,
+          moment(transaction.sales_date).format("DD MMM YYYY"),
+          transaction.buyer_name,
+          transaction.sales_vehicle_no,
+          transaction.sum_sales_sub_box,
+        ]);
+      });
 
-    // Generate and download Excel file
+      worksheet.addRow([]);
+    };
+    addSection("Dispatch Report", sales);
+    addSection("Dispatch Return Report", salesReturn);
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -140,13 +146,34 @@ const DispatchReport = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `dispatch.xlsx`;
+    link.download = `Dispatch_Report_${moment().format(
+      "YYYYMMDD_HHmmss"
+    )}.xlsx`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  const renderContent = () => {
-    if (isLoading) {
+  const renderReportContent = ({
+    data = [],
+    isLoading,
+    isError,
+    title,
+    refetch,
+    fromDate,
+    toDate,
+    searchtitle,
+  }) => {
+    if (!hasSearched && searchtitle != null) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <Search className="h-12 w-12 mb-2 opacity-30" />
+          <p className="text-md">
+            Search for {searchtitle?.toLowerCase()} report
+          </p>
+        </div>
+      );
+    }
+    if (isLoading || isFetching) {
       return (
         <div className="flex justify-center items-center h-64">
           <Loader />
@@ -159,14 +186,14 @@ const DispatchReport = () => {
         <Card className="w-full max-w-md mx-auto mt-6">
           <CardHeader>
             <CardTitle className="text-destructive">
-              Error Fetching Dispatch Data
+              Error Fetching {title} Data
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Unable to retrieve Dispatch information. Please try again.
+              Unable to retrieve {title} information. Please try again.
             </p>
-            <Button onClick={() => refetch()} variant="outline">
+            <Button onClick={refetch} variant="outline">
               Try Again
             </Button>
           </CardContent>
@@ -174,45 +201,43 @@ const DispatchReport = () => {
       );
     }
 
-    if (reportData?.sales?.length > 0) {
-      return (
-        <div ref={containerRef} className="mt-4">
-          <div className="bg-white rounded-lg shadow-sm p-0 md:p-4">
-            <div className="flex justify-between">
-              <h2 className="text-lg font-bold mb-4">Dispatch Report</h2>
-
-              <div className="hidden print:block">
-                <h2 className="text-lg font-bold mb-4 flex justify-center">
-                  From Date - {moment(formData.from_date).format("DD MMM YYYY")}{" "}
-                  To -{moment(formData.to_date).format("DD MMM YYYY")}{" "}
-                </h2>
-              </div>
+    // After successful search
+    return (
+      <div className="mt-4">
+        <div className="bg-white rounded-lg shadow-sm p-0 md:p-4">
+          <div className="flex justify-between">
+            <h2 className="text-lg font-bold mb-4">{title} Report</h2>
+            <div className="hidden print:block">
+              <h2 className="text-lg font-bold mb-4 flex justify-center">
+                From Date - {moment(fromDate).format("DD MMM YYYY")} To -{" "}
+                {moment(toDate).format("DD MMM YYYY")}
+              </h2>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300 text-[11px]">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border border-gray-300 px-2 py-2 text-center">
-                      Ref No
-                    </th>
-                    <th className="border border-gray-300 px-2 py-2 text-left">
-                      Date
-                    </th>
-                    <th className="border border-gray-300 px-2 py-2 text-left">
-                      Buyer Name
-                    </th>
-
-                    <th className="border border-gray-300 px-2 py-2 text-right">
-                      Vehicle No
-                    </th>
-                    <th className="border border-gray-300 px-2 py-2 text-right">
-                      Box{" "}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Transactions */}
-                  {reportData?.sales?.map((transaction, index) => (
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 text-[11px]">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border border-gray-300 px-2 py-2 text-center">
+                    Ref No
+                  </th>
+                  <th className="border border-gray-300 px-2 py-2 text-left">
+                    Date
+                  </th>
+                  <th className="border border-gray-300 px-2 py-2 text-left">
+                    Buyer Name
+                  </th>
+                  <th className="border border-gray-300 px-2 py-2 text-right">
+                    Vehicle No
+                  </th>
+                  <th className="border border-gray-300 px-2 py-2 text-right">
+                    Box
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.length > 0 ? (
+                  data.map((transaction, index) => (
                     <tr key={index}>
                       <td className="border border-gray-300 px-2 py-1 text-center border-l border-r">
                         {transaction?.sales_ref_no}
@@ -223,7 +248,6 @@ const DispatchReport = () => {
                       <td className="border border-gray-300 px-2 py-1">
                         {transaction?.buyer_name}
                       </td>
-
                       <td className="border border-gray-300 px-2 py-1 text-right">
                         {transaction?.sales_vehicle_no}
                       </td>
@@ -231,18 +255,21 @@ const DispatchReport = () => {
                         {transaction?.sum_sales_sub_box}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="border border-gray-300 px-4 py-4 text-center text-gray-500"
+                    >
+                      No data found in {title.toLowerCase()} report.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      );
-    }
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-        <Search className="h-12 w-12 mb-2 opacity-30" />
-        <p className="text-md">Search for an item to view sales details</p>
       </div>
     );
   };
@@ -426,8 +453,30 @@ const DispatchReport = () => {
             </div>
           </div>
         </div>
+        <div ref={containerRef}>
+          {renderReportContent({
+            data: reportData?.sales,
+            isLoading,
+            isError,
+            title: "Dispatch",
+            searchtitle: !hasSearched ? "Dispatch & dispatch return" : null,
+            refetch,
+            fromDate: formData.from_date,
+            toDate: formData.to_date,
+          })}
 
-        {renderContent()}
+          {hasSearched &&
+            renderReportContent({
+              data: reportData?.salesReturn,
+              isLoading,
+              isError,
+              title: "Dispatch Return",
+              searchtitle: null,
+              refetch,
+              fromDate: formData.from_date,
+              toDate: formData.to_date,
+            })}
+        </div>
       </div>
     </Page>
   );

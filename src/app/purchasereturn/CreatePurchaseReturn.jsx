@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useFetchBuyers,
   useFetchItems,
-  useFetchPurchaseReturnRef
+  useFetchPurchaseReturnRef,
 } from "@/hooks/useApi";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowLeft, MinusCircle, PlusCircle, SquarePlus } from "lucide-react";
@@ -35,8 +35,8 @@ const productRowSchema = z.object({
   purchase_sub_category: z.string().min(1, "Category data is required"),
   purchase_sub_item: z.string().min(1, "item data is required"),
   purchase_sub_size: z.string().min(1, "Size data is required"),
-  purchase_sub_brand: z.string().min(1, "Brand data is required"),
-  purchase_sub_weight: z.number().nonnegative("Weight must be 0 or more"),
+  purchase_sub_brand: z.any().optional(),
+  purchase_sub_weight: z.any().optional(),
   purchase_sub_box: z.string().min(1, "Box data is required"),
 });
 
@@ -57,7 +57,9 @@ const BranchHeader = () => {
       className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
     >
       <div className="flex-1">
-        <h1 className="text-3xl font-bold text-gray-800">Create Purchase Return</h1>
+        <h1 className="text-lg font-bold text-gray-800">
+          Create Purchase Return
+        </h1>
       </div>
     </div>
   );
@@ -280,8 +282,8 @@ const CreatePurchaseReturn = () => {
     purchase_sub_category: "Category",
     purchase_sub_item: "Item",
     purchase_sub_size: "Size",
-    purchase_sub_brand: "Brand",
-    purchase_sub_weight: "Weight",
+    // purchase_sub_brand: "Brand",
+    // purchase_sub_weight: "Weight",
     purchase_sub_box: "Box",
   };
 
@@ -355,7 +357,7 @@ const CreatePurchaseReturn = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex flex-col">
-                  <h1 className="text-xl font-bold tracking-wide">
+                  <h1 className="text-lg font-bold tracking-wide">
                     Create Purchase Return
                   </h1>
                   <p className="text-xs text-yellow-100 mt-0.5 opacity-90">

@@ -40,6 +40,7 @@ import { z } from "zod";
 import CreateBuyer from "../master/buyer/CreateBuyer";
 import CreateItem from "../master/item/CreateItem";
 import SalesTable from "./SalesReturnTable";
+import Loader from "@/components/loader/Loader";
 // Validation Schema
 
 const BranchHeader = () => {
@@ -48,8 +49,8 @@ const BranchHeader = () => {
       className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
     >
       <div className="flex-1">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Edit Dispatch Return
+        <h1 className="text-lg font-bold text-gray-800">
+          Update Dispatch Return
         </h1>
       </div>
     </div>
@@ -343,8 +344,8 @@ const EditSalesReturn = () => {
         missingFields.push(`Row ${index + 1}: Category`);
       if (!row.sales_sub_item) missingFields.push(`Row ${index + 1}: Item`);
       if (!row.sales_sub_size) missingFields.push(`Row ${index + 1}: Size`);
-      if (!row.sales_sub_brand) missingFields.push(`Row ${index + 1}: Brand`);
-      if (!row.sales_sub_weight) missingFields.push(`Row ${index + 1}: Weight`);
+      // if (!row.sales_sub_brand) missingFields.push(`Row ${index + 1}: Brand`);
+      // if (!row.sales_sub_weight) missingFields.push(`Row ${index + 1}: Weight`);
       if (
         row.sales_sub_box === null ||
         row.sales_sub_box === undefined ||
@@ -417,7 +418,15 @@ const EditSalesReturn = () => {
       });
     }
   };
-
+  if (isLoading) {
+    return (
+      <Page>
+        <div className="flex justify-center items-center h-full">
+          <Loader />
+        </div>
+      </Page>
+    );
+  }
   return (
     <Page>
       <div className="p-0 md:p-4">
@@ -438,7 +447,7 @@ const EditSalesReturn = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex flex-col">
-                  <h1 className="text-xl font-bold tracking-wide">
+                  <h1 className="text-lg font-bold tracking-wide">
                     Update Dispatch Return
                   </h1>
                   <p className="text-xs text-yellow-100 mt-0.5 opacity-90">

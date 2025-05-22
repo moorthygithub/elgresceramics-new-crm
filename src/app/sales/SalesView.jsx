@@ -10,6 +10,7 @@ import { ButtonConfig } from "@/config/ButtonConfig";
 import { useReactToPrint } from "react-to-print";
 import moment from "moment";
 import html2pdf from "html2pdf.js";
+import Loader from "@/components/loader/Loader";
 
 const SalesView = () => {
   const { id } = useParams();
@@ -93,7 +94,15 @@ const SalesView = () => {
       })
       .save();
   };
-
+  if (isLoading) {
+    return (
+      <Page>
+        <div className="flex justify-center items-center h-full">
+          <Loader />
+        </div>
+      </Page>
+    );
+  }
   return (
     <Page>
       <div

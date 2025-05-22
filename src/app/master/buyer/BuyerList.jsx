@@ -40,6 +40,7 @@ const BuyerList = () => {
   const {
     data: buyers,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -149,7 +150,7 @@ const BuyerList = () => {
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -224,7 +225,6 @@ const BuyerList = () => {
                           <span className="text-xs">{item.buyer_city}</span>
                           <span className="text-xs">{item.buyer_mobile}</span>
                         </h3>
-                   
                       </div>
                       <div className="flex items-center justify-between gap-2 ">
                         <span

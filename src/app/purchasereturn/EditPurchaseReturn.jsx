@@ -1,24 +1,11 @@
+import {
+  fetchPurchaseReturnById,
+  updatePurchaseReturnEdit
+} from "@/api";
 import Page from "@/app/dashboard/page";
 import { MemoizedProductSelect } from "@/components/common/MemoizedProductSelect";
 import { MemoizedSelect } from "@/components/common/MemoizedSelect";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import Loader from "@/components/loader/Loader";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +16,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import BASE_URL from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
@@ -46,13 +44,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import CreateBuyer from "../master/buyer/CreateBuyer";
 import CreateItem from "../master/item/CreateItem";
-import { decryptId } from "@/components/common/Encryption";
-import {
-  fetchPurchaseById,
-  fetchPurchaseReturnById,
-  updatePurchaseEdit,
-  updatePurchaseReturnEdit,
-} from "@/api";
 // Validation Schema
 
 const BranchHeader = () => {
@@ -61,8 +52,8 @@ const BranchHeader = () => {
       className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
     >
       <div className="flex-1">
-        <h1 className="text-3xl font-bold text-gray-800">
-          Edit Purchase Return
+        <h1 className="text-lg font-bold text-gray-800">
+          Update Purchase Return
         </h1>
       </div>
     </div>
@@ -399,10 +390,10 @@ const EditPurchaseReturn = () => {
         missingFields.push(`Row ${index + 1}: Category`);
       if (!row.purchase_sub_item) missingFields.push(`Row ${index + 1}: Item`);
       if (!row.purchase_sub_size) missingFields.push(`Row ${index + 1}: Size`);
-      if (!row.purchase_sub_brand)
-        missingFields.push(`Row ${index + 1}: Brand`);
-      if (!row.purchase_sub_weight)
-        missingFields.push(`Row ${index + 1}: Weight`);
+      // if (!row.purchase_sub_brand)
+      //   missingFields.push(`Row ${index + 1}: Brand`);
+      // if (!row.purchase_sub_weight)
+      //   missingFields.push(`Row ${index + 1}: Weight`);
       if (
         row.purchase_sub_box === null ||
         row.purchase_sub_box === undefined ||
@@ -475,7 +466,16 @@ const EditPurchaseReturn = () => {
       });
     }
   };
-  console.log(formData.purchase_buyer_name, "purchase_buyer_name");
+  if (isLoading) {
+    return (
+      <Page>
+        <div className="flex justify-center items-center h-full">
+          <Loader />
+        </div>
+      </Page>
+    );
+  }
+
   return (
     <Page>
       <div className="p-0 md:p-4">

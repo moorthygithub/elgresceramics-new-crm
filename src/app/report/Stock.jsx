@@ -113,7 +113,11 @@ const Stock = () => {
       };
     });
     buyerData.forEach((transaction) => {
-      const opening = transaction.openpurch - transaction.closesale;
+      const opening =
+        transaction.openpurch -
+        transaction.closesale -
+        Number(transaction.purchR) +
+        Number(transaction.saleR);
       const purchase = transaction.purch;
       const dispatch = transaction.sale;
       const closing = opening + (purchase - dispatch);
@@ -307,16 +311,6 @@ const Stock = () => {
                   />
                 </div>
               </div>
-
-              {/* Print Button */}
-              {/* <div className="absolute top-0 right-0 ">
-                <button
-                  className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-bl-2xl `}
-                  onClick={handlePrintPdf}
-                >
-                  <Printer className="h-3 w-3 " />
-                </button>
-              </div> */}
             </div>
           </div>
         </div>
@@ -357,7 +351,13 @@ const Stock = () => {
                   Purchase
                 </th>
                 <th className="border border-black px-2 py-2 text-center">
+                  PR
+                </th>
+                <th className="border border-black px-2 py-2 text-center">
                   Dispatch
+                </th>
+                <th className="border border-black px-2 py-2 text-center">
+                  DR
                 </th>
 
                 <th className="border border-black px-2 py-2 text-center">
@@ -376,22 +376,28 @@ const Stock = () => {
                       <td className="border border-black px-2 py-2 ">
                         {buyer.item_name}
                       </td>
-                      <td className="border border-black px-2 py-2 text-right">
+                      <td className="border border-black px-2 py-2 text-center">
                         {buyer.openpurch - buyer.closesale}
                       </td>
-                      <td className="border border-black px-2 py-2 text-right">
+                      <td className="border border-black px-2 py-2 text-center">
                         {buyer.purch}
                       </td>
-                      <td className="border border-black px-2 py-2 text-right">
+                      <td className="border border-black px-2 py-2 text-center">
+                        {buyer.purchR}
+                      </td>
+                      <td className="border border-black px-2 py-2 text-center">
                         {buyer.sale}
                       </td>
+                      <td className="border border-black px-2 py-2 text-center">
+                        {buyer.saleR}
+                      </td>
 
-                      <td className="border border-black px-2 py-2 text-right">
-                        {(
-                          buyer.openpurch -
-                          buyer.closesale +
-                          (buyer.purch - buyer.sale)
-                        ).toLocaleString()}
+                      <td className="border border-black px-2 py-2 text-center">
+                        {Number(buyer.openpurch) -
+                          Number(buyer.closesale) +
+                          (Number(buyer.purch) - Number(buyer.sale)) -
+                          Number(buyer.purchR) +
+                          Number(buyer.saleR)}
                       </td>
                     </tr>
                   </>

@@ -42,6 +42,7 @@ const TeamList = () => {
   const {
     data: team,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -287,7 +288,7 @@ const TeamList = () => {
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
