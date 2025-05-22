@@ -47,7 +47,7 @@ import {
   fetchSalesById,
   navigateTOSalesReturnEdit,
   navigateTOSalesReturnView,
-  SALES_RETURN_LIST
+  SALES_RETURN_LIST,
 } from "@/api";
 import { encryptId } from "@/components/common/Encryption";
 import Loader from "@/components/loader/Loader";
@@ -72,6 +72,7 @@ const SalesReturnList = () => {
   const {
     data: sales,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -98,9 +99,6 @@ const SalesReturnList = () => {
   const { toast } = useToast();
   const whatsapp = localStorage.getItem("whatsapp-number");
   const queryClient = useQueryClient();
-  const [selectedDate, setSelectedDate] = useState(
-    moment().format("YYYY-MM-DD")
-  );
 
   const handleDeleteRow = (productId) => {
     setDeleteItemId(productId);
@@ -361,22 +359,8 @@ ${itemLines.join("\n")}
     },
   ];
 
-  const filteredItem = useMemo(() => {
-    if (!sales) return [];
-
-    return sales.filter((item) => {
-      const itemDate = moment(item.sales_date).format("YYYY-MM-DD");
-      const matchesDate = !selectedDate || itemDate === selectedDate;
-      const matchesSearch = item.buyer_name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-      return matchesDate && matchesSearch;
-    });
-  }, [sales, selectedDate, searchQuery]);
-
   const table = useReactTable({
-    data: filteredItem || [],
+    data: sales || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -400,7 +384,7 @@ ${itemLines.join("\n")}
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -462,17 +446,11 @@ ${itemLines.join("\n")}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
               />
             </div>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
-            />
           </div>
 
           <div className="space-y-3">
-            {filteredItem.length > 0 ? (
-              filteredItem.map((item, index) => (
+            {sales.length > 0 ? (
+              sales.map((item, index) => (
                 <div
                   key={item.id}
                   onClick={() => {
@@ -686,12 +664,6 @@ ${itemLines.join("\n")}
 
             {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
-              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full md:w-auto">

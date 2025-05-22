@@ -178,7 +178,7 @@ const CreateItem = () => {
                 }
               >
                 <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Select Item Category " />
+                  <SelectValue placeholder="Select Item Category *" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
                   {categoryData?.category?.map((product, index) => (
@@ -191,7 +191,7 @@ const CreateItem = () => {
             </div>
             <Input
               id="item_name"
-              placeholder="Enter Item Name"
+              placeholder="Enter Item Name *"
               value={formData.item_name}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, item_name: e.target.value }))
@@ -199,7 +199,7 @@ const CreateItem = () => {
             />
             <Input
               id="item_size"
-              placeholder="Enter Item Size"
+              placeholder="Enter Item Size *"
               value={formData.item_size}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, item_size: e.target.value }))
@@ -207,7 +207,7 @@ const CreateItem = () => {
             />
             <Input
               id="item_brand"
-              placeholder="Enter Item Brand"
+              placeholder="Enter Item Brand *"
               value={formData.item_brand}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, item_brand: e.target.value }))
@@ -216,7 +216,7 @@ const CreateItem = () => {
             <Input
               type="number"
               id="item_weight"
-              placeholder="Enter Item Weight"
+              placeholder="Enter Item Weight *"
               value={formData.item_weight}
               onChange={(e) =>
                 setFormData((prev) => ({

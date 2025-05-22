@@ -37,8 +37,8 @@ const productRowSchema = z.object({
   sales_sub_category: z.string().min(1, "Category data is required"),
   sales_sub_item: z.string().min(1, "item data is required"),
   sales_sub_size: z.string().min(1, "Size data is required"),
-  sales_sub_brand: z.string().min(1, "Brand data is required"),
-  sales_sub_weight: z.number().min(1, "Weight data is required"),
+  sales_sub_brand: z.any().optional(),
+  sales_sub_weight: z.any().optional(),
   sales_sub_box: z.string().min(1, "Box data is required"),
 });
 
@@ -59,7 +59,7 @@ const BranchHeader = () => {
       className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
     >
       <div className="flex-1">
-        <h1 className="text-3xl font-bold text-gray-800">Create Dispatch</h1>
+        <h1 className="text-lg font-bold text-gray-800">Create Dispatch</h1>
       </div>
     </div>
   );
@@ -279,8 +279,8 @@ const CreateSales = () => {
     sales_sub_category: "Category",
     sales_sub_item: "Item",
     sales_sub_size: "Size",
-    sales_sub_brand: "Brand",
-    sales_sub_weight: "Weight",
+    // sales_sub_brand: "Brand",
+    // sales_sub_weight: "Weight",
     sales_sub_box: "Box",
   };
 
@@ -355,7 +355,7 @@ const CreateSales = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex flex-col">
-                  <h1 className="text-xl font-bold tracking-wide">
+                  <h1 className="text-lg font-bold tracking-wide">
                     Create Dispatch
                   </h1>
                   <p className="text-xs text-yellow-100 mt-0.5 opacity-90">

@@ -40,6 +40,7 @@ const BranchList = () => {
   const {
     data: branch,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -150,7 +151,7 @@ const BranchList = () => {
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">

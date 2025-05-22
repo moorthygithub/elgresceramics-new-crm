@@ -65,6 +65,7 @@ const PurchaseReturnList = () => {
   const {
     data: purchase,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -359,7 +360,7 @@ ${itemLines.join("\n")}
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">

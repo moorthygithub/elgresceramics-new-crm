@@ -266,11 +266,12 @@ const Home = () => {
         item.item_name,
         item.item_category,
         item.item_size,
-        (
-          item.openpurch -
-          item.closesale +
-          (item.purch - item.sale)
-        ).toLocaleString(),
+
+        Number(item.openpurch) -
+          Number(item.closesale) +
+          (Number(item.purch) - Number(item.sale)) -
+          Number(item.purchR) +
+          Number(item.saleR),
       ];
       worksheet.addRow(row);
     });
@@ -321,9 +322,11 @@ const Home = () => {
       const purchase = transaction.item_category;
 
       const dispatch =
-        transaction.openpurch -
-        transaction.closesale +
-        (transaction.purch - transaction.sale);
+        Number(transaction.openpurch) -
+        Number(transaction.closesale) +
+        (Number(transaction.purch) - Number(transaction.sale)) -
+        Number(transaction.purchR) +
+        Number(transaction.saleR);
 
       worksheet.addRow([opening, purchase, dispatch]);
     });
@@ -375,9 +378,11 @@ const Home = () => {
       const purchase = transaction.item_category;
 
       const dispatch =
-        transaction.openpurch -
-        transaction.closesale +
-        (transaction.purch - transaction.sale);
+        Number(transaction.openpurch) -
+        Number(transaction.closesale) +
+        (Number(transaction.purch) - Number(transaction.sale)) -
+        Number(transaction.purchR) +
+        Number(transaction.saleR);
 
       worksheet.addRow([opening, purchase, dispatch]);
     });
@@ -582,11 +587,11 @@ const Home = () => {
                                   </td>
 
                                   <td className="border border-black px-2 py-2 text-right">
-                                    {(
-                                      item.openpurch -
-                                      item.closesale +
-                                      (item.purch - item.sale)
-                                    ).toLocaleString()}
+                                    {Number(item.openpurch) -
+                                      Number(item.closesale) +
+                                      (Number(item.purch) - Number(item.sale)) -
+                                      Number(item.purchR) +
+                                      Number(item.saleR)}
                                   </td>
                                 </tr>
                               </>
@@ -762,11 +767,11 @@ const Home = () => {
                                   </td>
 
                                   <td className="border border-black px-2 py-2 text-right">
-                                    {(
-                                      item.openpurch -
-                                      item.closesale +
-                                      (item.purch - item.sale)
-                                    ).toLocaleString()}
+                                    {Number(item.openpurch) -
+                                      Number(item.closesale) +
+                                      (Number(item.purch) - Number(item.sale)) -
+                                      Number(item.purchR) +
+                                      Number(item.saleR)}
                                   </td>
                                 </tr>
                               </>
@@ -944,11 +949,11 @@ const Home = () => {
                                   </td>
 
                                   <td className="border border-black px-2 py-2 text-right">
-                                    {(
-                                      item.openpurch -
-                                      item.closesale +
-                                      (item.purch - item.sale)
-                                    ).toLocaleString()}
+                                    {Number(item.openpurch) -
+                                      Number(item.closesale) +
+                                      (Number(item.purch) - Number(item.sale)) -
+                                      Number(item.purchR) +
+                                      Number(item.saleR)}
                                   </td>
                                 </tr>
                               </>
@@ -1160,11 +1165,11 @@ const Home = () => {
                         {item.item_category}
                       </td>
                       <td className="border-b px-2 py-2">
-                        {(
-                          item.openpurch -
-                          item.closesale +
-                          (item.purch - item.sale)
-                        ).toLocaleString()}
+                        {Number(item.openpurch) -
+                          Number(item.closesale) +
+                          (Number(item.purch) - Number(item.sale)) -
+                          Number(item.purchR) +
+                          Number(item.saleR)}
                       </td>
                     </tr>
                   ))}
@@ -1229,11 +1234,11 @@ const Home = () => {
                       </td>
 
                       <td className="border-b  px-2 py-2 ">
-                        {(
-                          item.openpurch -
-                          item.closesale +
-                          (item.purch - item.sale)
-                        ).toLocaleString()}
+                        {Number(item.openpurch) -
+                          Number(item.closesale) +
+                          (Number(item.purch) - Number(item.sale)) -
+                          Number(item.purchR) +
+                          Number(item.saleR)}
                       </td>
                     </tr>
                   ))}

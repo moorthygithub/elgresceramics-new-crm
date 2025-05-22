@@ -1,3 +1,4 @@
+import { PURCHASE_CREATE } from "@/api";
 import Page from "@/app/dashboard/page";
 import { MemoizedProductSelect } from "@/components/common/MemoizedProductSelect";
 import { MemoizedSelect } from "@/components/common/MemoizedSelect";
@@ -12,12 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import BASE_URL from "@/config/BaseUrl";
+import { Textarea } from "@/components/ui/textarea";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import { useToast } from "@/hooks/use-toast";
 import {
   useFetchBuyers,
-  useFetchCategory,
   useFetchItems,
   useFetchPurchaseRef,
 } from "@/hooks/useApi";
@@ -29,16 +29,14 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import CreateBuyer from "../master/buyer/CreateBuyer";
 import CreateItem from "../master/item/CreateItem";
-import { Textarea } from "@/components/ui/textarea";
-import { PURCHASE_CREATE } from "@/api";
 // Validation Schema
 
 const productRowSchema = z.object({
   purchase_sub_category: z.string().min(1, "Category data is required"),
   purchase_sub_item: z.string().min(1, "item data is required"),
   purchase_sub_size: z.string().min(1, "Size data is required"),
-  purchase_sub_brand: z.string().min(1, "Brand data is required"),
-  purchase_sub_weight: z.number().nonnegative("Weight must be 0 or more"),
+  // purchase_sub_brand: z.any().optional(),
+  // purchase_sub_weight: z.any().optional(),
   purchase_sub_box: z.string().min(1, "Box data is required"),
 });
 
@@ -59,7 +57,7 @@ const BranchHeader = () => {
       className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
     >
       <div className="flex-1">
-        <h1 className="text-3xl font-bold text-gray-800">Create Purchase</h1>
+        <h1 className="text-lg font-bold text-gray-800">Create Purchase</h1>
       </div>
     </div>
   );
@@ -224,10 +222,6 @@ const CreatePurchase = () => {
         updatedData[rowIndex]["purchase_sub_size"] = selectedItem.item_size;
         updatedData[rowIndex]["purchase_sub_brand"] = selectedItem.item_brand;
         updatedData[rowIndex]["purchase_sub_weight"] = selectedItem.item_weight;
-        // updatedData[rowIndex]["purchase_sub_box"] =
-        //   selectedItem.openpurch -
-        //   selectedItem.closesale +
-        //   (selectedItem.purch - selectedItem.sale);
         setAvailableBox(
           selectedItem.openpurch -
             selectedItem.closesale +
@@ -282,8 +276,8 @@ const CreatePurchase = () => {
     purchase_sub_category: "Category",
     purchase_sub_item: "Item",
     purchase_sub_size: "Size",
-    purchase_sub_brand: "Brand",
-    purchase_sub_weight: "Weight",
+    // purchase_sub_brand: "Brand",
+    // purchase_sub_weight: "Weight",
     purchase_sub_box: "Box",
   };
 
@@ -357,7 +351,7 @@ const CreatePurchase = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <div className="flex flex-col">
-                  <h1 className="text-xl font-bold tracking-wide">
+                  <h1 className="text-lg font-bold tracking-wide">
                     Create Purchase
                   </h1>
                   <p className="text-xs text-yellow-100 mt-0.5 opacity-90">

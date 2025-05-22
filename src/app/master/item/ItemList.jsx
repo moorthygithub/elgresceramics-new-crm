@@ -41,6 +41,7 @@ const ItemList = () => {
   const {
     data: item,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -178,7 +179,7 @@ const ItemList = () => {
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">

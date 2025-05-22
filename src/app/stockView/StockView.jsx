@@ -47,9 +47,10 @@ const StockView = () => {
 
   const {
     data: stockData,
-    isLoadingStock,
-    isErrorStock,
-    refetchStock,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
   } = useQuery({
     queryKey: ["stockData"],
     queryFn: fetchStockData,
@@ -183,7 +184,7 @@ const StockView = () => {
     URL.revokeObjectURL(url);
   };
 
-  if (isLoadingStock) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -194,7 +195,7 @@ const StockView = () => {
   }
 
   // Render error state
-  if (isErrorStock) {
+  if (isError) {
     return (
       <Page>
         <Card className="w-full max-w-md mx-auto mt-10">
@@ -204,7 +205,7 @@ const StockView = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => refetchStock()} variant="outline">
+            <Button onClick={() => refetch()} variant="outline">
               Try Again
             </Button>
           </CardContent>
@@ -395,11 +396,11 @@ const StockView = () => {
                           {item.item_size}
                         </td>
                         <td className="border border-black px-2 py-2 text-right">
-                          {(
-                            item.openpurch -
-                            item.closesale +
-                            (item.purch - item.sale)
-                          ).toLocaleString()}
+                          {Number(item.openpurch) -
+                            Number(item.closesale) +
+                            (Number(item.purch) - Number(item.sale)) -
+                            Number(item.purchR) +
+                            Number(item.saleR)}
                         </td>
                       </tr>
                     ))}

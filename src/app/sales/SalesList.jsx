@@ -72,6 +72,7 @@ const SalesList = () => {
   const {
     data: sales,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useQuery({
@@ -171,7 +172,6 @@ const SalesList = () => {
       console.error("Failed to fetch purchase data or send WhatsApp:", error);
     }
   };
- 
 
   const handleSendWhatsApp = (sales, salesSub, buyer) => {
     const { sales_ref_no, sales_date, sales_vehicle_no } = sales;
@@ -202,7 +202,7 @@ ${itemLines.join("\n")}
 ======================
 *Total QTY: ${totalQty}*
 ======================`;
-// const phoneNumber = "919360485526";
+    // const phoneNumber = "919360485526";
     const phoneNumber = `${whatsapp}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -401,7 +401,7 @@ ${itemLines.join("\n")}
   });
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isFetching) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
