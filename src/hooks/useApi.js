@@ -1,5 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import BASE_URL from "@/config/BaseUrl";
+import usetoken from "@/api/usetoken";
+import apiClient from "@/api/axios";
 
 const STALE_TIME = 5 * 60 * 1000;
 const CACHE_TIME = 30 * 60 * 1000;
@@ -7,19 +9,17 @@ const CACHE_TIME = 30 * 60 * 1000;
 const fetchData = async (endpoint, token) => {
   if (!token) throw new Error("No authentication token found");
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await apiClient.get(`${endpoint}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
   });
-
-  if (!response.ok) throw new Error(`Failed to fetch data from ${endpoint}`);
-  return response.json();
+  return response.data;
 };
-
 const createQueryConfig = (queryKey, endpoint, options = {}) => {
-  const token = localStorage.getItem("token");
+  const token = usetoken();
+
   return {
     queryKey,
     queryFn: () => fetchData(endpoint, token),
@@ -31,27 +31,30 @@ const createQueryConfig = (queryKey, endpoint, options = {}) => {
 };
 
 export const useFetchBuyers = () => {
-  return useQuery(createQueryConfig(["buyer"], "/api/buyers"));
+  return useQuery(createQueryConfig(["buyer"], "/buyers"));
 };
 export const useFetchCategory = () => {
-  return useQuery(createQueryConfig(["categorys"], "/api/categorys"));
+  return useQuery(createQueryConfig(["categorys"], "/categorys"));
 };
 export const useFetchItems = () => {
-  return useQuery(createQueryConfig(["items"], "/api/items"));
+  return useQuery(createQueryConfig(["items"], "/items"));
+};
+export const useFetchGoDown = () => {
+  return useQuery(createQueryConfig(["godown"], "/godown"));
 };
 export const useFetchPurchaseRef = () => {
-  return useQuery(createQueryConfig(["purchasesref"], "/api/purchases-ref"));
+  return useQuery(createQueryConfig(["purchasesref"], "/purchases-ref"));
 };
 export const useFetchPurchaseReturnRef = () => {
   return useQuery(
-    createQueryConfig(["purchasesreturnref"], "/api/purchases-return-ref")
+    createQueryConfig(["purchasesreturnref"], "/purchases-return-ref")
   );
 };
-export const useFetchSalesRef = () => {
-  return useQuery(createQueryConfig(["salesref"], "/api/sales-ref"));
+export const useFetchDispatchRef = () => {
+  return useQuery(createQueryConfig(["dispatchref"], "/dispatch-ref"));
 };
-export const useFetchSalesReturnRef = () => {
+export const useFetchDispatchReturnRef = () => {
   return useQuery(
-    createQueryConfig(["salesreturnref"], "/api/sales-return-ref")
+    createQueryConfig(["dispatchreturnref"], "/dispatch-return-ref")
   );
 };

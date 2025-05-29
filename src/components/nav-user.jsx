@@ -1,5 +1,7 @@
 import { ArrowRight, ChevronsUpDown, Key, LogOut, User } from "lucide-react";
 
+import ChangePassword from "@/app/auth/ChangePassword";
+import Profile from "@/app/auth/Profile";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -15,31 +17,32 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useNavigate } from "react-router-dom";
-import ChangePassword from "@/app/auth/ChangePassword";
+import useLogout from "@/hooks/useLogout";
+import { setShowUpdateDialog } from "@/redux/versionSlice";
 import { useState } from "react";
-import Profile from "@/app/auth/Profile";
-import VersionCheck from "@/utils/VersionCheck";
+import { useDispatch, useSelector } from "react-redux";
 
 export function NavUser({ user }) {
   const [open, setOpen] = useState(false);
   const [openprofile, setOpenProfile] = useState(false);
 
   const { isMobile } = useSidebar();
-  const navigate = useNavigate();
-  const user_position = localStorage.getItem("user_position");
-  const localVersion = localStorage.getItem("version");
-  const serverVersion = localStorage.getItem("serverversion");
-  const sidebar = localStorage.getItem("sidebar:state") === "true";
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const user_position = useSelector((state) => state.auth.user_position);
+  const localVersion = useSelector((state) => state.auth?.version);
+  const serverVersion = useSelector((state) => state?.version?.version);
+  const sidebar = useSelector((state) => state.sidebar.open);
   const showDialog = localVersion !== serverVersion ? true : false;
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+
+  const dispatch = useDispatch();
+  const handleOpenDialog = () => {
+    dispatch(
+      setShowUpdateDialog({
+        showUpdateDialog: true,
+        version: serverVersion,
+      })
+    );
   };
-  // const handleOpenDialog = () => {
-  //   setIsDialogOpen(true);
-  // };
+  const handleLogout = useLogout();
 
   const splitUser = user.name;
   const intialsChar = splitUser
@@ -55,7 +58,7 @@ export function NavUser({ user }) {
           {showDialog ? (
             <div
               className="rounded-lg bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black px-4 py-2 animate-pulse w-full cursor-pointer h-10"
-              // onClick={() => handleOpenDialog()}
+              onClick={handleOpenDialog}
             >
               <div className="flex justify-center items-center h-full w-full text-xs leading-tight text-center">
                 <span className="flex items-center gap-1 font-semibold">
@@ -67,7 +70,6 @@ export function NavUser({ user }) {
           ) : (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                {/* <div className="flex flex-col w-full"> */}
                 <SidebarMenuButton
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
@@ -101,7 +103,7 @@ export function NavUser({ user }) {
                       </span>
                     </span>
                     <span className="flex items-center gap-1 font-semibold">
-                      Updated on :22/05/2025
+                      Updated on :29/05/2025
                     </span>
                   </div>
                 </div>
@@ -153,10 +155,10 @@ export function NavUser({ user }) {
       </SidebarMenu>
       <ChangePassword setOpen={setOpen} open={open} />
       <Profile setOpen={setOpenProfile} open={openprofile} />
-      <VersionCheck
+      {/* <VersionCheck
         isDialogOpen={isDialogOpen}
         setIsDialogOpen={setIsDialogOpen}
-      />
+      /> */}
     </>
   );
 }

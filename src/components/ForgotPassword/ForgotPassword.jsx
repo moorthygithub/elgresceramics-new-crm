@@ -15,8 +15,11 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import companyname from "../../json/company.json";
 import Logo from "@/json/logo";
+import apiClient from "@/api/axios";
+import { PANEL_FORGOT_PASSWORD } from "@/api";
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");
@@ -57,10 +60,7 @@ export default function ForgotPassword() {
     formData.append("name", username);
 
     try {
-      console.log("Submitting forgot password request...");
-
-      const res = await axios.post(`${BASE_URL}/api/forgot-password`, formData);
-
+      const res = await apiClient.post(`${PANEL_FORGOT_PASSWORD}`, formData);
       if (res.status === 200) {
         const response = res.data;
 
@@ -119,11 +119,21 @@ export default function ForgotPassword() {
           className={`w-72 md:w-80 max-w-md ${ButtonConfig.loginBackground} ${ButtonConfig.loginText}`}
         >
           <CardHeader className="space-y-1">
+            {/* <div className="font-semibold flex items-center space-x-2">
+              <div className="flex items-center">
+                <Logo />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[1rem] font-bold text-yellow-900 leading-tight">
+                  {companyname?.CompanyName}
+                </span>
+              </div>
+            </div> */}
+            <Logo />
+
             <CardTitle
               className={`text-2xl text-center${ButtonConfig.loginText}`}
             >
-              {/* <img src={logo} alt="logo" className="w-[200px] mx-auto" /> */}
-              <Logo />
               Forgot Password
             </CardTitle>
           </CardHeader>
@@ -151,7 +161,7 @@ export default function ForgotPassword() {
                       value={username}
                       onChange={(e) => setUserName(e.target.value)}
                       required
-                      className="bg-gray-800 text-white placeholder-gray-400 border-white"
+                      className="bg-white text-black placeholder-gray-400 border-white"
                     />
                   </motion.div>
                 </div>
@@ -175,7 +185,7 @@ export default function ForgotPassword() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-gray-800 text-white placeholder-gray-400 border-white"
+                      className="bg-white text-black placeholder-gray-400 border-white"
                     />
                   </motion.div>
                 </div>

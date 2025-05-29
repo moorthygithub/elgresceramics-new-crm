@@ -1,6 +1,3 @@
-import React, { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,12 +8,19 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
 import BASE_URL from "@/config/BaseUrl";
-import logo from "../../assets/logo.png";
 import { ButtonConfig } from "@/config/ButtonConfig";
+import { useToast } from "@/hooks/use-toast";
 import Logo from "@/json/logo";
+import { loginSuccess } from "@/redux/authSlice";
+import axios from "axios";
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import companyname from "../../json/company.json";
+import apiClient from "@/api/axios";
+import { PANEL_LOGIN } from "@/api";
 export default function LoginAuth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +28,7 @@ export default function LoginAuth() {
   const [loadingMessage, setLoadingMessage] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const dispatch = useDispatch();
 
   const loadingMessages = [
     "Setting things up for you...",
@@ -52,14 +57,11 @@ export default function LoginAuth() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
-
     const formData = new FormData();
     formData.append("username", email);
     formData.append("password", password);
-
     try {
-      const res = await axios.post(`${BASE_URL}/api/login`, formData);
-
+      const res = await apiClient.post(`${PANEL_LOGIN}`, formData);
       if (res.status === 200) {
         if (!res.data.UserInfo || !res.data.UserInfo.token) {
           console.warn("⚠️ Login failed: Token missing in response");
@@ -69,19 +71,20 @@ export default function LoginAuth() {
         }
 
         const { UserInfo } = res.data;
-        console.log("Saving user details to local storage...");
-        localStorage.setItem("token", UserInfo.token);
-        localStorage.setItem("id", UserInfo.user.id);
-        localStorage.setItem("name", UserInfo.user.name);
-        localStorage.setItem("userType", UserInfo.user.user_type);
-        localStorage.setItem("email", UserInfo.user.email);
-        localStorage.setItem("token-expire-time", UserInfo.token_expires_at);
-        localStorage.setItem("sidebar:state", true);
-        localStorage.setItem(
-          "whatsapp-number",
-          res?.data?.branch?.branch_whatsapp
-        );
-        localStorage.setItem("version", res?.data?.version?.version_panel);
+
+        const userData = {
+          token: UserInfo.token,
+          id: UserInfo.user.id,
+          name: UserInfo.user?.name,
+          user_type: UserInfo.user?.user_type,
+          email: UserInfo.user.email,
+          token_expire_time: UserInfo.token_expires_at,
+          whatsapp_number: res?.data?.branch?.branch_whatsapp,
+          version: res?.data?.version?.version_panel,
+          branch_d_unit: res?.data?.branch?.branch_d_unit,
+          branch_s_unit: res?.data?.branch?.branch_s_unit,
+        };
+        dispatch(loginSuccess(userData));
 
         const redirectPath = window.innerWidth < 768 ? "/home" : "/stock-view";
         console.log(`✅ Login successful! Redirecting to ${redirectPath}...`);
@@ -119,13 +122,22 @@ export default function LoginAuth() {
           transition: { duration: 0.3, ease: "easeInOut" },
         }}
       >
-        {/* <Card className=`w-72 md:w-80 max-w-md ${ButtonConfig.loginBackground} ${ButtonConfig.loginText}`> */}
         <Card
           className={`w-72 md:w-80 max-w-md ${ButtonConfig.loginBackground} ${ButtonConfig.loginText}`}
         >
           <CardHeader>
-            {/* <img src={logo} alt="logo" className="w-[200px] mx-auto" /> */}
+            {/* <div className="font-semibold flex items-center space-x-2">
+              <div className="flex items-center">
+                <Logo />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[1rem] font-bold text-yellow-900 leading-tight">
+                  {companyname?.CompanyName}
+                </span>
+              </div>
+            </div> */}
             <Logo />
+
             <CardTitle
               className={`text-2xl text-center${ButtonConfig.loginText}`}
             >
@@ -154,7 +166,7 @@ export default function LoginAuth() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-gray-800 text-white placeholder-gray-400 border-white"
+                      className="bg-white text-black placeholder-gray-400 border-white"
                     />
                   </motion.div>
                 </div>
@@ -177,7 +189,7 @@ export default function LoginAuth() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="bg-gray-800 text-white placeholder-gray-400 border-white"
+                      className="bg-white text-black placeholder-gray-400 border-white"
                     />
                   </motion.div>
                 </div>

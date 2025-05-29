@@ -1,14 +1,4 @@
 import Page from "@/app/dashboard/page";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -35,17 +25,31 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import axios from "axios";
 import { ChevronDown, Edit, Search, SquarePlus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   fetchPurchaseById,
+  fetchPurchaseReturnById,
   navigateToPurchaseEdit,
   navigateToPurchaseReturnEdit,
+  PURCHASE_EDIT_LIST,
+  PURCHASE_LIST,
+  PURCHASE_RETURN_EDIT_LIST,
   PURCHASE_RETURN_LIST,
 } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import { encryptId } from "@/components/common/Encryption";
 import Loader from "@/components/loader/Loader";
 import StatusToggle from "@/components/toggle/StatusToggle";
@@ -55,24 +59,24 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import BASE_URL from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
-import { useToast } from "@/hooks/use-toast";
 import moment from "moment";
 import { RiWhatsappFill } from "react-icons/ri";
+import { useToast } from "@/hooks/use-toast";
+import { useSelector } from "react-redux";
 
 const PurchaseReturnList = () => {
+  const token = usetoken();
+
   const {
-    data: purchase,
+    data: purchasereturn,
     isLoading,
-    isFetching,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["purchase"],
+    queryKey: ["purchasereturn"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${PURCHASE_RETURN_LIST}`, {
+      const response = await apiClient.get(`${PURCHASE_RETURN_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.purchase;
@@ -80,6 +84,7 @@ const PurchaseReturnList = () => {
   });
 
   // State for table management
+  const { toast } = useToast();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
   const [sorting, setSorting] = useState([]);
@@ -87,10 +92,9 @@ const PurchaseReturnList = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
-  const { toast } = useToast();
-  const UserId = localStorage.getItem("userType");
+  const UserId = useSelector((state) => state.auth.user_type);
   const queryClient = useQueryClient();
-  const whatsapp = localStorage.getItem("whatsapp-number");
+  const whatsapp = useSelector((state) => state.auth.whatsapp_number);
   const navigate = useNavigate();
   const handleDeleteRow = (productId) => {
     setDeleteItemId(productId);
@@ -98,10 +102,8 @@ const PurchaseReturnList = () => {
   };
   const confirmDelete = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.delete(
-        `${BASE_URL}/api/purchases-return/${deleteItemId}`,
+      const response = await apiClient.delete(
+        `${PURCHASE_RETURN_EDIT_LIST}/${deleteItemId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -110,14 +112,14 @@ const PurchaseReturnList = () => {
       );
 
       const data = response.data;
-
-      if (data.code === 200) {
+      console.log(data, "data");
+      if (data.code == 200) {
         toast({
           title: "Success",
           description: data.msg,
         });
         refetch();
-      } else if (data.code === 400) {
+      } else if (data.code == 400) {
         toast({
           title: "Duplicate Entry",
           description: data.msg,
@@ -145,12 +147,11 @@ const PurchaseReturnList = () => {
       setDeleteItemId(null);
     }
   };
-
   const handleFetchPurchaseById = async (purchaseId) => {
     try {
       const data = await queryClient.fetchQuery({
-        queryKey: ["purchaseByid", purchaseId],
-        queryFn: () => fetchPurchaseById(purchaseId),
+        queryKey: ["purchasereturnByid", purchaseId],
+        queryFn: () => fetchPurchaseReturnById(purchaseId, token),
       });
 
       if (data?.purchase && data?.purchaseSub) {
@@ -159,38 +160,44 @@ const PurchaseReturnList = () => {
         console.error("Incomplete data received");
       }
     } catch (error) {
-      console.error("Failed to fetch purchase data or send WhatsApp:", error);
+      console.error(
+        "Failed to fetch purchase return data or send WhatsApp:",
+        error
+      );
     }
   };
   const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
+
     const { buyer_name, buyer_city } = buyer;
     const purchaseNo = purchase_ref_no?.split("-").pop();
-
     const itemLines = purchaseSub.map((item) => {
-      const name = item.item_name.trim();
-      const qty = String(item.purchase_sub_box).replace(/\D/g, "");
-      return `${name}   (${qty})`;
+      const name = item.item_name.padEnd(25, " ");
+      const box = `(${String(item.purchase_sub_box).replace(
+        /\D/g,
+        ""
+      )})`.padStart(4, " ");
+      return `${name}      ${box}`;
     });
 
     const totalQty = purchaseSub.reduce((sum, item) => {
       const qty = parseInt(item.purchase_sub_box, 10) || 0;
       return sum + qty;
     }, 0);
-
     const message = `=== PackList ===
-No       : ${purchaseNo}
-Date     : ${moment(purchase_date).format("DD-MM-YYYY")}
-Party    : ${buyer_name}
-City     : ${buyer_city}
-Vehicle  : ${purchase_vehicle_no}
-======================
-Product [SIZE] (QTY)
-======================
-${itemLines.join("\n")}
-======================
-*Total QTY: ${totalQty}*
-======================`;
+  No.        : ${purchaseNo}
+  Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
+  Party      : ${buyer_name}
+  City       : ${buyer_city}
+  VEHICLE NO : ${purchase_vehicle_no}
+  ======================
+  Product    [SIZE]   (QTY)
+  ======================
+${itemLines.map((line) => "  " + line).join("\n")}
+  ======================
+  *Total QTY: ${totalQty}*
+  ======================`;
+
     const phoneNumber = `${whatsapp}`;
     // const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
@@ -279,12 +286,11 @@ ${itemLines.join("\n")}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Edit Purchase</p>
+                    <p>Edit Purchase Return</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
-
             {UserId != 1 && (
               <TooltipProvider>
                 <Tooltip>
@@ -299,7 +305,7 @@ ${itemLines.join("\n")}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Delete Purchase</p>
+                    <p>Delete Purchase Return</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -319,7 +325,7 @@ ${itemLines.join("\n")}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Whatsapp Purchase</p>
+                  <p>Whatsapp Purchas Return</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -330,13 +336,13 @@ ${itemLines.join("\n")}
   ];
 
   const filteredItems =
-    purchase?.filter((item) =>
+    purchasereturn?.filter((item) =>
       item.buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
   // Create the table instance
   const table = useReactTable({
-    data: purchase || [],
+    data: purchasereturn || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -360,7 +366,7 @@ ${itemLines.join("\n")}
   });
 
   // Render loading state
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -469,17 +475,6 @@ ${itemLines.join("\n")}
                             }}
                           >
                             <Edit className="w-4 h-4" />
-                          </button>
-                        )}
-                        {UserId != 1 && (
-                          <button
-                            variant="ghost"
-                            onClick={() => {
-                              e.stopPropagation();
-                              handleDeleteRow(item.id);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
                           </button>
                         )}
                         <button
@@ -635,7 +630,6 @@ ${itemLines.join("\n")}
               />
             </div>
 
-            {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -670,7 +664,7 @@ ${itemLines.join("\n")}
                       navigate("/purchase-return/create");
                     }}
                   >
-                    <SquarePlus className="h-4 w-4 mr-2" /> Purchase
+                    <SquarePlus className="h-4 w-4 mr-2" /> Purchase Return
                   </Button>{" "}
                 </>
               )}
@@ -733,7 +727,7 @@ ${itemLines.join("\n")}
           {/* row slection and pagintaion button  */}
           <div className="flex items-center justify-end space-x-2 py-4">
             <div className="flex-1 text-sm text-muted-foreground">
-              Total Purchase : &nbsp;
+              Total Purchase Return : &nbsp;
               {table.getFilteredRowModel().rows.length}
             </div>
             <div className="space-x-2">
@@ -763,7 +757,7 @@ ${itemLines.join("\n")}
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              purchase.
+              purchase return.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

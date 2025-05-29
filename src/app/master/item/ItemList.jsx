@@ -25,30 +25,30 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import axios from "axios";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, MessageCircle, Search, Share2 } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { ITEM_LIST } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import Loader from "@/components/loader/Loader";
 import { Separator } from "@/components/ui/separator";
+import { IMAGE_URL, NO_IMAGE_URL } from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import CreateItem from "./CreateItem";
-import EditItem from "./EditItem";
+import { useSelector } from "react-redux";
 
 const ItemList = () => {
+  const token = usetoken();
   const {
     data: item,
     isLoading,
-    isFetching,
     isError,
     refetch,
   } = useQuery({
     queryKey: ["item"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${ITEM_LIST}`, {
+      const response = await apiClient.get(`${ITEM_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.items;
@@ -56,13 +56,14 @@ const ItemList = () => {
   });
 
   // State for table management
-  const UserId = localStorage.getItem("userType");
+  const UserId = useSelector((state) => state.auth.user_type);
+  const BrandUnit = useSelector((state) => state.auth.branch_d_unit);
+
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate();
 
   // Define columns for the table
   const columns = [
@@ -71,6 +72,32 @@ const ItemList = () => {
       header: "Sl No",
       cell: ({ row }) => <div>{row.index + 1}</div>,
     },
+    {
+      id: "Image",
+      accessorKey: "item_image",
+      header: "Image",
+      cell: ({ row }) => {
+        const imageUrl = row.original.item_image
+          ? `${IMAGE_URL}${row.original.item_image}`
+          : NO_IMAGE_URL;
+
+        return (
+          <div>
+            <img
+              src={imageUrl}
+              alt="Item"
+              style={{
+                width: "50px",
+                height: "50px",
+                objectFit: "cover",
+                borderRadius: 4,
+              }}
+            />
+          </div>
+        );
+      },
+    },
+
     {
       id: "Category",
       accessorKey: "item_category",
@@ -101,6 +128,23 @@ const ItemList = () => {
       header: "Weight",
       cell: ({ row }) => <div>{row.original.item_weight}</div>,
     },
+    {
+      id: "Minimum Stock",
+      accessorKey: "item_minimum_stock",
+      header: "Minimum Stock",
+      cell: ({ row }) => <div>{row.original.item_minimum_stock}</div>,
+    },
+
+    ...(BrandUnit == "Yes"
+      ? [
+          {
+            id: "Item Price",
+            accessorKey: "item_piece",
+            header: "Item Price",
+            cell: ({ row }) => <div>{row.original.item_piece}</div>,
+          },
+        ]
+      : []),
     ...(UserId == 3
       ? [
           {
@@ -139,7 +183,7 @@ const ItemList = () => {
               const ItemId = row.original.id;
               return (
                 <div className="flex flex-row">
-                  <EditItem ItemId={ItemId} />
+                  <CreateItem editId={ItemId} />
                 </div>
               );
             },
@@ -178,8 +222,26 @@ const ItemList = () => {
     },
   });
 
+  const handleWhatsAppShare = () => {
+    const message = "Hello! Check this out: " + window.location.href;
+    const encodedMessage = encodeURIComponent(message);
+    const appUrl = `whatsapp://send?text=${encodedMessage}`;
+    const webUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+    const newWindow = window.open(appUrl, "_blank");
+
+    setTimeout(() => {
+      if (
+        !newWindow ||
+        newWindow.closed ||
+        typeof newWindow.closed === "undefined"
+      ) {
+        window.open(webUrl, "_blank");
+      }
+    }, 2000);
+  };
+
   // Render loading state
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -265,7 +327,7 @@ const ItemList = () => {
                         >
                           {item.item_status}
                         </span>
-                        {UserId != 3 && <EditItem ItemId={item.id} />}
+                        {UserId != 3 && <CreateItem editId={item.id} />}
                       </div>
                     </div>
                     <Separator />
@@ -345,7 +407,6 @@ const ItemList = () => {
               />
             </div>
 
-            {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

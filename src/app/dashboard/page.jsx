@@ -1,18 +1,12 @@
 import { AppBottombar } from "@/components/app-bottombar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,34 +15,39 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowLeft, ChevronsUpDown, Key, LogOut, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import ChangePassword from "../auth/ChangePassword";
-import { useState } from "react";
-import logo from "../../assets/el.png";
-import Profile from "../auth/Profile";
+import { Separator } from "@/components/ui/separator";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import useLogout from "@/hooks/useLogout";
 import Logo from "@/json/logo";
+import { ArrowLeft, Key, LogOut, User } from "lucide-react";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import companyname from "../../json/company.json";
+import ChangePassword from "../auth/ChangePassword";
+import Profile from "../auth/Profile";
 
 // eslint-disable-next-line react/prop-types
 export default function Page({ children }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  // Get user data from localStorage
-  const nameL = localStorage.getItem("name");
-  const emailL = localStorage.getItem("email");
+  const nameL = useSelector((state) => state?.auth.name);
+  const emailL = useSelector((state) => state?.auth.email);
+  const id = useSelector((state) => state.auth?.user_type);
   const [openprofile, setOpenProfile] = useState(false);
-  const localVersion = localStorage.getItem("version");
+  const localVersion = useSelector((state) => state.auth?.version);
 
   const handleBackClick = (e) => {
     e.preventDefault();
     navigate(-1);
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
+  const handleLogout = useLogout();
 
   // Create initials from user name
   const splitUser = nameL || "";
@@ -96,6 +95,16 @@ export default function Page({ children }) {
         {/* Mobile header text - only shown on sm screens */}
 
         <div className="sm:hidden sticky top-0 flex justify-between items-center px-4 py-2  border-b z-40 bg-white  rounded-b-lg shadow-sm">
+          {/* <div className="font-semibold flex items-center space-x-2">
+            <div className="flex items-center">
+              <Logo />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-yellow-900 leading-tight">
+                {companyname?.CompanyName}
+              </span>
+            </div>
+          </div> */}
           <div className="font-semibold flex items-center space-x-2">
             <Logo showLogo="true" />
           </div>
@@ -154,7 +163,7 @@ export default function Page({ children }) {
                       </span>
                     </span>
                     <span className="flex items-center gap-1 font-semibold">
-                      Updated on :22/05/2025
+                      Updated on :29/05/2025
                     </span>
                   </div>
                 </div>

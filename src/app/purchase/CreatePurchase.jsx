@@ -1,4 +1,12 @@
-import { PURCHASE_CREATE } from "@/api";
+import {
+  fetchAvaiableItem,
+  fetchPurchaseById,
+  PURCHASE_CREATE,
+  PURCHASE_EDIT_LIST,
+  PURCHASE_SUB_DELETE,
+} from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import Page from "@/app/dashboard/page";
 import { MemoizedProductSelect } from "@/components/common/MemoizedProductSelect";
 import { MemoizedSelect } from "@/components/common/MemoizedSelect";
@@ -18,111 +26,93 @@ import { ButtonConfig } from "@/config/ButtonConfig";
 import { useToast } from "@/hooks/use-toast";
 import {
   useFetchBuyers,
+  useFetchGoDown,
   useFetchItems,
   useFetchPurchaseRef,
 } from "@/hooks/useApi";
-import { useMutation } from "@tanstack/react-query";
-import { ArrowLeft, MinusCircle, PlusCircle, SquarePlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  MinusCircle,
+  PlusCircle,
+  SquarePlus,
+  Trash2,
+} from "lucide-react";
 import moment from "moment";
-import { useCallback, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import CreateBuyer from "../master/buyer/CreateBuyer";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import BuyerForm from "../master/buyer/CreateBuyer";
 import CreateItem from "../master/item/CreateItem";
-// Validation Schema
-
-const productRowSchema = z.object({
-  purchase_sub_category: z.string().min(1, "Category data is required"),
-  purchase_sub_item: z.string().min(1, "item data is required"),
-  purchase_sub_size: z.string().min(1, "Size data is required"),
-  // purchase_sub_brand: z.any().optional(),
-  // purchase_sub_weight: z.any().optional(),
-  purchase_sub_box: z.string().min(1, "Box data is required"),
-});
-
-const contractFormSchema = z.object({
-  purchase_date: z.string().min(1, "Purchase Date is required"),
-  purchase_buyer_name: z.string().min(1, "Buyer Name is required"),
-  purchase_buyer_id: z.number().min(1, "Buyer Id is required"),
-  purchase_buyer_city: z.string().min(1, "City is required"),
-  purchase_ref_no: z.string().min(1, "Ref is required"),
-  purchase_vehicle_no: z.any().optional(),
-  purchase_remark: z.any().optional(),
-  purchase_product_data: z.array(productRowSchema),
-});
-
-const BranchHeader = () => {
-  return (
-    <div
-      className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
-    >
-      <div className="flex-1">
-        <h1 className="text-lg font-bold text-gray-800">Create Purchase</h1>
-      </div>
-    </div>
-  );
-};
-
-const createBranch = async (data) => {
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("No authentication token found");
-
-  const response = await fetch(`${PURCHASE_CREATE}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  const responseData = await response.json();
-
-  if (!response.ok) {
-    throw responseData;
-  }
-
-  return responseData;
-};
-
+import { useQuery } from "@tanstack/react-query";
+import { decryptId } from "@/components/common/Encryption";
+import Loader from "@/components/loader/Loader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useSelector } from "react-redux";
 const CreatePurchase = () => {
+  const { id } = useParams();
+  const decryptedId = decryptId(id);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+  const singlebranch = useSelector((state) => state.auth.branch_s_unit);
+  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  const userType = useSelector((state) => state.auth.user_type);
+  const editId = Boolean(id);
   const { toast } = useToast();
   const navigate = useNavigate();
   const boxInputRefs = useRef([]);
   const today = moment().format("YYYY-MM-DD");
-  const [availablebox, setAvailableBox] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const token = usetoken();
+
   const [formData, setFormData] = useState({
     purchase_date: today,
     purchase_buyer_id: "",
-    purchase_buyer_name: "",
-    purchase_buyer_city: "",
     purchase_ref_no: "",
     purchase_vehicle_no: "",
     purchase_remark: "",
+    purchase_status: editId ? "" : null,
   });
-  console.log(formData);
+
   const [invoiceData, setInvoiceData] = useState([
     {
-      purchase_sub_category: "",
-      purchase_sub_item: "",
-      purchase_sub_size: "",
-      purchase_sub_brand: "",
-      invoicePSub_bank_c: "",
-      purchase_sub_weight: "",
-      purchase_sub_box: "",
+      id: editId ? "" : null,
+      purchase_sub_item_id: "",
+      purchase_sub_godown_id: "",
+      purchase_sub_box: 0,
+      item_brand: "",
+      item_size: "",
+      purchase_sub_piece: 0,
+      stockData: {
+        total: 0,
+        total_box: 0,
+        total_piece: 0,
+      },
     },
   ]);
+
   const addRow = useCallback(() => {
     setInvoiceData((prev) => [
       ...prev,
       {
-        purchase_sub_category: "",
-        purchase_sub_item: "",
-        purchase_sub_size: "",
-        purchase_sub_brand: "",
-        invoicePSub_bank_c: "",
-        purchase_sub_weight: "",
-        purchase_sub_box: "",
+        purchase_sub_item_id: "",
+        purchase_sub_godown_id: "",
+        purchase_sub_box: 0,
+        purchase_sub_piece: 0,
+        stockData: {
+          total: 0,
+          total_box: 0,
+          total_piece: 0,
+        },
       },
     ]);
   }, []);
@@ -139,110 +129,165 @@ const CreatePurchase = () => {
       boxInputRefs.current[rowIndex].focus();
     }
   };
-  const createBranchMutation = useMutation({
-    mutationFn: createBranch,
-    onSuccess: (response) => {
-      if (response.code == 200) {
-        toast({
-          title: "Success",
-          description: response.msg,
-        });
-        navigate("/purchase");
-      } else if (response.code == 400) {
-        toast({
-          title: "Duplicate Entry",
-          description: response.msg,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Unexpected Response",
-          description: response.msg || "Something unexpected happened.",
-          variant: "destructive",
-        });
-      }
-      setFormData({
-        purchase_date: "",
-        purchase_buyer_name: "",
-        purchase_buyer_city: "",
-        purchase_ref_no: "",
-        purchase_vehicle_no: "",
-        purchase_remark: "",
-      });
-
-      setInvoiceData([
-        {
-          purchase_sub_category: "",
-          purchase_sub_item: "",
-          purchase_sub_size: "",
-          purchase_sub_brand: "",
-          invoicePSub_bank_c: "",
-          purchase_sub_weight: "",
-          purchase_sub_box: "",
-        },
-      ]);
-    },
-    onError: (error) => {
-      console.error("API Error:", error);
-
-      toast({
-        title: "Error",
-        description: error.msg || "Something went wrong",
-        variant: "destructive",
-      });
-    },
+  const {
+    data: purchaseByid,
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["purchaseByid", id],
+    queryFn: () => fetchPurchaseById(id, token),
+    enabled: !!id,
   });
 
-  const { data: buyerData } = useFetchBuyers();
-  const { data: itemsData } = useFetchItems();
-  const { data: purchaseRef } = useFetchPurchaseRef();
-  const handlePaymentChange = (selectedValue, rowIndex, fieldName) => {
-    let value;
+  useEffect(() => {
+    if (editId && purchaseByid?.purchase) {
+      console.log(purchaseByid.purchase.purchase_ref_no);
+      setFormData({
+        purchase_date: purchaseByid.purchase.purchase_date || "",
+        purchase_buyer_name: purchaseByid.buyer.buyer_name || "",
+        purchase_buyer_id: purchaseByid.purchase.purchase_buyer_id || "",
+        purchase_buyer_city: purchaseByid.buyer.buyer_city || "",
+        purchase_ref_no: purchaseByid.purchase.purchase_ref_no || "",
+        purchase_vehicle_no: purchaseByid.purchase.purchase_vehicle_no || "",
+        purchase_remark: purchaseByid.purchase.purchase_remark || "",
+        purchase_status: purchaseByid.purchase.purchase_status || "",
+      });
 
-    if (selectedValue && selectedValue.target) {
-      value = selectedValue.target.value;
-    } else {
-      value = selectedValue;
+      // Set invoice line items
+      const mappedData = Array.isArray(purchaseByid.purchaseSub)
+        ? purchaseByid.purchaseSub.map((sub) => ({
+            id: sub.id || "",
+            purchase_sub_item_id: sub.purchase_sub_item_id || "",
+            purchase_sub_box: sub.purchase_sub_box || 0,
+            purchase_sub_piece: sub.purchase_sub_piece || 0,
+            item_brand: sub.item_brand || "",
+            item_size: sub.item_size || "",
+            purchase_sub_item: sub.item_name || "",
+            purchase_sub_weight: sub.item_weight || "",
+            purchase_sub_godown_id: sub.purchase_sub_godown_id,
+          }))
+        : [
+            {
+              purchase_sub_item_id: "",
+              purchase_sub_box: "",
+              purchase_sub_piece: "",
+              item_brand: "",
+              item_size: "",
+              purchase_sub_item: "",
+              purchase_sub_weight: "",
+              purchase_sub_godown_id: "",
+            },
+          ];
+
+      setInvoiceData(mappedData);
+    }
+  }, [editId, purchaseByid]);
+
+  const { data: buyerData, isLoading: loadingbuyer } = useFetchBuyers();
+  const { data: itemsData, isLoading: loadingitem } = useFetchItems();
+  const { data: godownData, isLoading: loadinggodown } = useFetchGoDown();
+  const { data: purchaseRef, isLoading: loadingref } = useFetchPurchaseRef();
+
+  const fetchAndSetStock = async (rowIndex, itemId, godownId, updatedData) => {
+    if (!itemId || !godownId) return;
+
+    try {
+      const response = await fetchAvaiableItem(itemId, godownId, token);
+      const buyer = response?.stock?.[0];
+
+      const itemPiece = Number(buyer?.item_piece || 1);
+      const safeNumber = (val) => Number(val) || 0;
+
+      const openingPurch =
+        safeNumber(buyer?.openpurch) * itemPiece +
+        safeNumber(buyer?.openpurch_piece);
+      const openingSale =
+        safeNumber(buyer?.closesale) * itemPiece +
+        safeNumber(buyer?.closesale_piece);
+      const openingPurchR =
+        safeNumber(buyer?.openpurchR) * itemPiece +
+        safeNumber(buyer?.openpurchR_piece);
+      const openingSaleR =
+        safeNumber(buyer?.closesaleR) * itemPiece +
+        safeNumber(buyer?.closesaleR_piece);
+
+      const opening = openingPurch - openingSale - openingPurchR + openingSaleR;
+
+      const purchase =
+        safeNumber(buyer?.purch) * itemPiece + safeNumber(buyer?.purch_piece);
+      const purchaseR =
+        safeNumber(buyer?.purchR) * itemPiece + safeNumber(buyer?.purchR_piece);
+      const sale =
+        safeNumber(buyer?.sale) * itemPiece + safeNumber(buyer?.sale_piece);
+      const saleR =
+        safeNumber(buyer?.saleR) * itemPiece + safeNumber(buyer?.saleR_piece);
+
+      const total = opening + purchase - purchaseR - sale + saleR;
+
+      const toBoxPiece = (val) => ({
+        box: Math.floor(val / itemPiece),
+        piece: val % itemPiece,
+      });
+
+      const totalBP = toBoxPiece(total);
+
+      updatedData[rowIndex].stockData = {
+        total,
+        total_box: totalBP.box,
+        total_piece: totalBP.piece,
+      };
+    } catch (err) {
+      console.error("Stock fetch error:", err);
+      updatedData[rowIndex].stockData = {
+        total: 0,
+        total_box: 0,
+        total_piece: 0,
+      };
     }
 
-    console.log("Selected Value:", value);
-
+    setInvoiceData([...updatedData]);
+  };
+  useEffect(() => {
+    invoiceData.forEach((row, index) => {
+      const { purchase_sub_item_id, purchase_sub_godown_id } = row;
+      if (purchase_sub_item_id && purchase_sub_godown_id) {
+        fetchAndSetStock(index, purchase_sub_item_id, purchase_sub_godown_id, [
+          ...invoiceData,
+        ]);
+      }
+    });
+  }, [
+    invoiceData
+      .map(
+        (row) => row?.purchase_sub_item_id + "-" + row?.purchase_sub_godown_id
+      )
+      .join(","),
+  ]);
+  const handlePaymentChange = (selectedValue, rowIndex, fieldName) => {
+    let value = selectedValue?.target?.value ?? selectedValue;
     const updatedData = [...invoiceData];
 
-    if (fieldName === "purchase_sub_item") {
+    if (fieldName === "purchase_sub_item_id") {
       updatedData[rowIndex][fieldName] = value;
-
-      const selectedItem = itemsData?.items?.find(
-        (item) => item.item_name === value
-      );
-
+      const selectedItem = itemsData?.items?.find((item) => item.id === value);
       if (selectedItem) {
-        updatedData[rowIndex]["purchase_sub_category"] =
-          selectedItem.item_category;
-        updatedData[rowIndex]["purchase_sub_size"] = selectedItem.item_size;
-        updatedData[rowIndex]["purchase_sub_brand"] = selectedItem.item_brand;
-        updatedData[rowIndex]["purchase_sub_weight"] = selectedItem.item_weight;
-        setAvailableBox(
-          selectedItem.openpurch -
-            selectedItem.closesale +
-            (selectedItem.purch - selectedItem.sale)
-        );
+        updatedData[rowIndex]["item_size"] = selectedItem.item_size;
+        updatedData[rowIndex]["item_brand"] = selectedItem.item_brand;
       }
-
       focusBoxInput(rowIndex);
-
-      setInvoiceData(updatedData);
     } else {
-      if (["purchase_sub_weight", "purchase_sub_box"].includes(fieldName)) {
-        if (!/^\d*$/.test(value)) {
-          console.log("Invalid input. Only digits are allowed.");
-          return;
-        }
+      if (
+        ["purchase_sub_box", "purchase_sub_piece"].includes(fieldName) &&
+        !/^\d*$/.test(value)
+      ) {
+        console.log("Invalid input. Only digits are allowed.");
+        return;
       }
-
       updatedData[rowIndex][fieldName] = value;
-      setInvoiceData(updatedData);
     }
+
+    setInvoiceData(updatedData);
   };
 
   const handleInputChange = (e, field) => {
@@ -250,87 +295,174 @@ const CreatePurchase = () => {
     console.log(value);
     let updatedFormData = { ...formData, [field]: value };
 
-    if (field === "purchase_buyer_name") {
-      const selectedBuyer = buyerData?.buyers.find(
-        (buyer) => buyer.buyer_name === value
-      );
-
-      if (selectedBuyer) {
-        updatedFormData.purchase_buyer_city = selectedBuyer.buyer_city;
-        updatedFormData.purchase_buyer_id = selectedBuyer.id;
-      } else {
-        updatedFormData.purchase_buyer_city = "";
-      }
-    }
-
     setFormData(updatedFormData);
-  };
-
-  const fieldLabels = {
-    purchase_date: "Purchase Date",
-    purchase_buyer_name: "Buyer Name",
-    purchase_buyer_id: "Buyer Id",
-    purchase_buyer_city: "Buyer City",
-    purchase_ref_no: "Bill Ref No",
-    purchase_vehicle_no: "Vehicle No",
-    purchase_sub_category: "Category",
-    purchase_sub_item: "Item",
-    purchase_sub_size: "Size",
-    // purchase_sub_brand: "Brand",
-    // purchase_sub_weight: "Weight",
-    purchase_sub_box: "Box",
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const missingFields = [];
+    if (!formData.purchase_date) missingFields.push("Purchase Date");
+    if (!formData.purchase_buyer_id) missingFields.push("Buyer Id");
+    if (!formData.purchase_ref_no) missingFields.push("Bill Ref No");
+    if (!formData.purchase_status && editId) {
+      missingFields.push("Status");
+    }
+    invoiceData.forEach((row, index) => {
+      if (!row.purchase_sub_godown_id)
+        missingFields.push(`Row ${index + 1}: Go Down`);
+      if (!row.purchase_sub_item_id)
+        missingFields.push(`Row ${index + 1}: Item`);
+      if (singlebranch == "Yes") {
+        if (
+          row.purchase_sub_box === null ||
+          row.purchase_sub_box === undefined ||
+          row.purchase_sub_box === ""
+        ) {
+          missingFields.push(`Row ${index + 1}: Box`);
+        }
+      }
+      if (doublebranch == "Yes") {
+        if (
+          row.purchase_sub_piece === null ||
+          row.purchase_sub_piece === undefined ||
+          row.purchase_sub_piece === ""
+        ) {
+          missingFields.push(`Row ${index + 1}: Piece`);
+        }
+      }
+    });
+
+    if (missingFields.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: (
+          <div>
+            <p>Please fill in the following fields:</p>
+            <ul className="list-disc pl-5">
+              {missingFields.map((field, i) => (
+                <li key={i}>{field}</li>
+              ))}
+            </ul>
+          </div>
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      const validatedData = contractFormSchema.parse({
+      const payload = {
         ...formData,
         purchase_product_data: invoiceData,
+      };
+
+      if (editId) {
+        payload.item_status = formData.item_status;
+      }
+
+      const url = editId
+        ? `${PURCHASE_EDIT_LIST}/${decryptedId}`
+        : PURCHASE_CREATE;
+      const method = editId ? "put" : "post";
+
+      const response = await apiClient[method](url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-
-      createBranchMutation.mutate(validatedData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const groupedErrors = error.errors.reduce((acc, err) => {
-          const field = err.path.join(".");
-          if (!acc[field]) acc[field] = [];
-          acc[field].push(err.message);
-          return acc;
-        }, {});
-
-        const errorMessages = Object.entries(groupedErrors).map(
-          ([field, messages]) => {
-            const fieldKey = field.split(".").pop();
-            const label = fieldLabels[fieldKey] || field;
-            return `${label}: ${messages.join(", ")}`;
-          }
-        );
-
+      if (response?.data.code == 200) {
         toast({
-          title: "Validation Error",
-          description: (
-            <div>
-              <ul className="list-disc pl-5">
-                {errorMessages.map((message, index) => (
-                  <li key={index}>{message}</li>
-                ))}
-              </ul>
-            </div>
-          ),
-          variant: "destructive",
+          title: "Success",
+          description: response.data.msg,
         });
+        navigate("/purchase");
       } else {
-        console.error("Unexpected error:", error);
         toast({
           title: "Error",
-          description: "An unexpected error occurred. Please try again.",
+          description: response.data.msg,
           variant: "destructive",
         });
       }
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Failed to save item",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleDeleteRow = (productId) => {
+    setDeleteConfirmOpen(true);
+    setDeleteItemId(productId);
+  };
+  const handleDelete = async () => {
+    try {
+      const response = await apiClient.delete(
+        `${PURCHASE_SUB_DELETE}/${deleteItemId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = response.data;
+
+      if (data.code === 200) {
+        toast({
+          title: "Success",
+          description: data.msg,
+        });
+
+        setInvoiceData((prevData) =>
+          prevData.filter((row) => row.id !== deleteItemId)
+        );
+      } else if (data.code === 400) {
+        toast({
+          title: "Duplicate Entry",
+          description: data.msg,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Unexpected Response",
+          description: data.msg || "Something unexpected happened.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.response?.data?.msg || error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setDeleteItemId(null);
     }
   };
 
+  if (
+    isFetching ||
+    loadingbuyer ||
+    loadingitem ||
+    loadinggodown ||
+    loadingref
+  ) {
+    return (
+      <Page>
+        <div className="flex justify-center items-center h-full">
+          <Loader />
+        </div>
+      </Page>
+    );
+  }
   return (
     <Page>
       <div className="p-0 md:p-4">
@@ -352,10 +484,12 @@ const CreatePurchase = () => {
                 </button>
                 <div className="flex flex-col">
                   <h1 className="text-lg font-bold tracking-wide">
-                    Create Purchase
+                    {editId ? "Update Purchase" : "Create  Purchase"}
                   </h1>
                   <p className="text-xs text-yellow-100 mt-0.5 opacity-90">
-                    Add new purchase details
+                    {editId
+                      ? "Update new purchase details"
+                      : "Add new purchase details"}
                   </p>
                 </div>
               </div>
@@ -377,29 +511,28 @@ const CreatePurchase = () => {
                     type="date"
                   />
                 </div>
-
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-sm font-medium text-gray-700 flex items-center">
                       <span className="w-1 h-4 bg-yellow-500 rounded-full mr-2"></span>
                       Buyer<span className="text-red-500">*</span>
                     </label>
-                    <button
-                      type="button"
-                      className="flex items-center text-xs text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded-full"
-                    >
-                      <SquarePlus className="h-3 w-3 mr-1" />
-                      <CreateBuyer />
-                    </button>
+                    {!editId && (
+                      <button
+                        type="button"
+                        className="flex items-center text-xs text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded-full"
+                      >
+                        <SquarePlus className="h-3 w-3 mr-1" />
+                        <BuyerForm />
+                      </button>
+                    )}
                   </div>
                   <MemoizedSelect
-                    value={formData.purchase_buyer_name}
-                    onChange={(e) =>
-                      handleInputChange(e, "purchase_buyer_name")
-                    }
+                    value={formData.purchase_buyer_id}
+                    onChange={(e) => handleInputChange(e, "purchase_buyer_id")}
                     options={
                       buyerData?.buyers?.map((buyer) => ({
-                        value: buyer.buyer_name,
+                        value: buyer.id,
                         label: buyer.buyer_name,
                       })) || []
                     }
@@ -407,319 +540,14 @@ const CreatePurchase = () => {
                     className="bg-white focus:ring-2 focus:ring-yellow-300"
                   />
                 </div>
-
-                <div className="mb-4">
-                  <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                    <span className="w-1 h-4 bg-yellow-500 rounded-full mr-2"></span>
-                    City<span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    className="sm:bg-white border border-gray-300 rounded-lg w-full bg-gray-50"
-                    value={formData.purchase_buyer_city}
-                    disabled
-                    placeholder="City auto-filled from buyer"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <span className="w-1 h-4 bg-yellow-500 rounded-full mr-2"></span>
-                      Ref No<span className="text-red-500">*</span>
-                    </label>
-                    {/* <Input
-                      className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
-                      value={formData.purchase_ref_no}
-                      onChange={(e) => handleInputChange(e, "purchase_ref_no")}
-                      placeholder="Ref No"
-                    /> */}
-                    <MemoizedSelect
-                      value={formData.purchase_ref_no}
-                      onChange={(e) => handleInputChange(e, "purchase_ref_no")}
-                      options={
-                        purchaseRef
-                          ? [
-                              {
-                                value: purchaseRef.purchase_ref,
-                                label: purchaseRef.purchase_ref,
-                              },
-                            ]
-                          : []
-                      }
-                      placeholder="Select Ref"
-                      className="bg-white focus:ring-2 focus:ring-yellow-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                      <span className="w-1 h-4 bg-gray-300 rounded-full mr-2"></span>
-                      Vehicle No
-                    </label>
-                    <Input
-                      className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
-                      value={formData.purchase_vehicle_no}
-                      onChange={(e) =>
-                        handleInputChange(e, "purchase_vehicle_no")
-                      }
-                      placeholder="Vehicle No"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                    <span className="w-1 h-4 bg-gray-300 rounded-full mr-2"></span>
-                    Remark
-                  </label>
-                  <Textarea
-                    className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
-                    value={formData.purchase_remark}
-                    onChange={(e) => handleInputChange(e, "purchase_remark")}
-                    placeholder="Add any notes here"
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              {/* Items Section  Table */}
-              <div className="bg-white rounded-xl shadow-sm p-2 mb-4 border border-yellow-100">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center">
-                    <span className="w-1.5 h-5 bg-yellow-500 rounded-full mr-2"></span>
-                    <h2 className="text-base font-semibold text-gray-800">
-                      Items
-                    </h2>
-                    <button
-                      type="button"
-                      className="flex items-center text-xs text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded-full"
-                    >
-                      <SquarePlus className="h-3 w-3 mr-1" />
-                      <CreateItem />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addRow}
-                    className="flex items-center bg-yellow-500 text-white px-3 py-1.5 rounded-full text-xs shadow-sm hover:bg-yellow-600 transition-colors"
-                  >
-                    <PlusCircle className="h-3 w-3 mr-1" />
-                    Add Item
-                  </button>
-                </div>
-
-                {/*  Item Table */}
-                <div className="overflow-hidden rounded-xl border border-yellow-200">
-                  <Table className="w-full border-collapse">
-                    <TableHeader>
-                      <TableRow className="bg-gradient-to-r from-yellow-100 to-yellow-50">
-                        <TableHead className="text-xs font-semibold text-gray-700 py-3 px-4">
-                          Item
-                        </TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-700 py-3 px-4">
-                          Box<span className="text-red-500 ml-1">*</span>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoiceData.map((row, rowIndex) => (
-                        <TableRow
-                          key={rowIndex}
-                          className="border-b border-yellow-100 hover:bg-yellow-50 transition-colors relative"
-                        >
-                          <TableCell className="px-3 py-2.5 w-48">
-                            <MemoizedProductSelect
-                              value={row.purchase_sub_item}
-                              onChange={(e) =>
-                                handlePaymentChange(
-                                  e,
-                                  rowIndex,
-                                  "purchase_sub_item"
-                                )
-                              }
-                              options={
-                                itemsData?.items?.map((product) => ({
-                                  value: product.item_name,
-                                  label: product.item_name,
-                                })) || []
-                              }
-                              placeholder="Select Item"
-                              className="text-xs"
-                            />
-                            {row.purchase_sub_item && (
-                              <div className="text-xs text-gray-600 mt-1 flex items-center">
-                                <span className="bg-yellow-100 px-1.5 py-0.5 rounded text-yellow-800">
-                                  {row.purchase_sub_category}
-                                </span>
-                                {/* <span className="mx-1">•</span> */}
-                                {/* <span>{row.purchase_sub_size}</span> */}
-                              </div>
-                            )}
-
-                            {/* Action button moved to absolute position */}
-                            <button
-                              type="button"
-                              onClick={() => removeRow(rowIndex)}
-                              disabled={invoiceData.length === 1}
-                              className={`absolute top-2 right-2 rounded-full p-1 ${
-                                invoiceData.length === 1
-                                  ? "bg-gray-200 text-gray-400"
-                                  : "bg-red-100 text-red-500"
-                              }`}
-                            >
-                              <MinusCircle className="h-4 w-4" />
-                            </button>
-                          </TableCell>
-
-                          <TableCell className="px-3 py-2.5">
-                            <Input
-                              ref={(el) =>
-                                (boxInputRefs.current[rowIndex] = el)
-                              }
-                              className="bg-white border border-gray-300 w-full text-xs"
-                              value={row.purchase_sub_box}
-                              onChange={(e) =>
-                                handlePaymentChange(
-                                  e,
-                                  rowIndex,
-                                  "purchase_sub_box"
-                                )
-                              }
-                              placeholder="Qty"
-                              type="number"
-                            />
-                            {row.purchase_sub_item && (
-                              <div className="text-xs text-gray-600 mt-1">
-                                <span className="inline-block bg-gray-100 px-1.5 py-0.5 rounded">
-                                  {row.purchase_sub_brand}
-                                </span>
-                              </div>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Item count  */}
-                <div className="mt-2 text-xs text-gray-500 flex items-center">
-                  <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mr-1"></span>
-                  Total Items: {invoiceData.length}
-                  {invoiceData.some((row) => row.purchase_sub_box) && (
-                    <>
-                      <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mx-1 "></span>
-                      <>Avaiable Box: {availablebox}</>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="mb-20">
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-700 hover:to-yellow-500 text-white font-bold py-3.5 rounded-xl shadow-md transition-all transform hover:scale-[0.99]"
-                  disabled={createBranchMutation.isPending}
-                >
-                  {createBranchMutation.isPending ? (
-                    <div className="flex items-center justify-center">
-                      <span className="animate-spin mr-2">⟳</span>
-                      Processing...
-                    </div>
-                  ) : (
-                    "CREATE PURCHASE"
-                  )}
-                </Button>
-              </div>
-
-              <div className="h-4"></div>
-            </div>
-          </form>
-        </div>
-
-        <div className="hidden sm:block">
-          <form onSubmit={handleSubmit} className="w-full ">
-            <BranchHeader />
-            <Card className={`mb-6 ${ButtonConfig.cardColor}`}>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                  <div>
+                {!editId && (
+                  <div className="mb-4">
                     <div>
-                      <label
-                        className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
-                      >
-                        Date<span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        className="bg-white"
-                        value={formData.purchase_date}
-                        onChange={(e) => handleInputChange(e, "purchase_date")}
-                        placeholder="Enter Payment Date"
-                        type="date"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label
-                      className={`block ${ButtonConfig.cardLabel} text-sm mb-1 font-medium flex justify-between items-center`}
-                    >
-                      <span className="flex items-center">
-                        Buyer <span className="text-red-500 ml-1">*</span>
-                      </span>
-                      <span className="flex items-center space-x-1">
-                        <SquarePlus className="h-3 w-3 text-red-600" />
-                        <CreateBuyer />
-                      </span>
-                    </label>
-                    <MemoizedSelect
-                      value={formData.purchase_buyer_name}
-                      onChange={(e) =>
-                        handleInputChange(e, "purchase_buyer_name")
-                      }
-                      options={
-                        buyerData?.buyers?.map((buyer) => ({
-                          value: buyer.buyer_name,
-                          label: buyer.buyer_name,
-                        })) || []
-                      }
-                      placeholder="Select Buyer"
-                    />
-                  </div>
-
-                  <div>
-                    <div>
-                      <label
-                        className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
-                      >
-                        City<span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        className="bg-white"
-                        value={formData.purchase_buyer_city}
-                        disabled
-                        onChange={(e) =>
-                          handleInputChange(e, "purchase_buyer_city")
-                        }
-                        placeholder="Enter City"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div>
-                      <label
-                        className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
-                      >
+                      <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                        <span className="w-1 h-4 bg-yellow-500 rounded-full mr-2"></span>
                         Ref No<span className="text-red-500">*</span>
                       </label>
-                      {/* <Input
-                        className="bg-white"
-                        value={formData.purchase_ref_no}
-                        onChange={(e) =>
-                          handleInputChange(e, "purchase_ref_no")
-                        }
-                        placeholder="Enter Ref No"
-                      /> */}
+
                       <MemoizedSelect
                         value={formData.purchase_ref_no}
                         onChange={(e) =>
@@ -740,6 +568,406 @@ const CreatePurchase = () => {
                       />
                     </div>
                   </div>
+                )}
+
+                {editId && (
+                  <div>
+                    <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                      <span className="w-1 h-4 bg-yellow-500 rounded-full mr-2"></span>
+                      Ref<span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
+                      value={formData.purchase_ref_no}
+                      onChange={(e) => handleInputChange(e, "purchase_ref_no")}
+                      disabled
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                    <span className="w-1 h-4 bg-gray-300 rounded-full mr-2"></span>
+                    Vehicle No
+                  </label>
+                  <Input
+                    className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
+                    value={formData.purchase_vehicle_no}
+                    onChange={(e) =>
+                      handleInputChange(e, "purchase_vehicle_no")
+                    }
+                    placeholder="Vehicle No"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="sm:block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <span className="w-1 h-4 bg-gray-300 rounded-full mr-2"></span>
+                  Remark
+                </label>
+                <Textarea
+                  className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
+                  value={formData.purchase_remark}
+                  onChange={(e) => handleInputChange(e, "purchase_remark")}
+                  placeholder="Add any notes here"
+                  rows={2}
+                />
+              </div>
+              {/* Items Section  Table */}
+              <div className="bg-white rounded-xl shadow-sm p-2 mb-4 border border-yellow-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <span className="w-1.5 h-5 bg-yellow-500 rounded-full mr-2"></span>
+                    <h2 className="text-base font-semibold text-gray-800">
+                      Items
+                    </h2>
+                    {!editId && (
+                      <button
+                        type="button"
+                        className="flex items-center text-xs text-yellow-600 font-medium bg-yellow-50 px-2 py-0.5 rounded-full"
+                      >
+                        <SquarePlus className="h-3 w-3 mr-1" />
+                        <CreateItem />
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addRow}
+                    className="flex items-center bg-yellow-500 text-white px-3 py-1.5 rounded-full text-xs shadow-sm hover:bg-yellow-600 transition-colors"
+                  >
+                    <PlusCircle className="h-3 w-3 mr-1" />
+                    Add Item
+                  </button>
+                </div>
+
+                {/*  Item Table */}
+                <div className="overflow-hidden rounded-xl border border-yellow-200">
+                  <Table className="w-full border-collapse">
+                    <TableHeader>
+                      <TableRow className="bg-gradient-to-r from-yellow-100 to-yellow-50">
+                        <TableHead className="text-xs font-semibold text-gray-700 py-3 px-4">
+                          Item
+                        </TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-700 py-3 px-4">
+                          Godown<span className="text-red-500 ml-1">*</span>
+                        </TableHead>
+                        {singlebranch == "Yes" && (
+                          <TableHead className="text-xs font-semibold text-gray-700 py-3 px-4">
+                            Box<span className="text-red-500 ml-1">*</span>
+                          </TableHead>
+                        )}
+
+                        {doublebranch == "Yes" && (
+                          <TableHead className="text-xs font-semibold text-gray-700 py-3 px-4">
+                            Piece<span className="text-red-500 ml-1">*</span>
+                          </TableHead>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+
+                    <TableBody>
+                      {invoiceData.map((row, rowIndex) => (
+                        <TableRow
+                          key={rowIndex}
+                          className="border-b border-yellow-100 hover:bg-yellow-50 transition-colors relative"
+                        >
+                          {/* Item Select */}
+                          <TableCell className="px-4 py-3 min-w-[200px] align-top">
+                            <div className="space-y-1">
+                              <MemoizedProductSelect
+                                value={row.purchase_sub_item_id}
+                                onChange={(e) =>
+                                  handlePaymentChange(
+                                    e,
+                                    rowIndex,
+                                    "purchase_sub_item_id"
+                                  )
+                                }
+                                options={
+                                  itemsData?.items?.map((product) => ({
+                                    value: product.id,
+                                    label: product.item_name,
+                                  })) || []
+                                }
+                                placeholder="Select Item"
+                                className="text-xs"
+                              />
+                              {!editId && row.item_size && (
+                                <div className="text-xs text-gray-600 flex gap-2">
+                                  <span className="bg-yellow-100 px-1.5 py-0.5 rounded text-yellow-800">
+                                    {row.item_size}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Delete Row Button */}
+                            {row.id ? (
+                              userType == 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteRow(row.id)}
+                                  className={`absolute top-2 right-2 rounded-full p-1 ${
+                                    invoiceData.length === 1
+                                      ? "bg-gray-200 text-gray-400"
+                                      : "bg-red-100 text-red-500"
+                                  }`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => removeRow(rowIndex)}
+                                disabled={invoiceData.length === 1}
+                                className={`absolute top-2 right-2 rounded-full p-1 ${
+                                  invoiceData.length === 1
+                                    ? "bg-gray-200 text-gray-400"
+                                    : "bg-red-100 text-red-500"
+                                }`}
+                              >
+                                <MinusCircle className="h-4 w-4" />
+                              </button>
+                            )}
+                          </TableCell>
+
+                          {/* Godown Select */}
+                          <TableCell className="px-4 py-3 min-w-[150px] align-top">
+                            <div className="space-y-1">
+                              <MemoizedProductSelect
+                                value={row.purchase_sub_godown_id}
+                                onChange={(e) =>
+                                  handlePaymentChange(
+                                    e,
+                                    rowIndex,
+                                    "purchase_sub_godown_id"
+                                  )
+                                }
+                                options={
+                                  godownData?.godown?.map((godown) => ({
+                                    value: godown.id,
+                                    label: godown.godown,
+                                  })) || []
+                                }
+                                placeholder="Select Godown"
+                                className="text-xs"
+                              />
+                              {!editId && row.item_brand && (
+                                <div className="text-xs text-gray-600 ">
+                                  <span className="inline-block bg-gray-100 px-1.5 py-0.5 rounded">
+                                    {row.item_brand}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+
+                          {singlebranch == "Yes" && (
+                            <TableCell className="px-4 py-3 min-w-[150px] align-top">
+                              <div className="space-y-1">
+                                <Input
+                                  ref={(el) =>
+                                    (boxInputRefs.current[rowIndex] = el)
+                                  }
+                                  className="bg-white border border-gray-300 w-full text-xs"
+                                  value={row.purchase_sub_box}
+                                  onChange={(e) =>
+                                    handlePaymentChange(
+                                      e,
+                                      rowIndex,
+                                      "purchase_sub_box"
+                                    )
+                                  }
+                                  placeholder="Qty"
+                                />
+                                {!editId &&
+                                  row?.purchase_sub_godown_id &&
+                                  row?.purchase_sub_item_id && (
+                                    <div className="text-xs text-gray-600">
+                                      <span className="inline-block bg-gray-100 px-1.5 py-0.5 rounded">
+                                        {row.stockData?.total_box}
+                                      </span>
+                                    </div>
+                                  )}
+                              </div>
+                            </TableCell>
+                          )}
+                          {doublebranch == "Yes" && (
+                            <TableCell className="px-4 py-3 min-w-[150px] align-top">
+                              <div className="space-y-1">
+                                <Input
+                                  className="bg-white border border-gray-300 w-full text-xs"
+                                  value={row.purchase_sub_piece}
+                                  onChange={(e) =>
+                                    handlePaymentChange(
+                                      e,
+                                      rowIndex,
+                                      "purchase_sub_piece"
+                                    )
+                                  }
+                                  placeholder="Piece"
+                                />
+                                {!editId &&
+                                  row?.purchase_sub_godown_id &&
+                                  row?.purchase_sub_item_id && (
+                                    <div className="text-xs text-gray-600">
+                                      <span className="inline-block bg-gray-100 px-1.5 py-0.5 rounded">
+                                        {row.stockData?.total_piece}
+                                      </span>
+                                    </div>
+                                  )}
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Item count  */}
+                <div className="mt-2 text-xs text-gray-500 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-yellow-400 rounded-full mr-1"></span>
+                  Total Items: {invoiceData.length}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="mb-20">
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-700 hover:to-yellow-500 text-white font-bold py-3.5 rounded-xl shadow-md transition-all transform hover:scale-[0.99]"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editId ? "Updating..." : "Creating..."}
+                    </>
+                  ) : editId ? (
+                    "Update Purchase"
+                  ) : (
+                    "Create Purchase"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div className="hidden sm:block">
+          <form onSubmit={handleSubmit} className="w-full ">
+            <div
+              className={`flex sticky top-0 z-10 border border-gray-200 rounded-lg justify-between items-start gap-8 mb-2 ${ButtonConfig.cardheaderColor} p-4 shadow-sm`}
+            >
+              <div className="flex-1">
+                <h1 className="text-lg font-bold text-gray-800">
+                  {editId ? "Update Purchase" : "Create New Purchase"}
+                </h1>
+              </div>
+            </div>{" "}
+            <Card className={`mb-6 ${ButtonConfig.cardColor}`}>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                  <div>
+                    <div>
+                      <label
+                        className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
+                      >
+                        Date <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        className="bg-white"
+                        value={formData.purchase_date}
+                        onChange={(e) => handleInputChange(e, "purchase_date")}
+                        placeholder="Enter Payment Date"
+                        type="date"
+                      />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label
+                        className={`text-sm font-medium ${ButtonConfig.cardLabel}`}
+                      >
+                        Buyer <span className="text-red-500">*</span>
+                      </label>
+                      {!editId && (
+                        <button
+                          type="button"
+                          className="flex items-center text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded-full transition-colors duration-150"
+                        >
+                          <SquarePlus className="h-3 w-3 mr-1" />
+
+                          <BuyerForm />
+                        </button>
+                      )}
+                    </div>
+
+                    <MemoizedSelect
+                      value={formData.purchase_buyer_id}
+                      onChange={(e) =>
+                        handleInputChange(e, "purchase_buyer_id")
+                      }
+                      options={
+                        buyerData?.buyers?.map((buyer) => ({
+                          value: buyer.id,
+                          label: buyer.buyer_name,
+                        })) || []
+                      }
+                      placeholder="Select Buyer"
+                      className="bg-white focus:ring-2 focus:ring-yellow-300"
+                    />
+                  </div>
+                  {!editId && (
+                    <div>
+                      <div>
+                        <label
+                          className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
+                        >
+                          Ref No<span className="text-red-500">*</span>
+                        </label>
+
+                        <MemoizedSelect
+                          value={formData.purchase_ref_no}
+                          onChange={(e) =>
+                            handleInputChange(e, "purchase_ref_no")
+                          }
+                          options={
+                            purchaseRef
+                              ? [
+                                  {
+                                    value: purchaseRef.purchase_ref,
+                                    label: purchaseRef.purchase_ref,
+                                  },
+                                ]
+                              : []
+                          }
+                          placeholder="Select Ref"
+                          className="bg-white focus:ring-2 focus:ring-yellow-300"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {editId && (
+                    <div>
+                      <label
+                        className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
+                      >
+                        Ref No<span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        className="bg-white border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-yellow-300 focus:border-yellow-400"
+                        value={formData.purchase_ref_no}
+                        onChange={(e) =>
+                          handleInputChange(e, "purchase_ref_no")
+                        }
+                        disabled
+                      />
+                    </div>
+                  )}
                   <div>
                     <div>
                       <label
@@ -757,115 +985,208 @@ const CreatePurchase = () => {
                       />
                     </div>
                   </div>
-                  <div className="md:col-span-3">
-                    <div>
-                      <label
-                        className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
-                      >
-                        Remark
-                      </label>
-                      <Textarea
-                        className="bg-white"
-                        value={formData.purchase_remark}
-                        onChange={(e) =>
-                          handleInputChange(e, "purchase_remark")
-                        }
-                        placeholder="Enter Remark"
-                      />
-                    </div>
+                </div>
+                <div>
+                  <div>
+                    <label
+                      className={`block  ${ButtonConfig.cardLabel} text-sm mb-2 font-medium `}
+                    >
+                      Remark
+                    </label>
+                    <Textarea
+                      className="bg-white"
+                      value={formData.purchase_remark}
+                      onChange={(e) => handleInputChange(e, "purchase_remark")}
+                      placeholder="Enter Remark"
+                    />
                   </div>
                 </div>
-
                 <div className="mt-4 grid grid-cols-1">
                   <Table className="border border-gray-300 rounded-lg shadow-sm">
                     <TableHeader>
                       <TableRow className="bg-gray-100">
-                        <TableHead className="text-sm font-semibold text-gray-600 py-2 px-4">
-                          <div className="flex items-center">
-                            <SquarePlus className="h-3 w-3 mr-1 text-red-600" />
-                            <CreateItem />
+                        <TableHead className="text-sm font-semibold text-gray-600 px-4 py-3">
+                          <div className="flex items-center justify-between">
+                            <span>
+                              Item
+                              <span className="text-red-500 ml-1 text-xs">
+                                *
+                              </span>
+                            </span>
+                            {!editId && (
+                              <div className="flex items-center gap-1">
+                                <SquarePlus className="h-4 w-4 text-red-600" />
+                                <CreateItem />
+                              </div>
+                            )}
                           </div>
                         </TableHead>
 
-                        <TableHead className="text-sm font-semibold text-gray-600 py-2 px-4">
-                          Box<span className="text-red-500 ml-1">*</span>
+                        <TableHead className="text-sm font-semibold text-gray-600 px-4 py-3">
+                          Godown
+                          <span className="text-red-500 ml-1 text-xs">*</span>
                         </TableHead>
-                        <TableHead className="text-sm font-semibold py-3 px-4 w-1/6 text-center">
-                          Action
-                          <PlusCircle
-                            onClick={addRow}
-                            className="inline-block ml-2 cursor-pointer text-blue-500 hover:text-gray-800 h-4 w-4"
-                          />
+                        {singlebranch == "Yes" && (
+                          <TableHead className="text-sm font-semibold text-gray-600 px-4 py-3">
+                            Box
+                            <span className="text-red-500 ml-1 text-xs">*</span>
+                          </TableHead>
+                        )}
+                        {doublebranch == "Yes" && (
+                          <TableHead className="text-sm font-semibold text-gray-600 px-4 py-3">
+                            Piece
+                            <span className="text-red-500 ml-1 text-xs">*</span>
+                          </TableHead>
+                        )}
+                        <TableHead className="text-sm font-semibold text-gray-600 px-4 py-3 text-center w-1/6">
+                          <div className="flex justify-center items-center gap-2">
+                            Action
+                            <PlusCircle
+                              onClick={addRow}
+                              className="cursor-pointer text-blue-500 hover:text-gray-800 h-4 w-4"
+                            />
+                          </div>
                         </TableHead>
                       </TableRow>
                     </TableHeader>
+
                     <TableBody>
                       {invoiceData.map((row, rowIndex) => (
                         <TableRow
                           key={rowIndex}
                           className="border-t border-gray-200 hover:bg-gray-50"
                         >
-                          <TableCell className="px-4 py-2">
-                            <div>
+                          {/* Item Column */}
+                          <TableCell className="px-4 py-3 align-top">
+                            <div className="flex flex-col gap-1">
                               <MemoizedProductSelect
-                                value={row.purchase_sub_item}
+                                value={row.purchase_sub_item_id}
                                 onChange={(e) =>
                                   handlePaymentChange(
                                     e,
                                     rowIndex,
-                                    "purchase_sub_item"
+                                    "purchase_sub_item_id"
                                   )
                                 }
                                 options={
                                   itemsData?.items?.map((product) => ({
-                                    value: product.item_name,
+                                    value: product.id,
                                     label: product.item_name,
                                   })) || []
                                 }
                                 placeholder="Select Item"
                               />
+                              {!editId && row.item_size && (
+                                <div className="text-xs text-gray-700">
+                                  • {row.item_size}
+                                </div>
+                              )}
                             </div>
-                            {row.purchase_sub_item && (
-                              <div className="text-sm text-black mt-1">
-                                •{row.purchase_sub_category} •{" "}
-                                {row.purchase_sub_size}
-                              </div>
-                            )}
                           </TableCell>
 
-                          <TableCell className="px-4 py-2 min-w-28 ">
-                            <Input
-                              className="bg-white border border-gray-300"
-                              value={row.purchase_sub_box}
-                              onChange={(e) =>
-                                handlePaymentChange(
-                                  e,
-                                  rowIndex,
-                                  "purchase_sub_box"
-                                )
-                              }
-                              placeholder="Enter Box"
-                              type="number"
-                            />
-                            {row.purchase_sub_item && (
-                              <div className="text-sm text-black mt-1">
-                                • {row.purchase_sub_brand}{" "}
-                                {row.purchase_sub_box && (
-                                  <>• Available Box {availablebox} </>
-                                )}
-                              </div>
-                            )}
+                          {/* Godown Column */}
+                          <TableCell className="px-4 py-3 align-top">
+                            <div className="flex flex-col gap-1">
+                              <MemoizedProductSelect
+                                value={row.purchase_sub_godown_id}
+                                onChange={(e) =>
+                                  handlePaymentChange(
+                                    e,
+                                    rowIndex,
+                                    "purchase_sub_godown_id"
+                                  )
+                                }
+                                options={
+                                  godownData?.godown?.map((godown) => ({
+                                    value: godown.id,
+                                    label: godown.godown,
+                                  })) || []
+                                }
+                                placeholder="Select Godown"
+                              />
+                              {!editId && row.item_brand && (
+                                <div className="text-xs text-gray-700">
+                                  • {row.item_brand}
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
-                          <TableCell className="p-2 border">
-                            <Button
-                              variant="ghost"
-                              onClick={() => removeRow(rowIndex)}
-                              disabled={invoiceData.length === 1}
-                              className="text-red-500 "
-                              type="button"
-                            >
-                              <MinusCircle className="h-4 w-4" />
-                            </Button>
+                          {singlebranch == "Yes" && (
+                            <TableCell className="px-4 py-3 align-top min-w-28">
+                              <div className="flex flex-col gap-1">
+                                <Input
+                                  className="bg-white border border-gray-300 text-sm"
+                                  value={row.purchase_sub_box}
+                                  onChange={(e) =>
+                                    handlePaymentChange(
+                                      e,
+                                      rowIndex,
+                                      "purchase_sub_box"
+                                    )
+                                  }
+                                  placeholder="Enter Box"
+                                />
+                                {!editId &&
+                                  row?.purchase_sub_godown_id &&
+                                  row?.purchase_sub_item_id && (
+                                    <div className="text-xs text-gray-700">
+                                      • Available Box:{" "}
+                                      {row?.stockData?.total_box ?? 0}
+                                    </div>
+                                  )}
+                              </div>
+                            </TableCell>
+                          )}
+                          {doublebranch == "Yes" && (
+                            <TableCell className="px-4 py-3 align-top min-w-28">
+                              <div className="flex flex-col gap-1">
+                                <Input
+                                  className="bg-white border border-gray-300 text-sm"
+                                  value={row.purchase_sub_piece}
+                                  onChange={(e) =>
+                                    handlePaymentChange(
+                                      e,
+                                      rowIndex,
+                                      "purchase_sub_piece"
+                                    )
+                                  }
+                                  placeholder="Enter Piece"
+                                />
+                              </div>
+                              {!editId &&
+                                row?.purchase_sub_godown_id &&
+                                row?.purchase_sub_item_id && (
+                                  <div className="text-xs text-gray-700">
+                                    • Available Piece:{" "}
+                                    {row?.stockData?.total_piece ?? 0}
+                                  </div>
+                                )}
+                            </TableCell>
+                          )}
+                          {/* Delete Button */}
+                          <TableCell className="p-2 align-middle">
+                            {row.id ? (
+                              userType == 2 && (
+                                <Button
+                                  variant="ghost"
+                                  onClick={() => handleDeleteRow(row.id)}
+                                  className="text-red-500"
+                                  type="button"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                onClick={() => removeRow(rowIndex)}
+                                disabled={invoiceData.length === 1}
+                                className="text-red-500"
+                                type="button"
+                              >
+                                <MinusCircle className="h-4 w-4" />
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -874,17 +1195,24 @@ const CreatePurchase = () => {
                 </div>
               </CardContent>
             </Card>
-
             <div className="flex flex-row items-center gap-2 justify-end ">
               <Button
                 type="submit"
                 className={`${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} flex items-center mt-2`}
-                disabled={createBranchMutation.isPending}
+                disabled={isLoading}
               >
-                {createBranchMutation.isPending
-                  ? "Submitting..."
-                  : "Create Purchase"}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {editId ? "Updating..." : "Creating..."}
+                  </>
+                ) : editId ? (
+                  "Update Purchase"
+                ) : (
+                  "Create Purchase"
+                )}{" "}
               </Button>
+
               <Button
                 type="button"
                 onClick={() => {
@@ -898,6 +1226,26 @@ const CreatePurchase = () => {
           </form>
         </div>
       </div>
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              purchase.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className={`${ButtonConfig.backgroundColor}  ${ButtonConfig.textColor} text-black hover:bg-red-600`}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Page>
   );
 };

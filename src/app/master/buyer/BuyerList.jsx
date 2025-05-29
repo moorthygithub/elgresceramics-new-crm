@@ -1,4 +1,8 @@
+import { BUYER_LIST } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import Page from "@/app/dashboard/page";
+import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ButtonConfig } from "@/config/ButtonConfig";
 import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
@@ -25,29 +30,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import axios from "axios";
 import { ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-import { BUYER_LIST } from "@/api";
-import Loader from "@/components/loader/Loader";
-import { ButtonConfig } from "@/config/ButtonConfig";
-import CreateBuyer from "./CreateBuyer";
-import EditBuyer from "./EditBuyer ";
+import BuyerForm from "./CreateBuyer";
 
 const BuyerList = () => {
+  const token = usetoken();
+
   const {
     data: buyers,
     isLoading,
-    isFetching,
     isError,
     refetch,
   } = useQuery({
     queryKey: ["buyers"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${BUYER_LIST}`, {
+      const response = await apiClient.get(`${BUYER_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.buyers;
@@ -73,12 +71,6 @@ const BuyerList = () => {
       accessorKey: "buyer_name",
       header: "Buyer Name",
       cell: ({ row }) => <div>{row.original.buyer_name}</div>,
-    },
-    {
-      id: "Mobile",
-      accessorKey: "buyer_mobile",
-      header: "Mobile",
-      cell: ({ row }) => <div>{row.original.buyer_mobile}</div>,
     },
     {
       id: "City",
@@ -114,7 +106,7 @@ const BuyerList = () => {
 
         return (
           <div className="flex flex-row">
-            <EditBuyer buyerId={buyerId} />
+            <BuyerForm buyerId={buyerId} />
           </div>
         );
       },
@@ -150,7 +142,7 @@ const BuyerList = () => {
   });
 
   // Render loading state
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -189,7 +181,7 @@ const BuyerList = () => {
               Buyer List
             </h1>
             <div>
-              <CreateBuyer />
+              <BuyerForm />
             </div>
           </div>
 
@@ -223,7 +215,6 @@ const BuyerList = () => {
                         <h3 className="font-medium flex flex-col text-sm text-gray-800">
                           <span>{item.buyer_name}</span>
                           <span className="text-xs">{item.buyer_city}</span>
-                          <span className="text-xs">{item.buyer_mobile}</span>
                         </h3>
                       </div>
                       <div className="flex items-center justify-between gap-2 ">
@@ -237,7 +228,7 @@ const BuyerList = () => {
                           {item.buyer_status}
                         </span>
 
-                        <EditBuyer buyerId={item.id} />
+                        <BuyerForm buyerId={item.id} />
                       </div>
                     </div>
                   </div>
@@ -268,7 +259,6 @@ const BuyerList = () => {
               />
             </div>
 
-            {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -295,7 +285,7 @@ const BuyerList = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <CreateBuyer />
+              <BuyerForm />
             </div>
           </div>
           {/* table  */}

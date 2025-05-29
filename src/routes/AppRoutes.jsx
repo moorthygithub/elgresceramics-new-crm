@@ -2,39 +2,37 @@ import { Route, Routes } from "react-router-dom";
 
 import StockView from "@/app/stockView/StockView";
 
-import AuthRoute from "./AuthRoute";
 import Login from "@/app/auth/Login";
 import ForgotPassword from "@/components/ForgotPassword/ForgotPassword";
 import Maintenance from "@/components/common/Maintenance";
+import AuthRoute from "./AuthRoute";
 import ProtectedRoute from "./ProtectedRoute";
 
-import BuyerList from "@/app/master/buyer/BuyerList";
-import ItemList from "@/app/master/item/ItemList";
-import CategoryList from "@/app/master/category/CategoryList";
-import PurchaseList from "@/app/purchase/PurchaseList";
-import CreatePurchase from "@/app/purchase/CreatePurchase";
-import EditPurchase from "@/app/purchase/EditPurchase";
-import SalesList from "@/app/sales/SalesList";
-import CreateSales from "@/app/sales/CreateSales";
-import EditSales from "@/app/sales/EditSales";
-import SalesView from "@/app/sales/SalesView";
-import Stock from "@/app/report/Stock";
-import BuyerReport from "@/app/report/BuyerReport";
+import CreateDispatch from "@/app/dispatch/CreateDispatch";
+import DispatchList from "@/app/dispatch/DispatchList";
+import DispatchView from "@/app/dispatch/DispatchView";
+import CreateDispatchReturnForm from "@/app/dispatchreturn/CreateDispatchReturnForm";
+import DispatchReturnList from "@/app/dispatchreturn/DispatchReturnList";
+import DispatchReturnView from "@/app/dispatchreturn/DispatchReturnView";
 import NotFound from "@/app/errors/NotFound";
 import Home from "@/app/home/Home";
-import SingleItemStock from "@/app/report/SingleItemStock";
-import PurchaseReport from "@/app/report/PurchaseReport";
-import DispatchReport from "@/app/report/DispatchReport";
 import BranchList from "@/app/master/branch/BranchList";
+import BuyerList from "@/app/master/buyer/BuyerList";
+import CategoryList from "@/app/master/category/CategoryList";
+import GoDownList from "@/app/master/godown/GoDownList";
+import ItemList from "@/app/master/item/ItemList";
 import TeamList from "@/app/master/team/TeamList";
-import ValidationWrapper from "@/utils/ValidationWrapper";
-import EditPurchaseReturn from "@/app/purchasereturn/EditPurchaseReturn";
-import PurchaseReturnList from "@/app/purchasereturn/PurchaseReturnList";
+import CreatePurchase from "@/app/purchase/CreatePurchase";
+import PurchaseList from "@/app/purchase/PurchaseList";
 import CreatePurchaseReturn from "@/app/purchasereturn/CreatePurchaseReturn";
-import SalesReturnList from "@/app/salesreturn/SalesReturnList";
-import CreateSalesReturn from "@/app/salesreturn/CreateSalesReturn";
-import EditSalesReturn from "@/app/salesreturn/EditSalesReturn";
-import SalesReturnView from "@/app/salesreturn/SalesReturnView";
+import PurchaseReturnList from "@/app/purchasereturn/PurchaseReturnList";
+import BuyerReport from "@/app/report/BuyerReport";
+import DispatchReport from "@/app/report/DispatchReport";
+import PurchaseReport from "@/app/report/PurchaseReport";
+import SingleItemStock from "@/app/report/SingleItemStock";
+import Stock from "@/app/report/Stock";
+import ValidationWrapper from "@/utils/ValidationWrapper";
+import StockGoDown from "@/app/report/StockGoDown";
 
 function AppRoutes() {
   return (
@@ -53,10 +51,11 @@ function AppRoutes() {
           <Route path="/master/category" element={<CategoryList />} />
           <Route path="/master/branch" element={<BranchList />} />
           <Route path="/master/team" element={<TeamList />} />
+          <Route path="/master/go-down" element={<GoDownList />} />
           <Route path="/stock-view" element={<StockView />} />
           <Route path="/purchase" element={<PurchaseList />} />
           <Route path="/purchase/create" element={<CreatePurchase />} />
-          <Route path="/purchase/edit/:id" element={<EditPurchase />} />
+          <Route path="/purchase/edit/:id" element={<CreatePurchase />} />
           <Route path="/purchase-return" element={<PurchaseReturnList />} />
           <Route
             path="/purchase-return/create"
@@ -64,24 +63,25 @@ function AppRoutes() {
           />
           <Route
             path="/purchase-return/edit/:id"
-            element={<EditPurchaseReturn />}
+            element={<CreatePurchaseReturn />}
           />
-          <Route path="/dispatch" element={<SalesList />} />
-          <Route path="/dispatch/create" element={<CreateSales />} />
-          <Route path="/dispatch/edit/:id" element={<EditSales />} />
-          <Route path="/dispatch/view/:id" element={<SalesView />} />
-          <Route path="/dispatch-return" element={<SalesReturnList />} />
+          <Route path="/dispatch" element={<DispatchList />} />
+          <Route path="/dispatch/create" element={<CreateDispatch />} />
+          <Route path="/dispatch/edit/:id" element={<CreateDispatch />} />
+          <Route path="/dispatch/view/:id" element={<DispatchView />} />
+
+          <Route path="/dispatch-return" element={<DispatchReturnList />} />
           <Route
             path="/dispatch-return/create"
-            element={<CreateSalesReturn />}
+            element={<CreateDispatchReturnForm />}
           />
           <Route
             path="/dispatch-return/edit/:id"
-            element={<EditSalesReturn />}
+            element={<CreateDispatchReturnForm />}
           />
           <Route
             path="/dispatch-return/view/:id"
-            element={<SalesReturnView />}
+            element={<DispatchReturnView />}
           />
           <Route path="/report/stock" element={<Stock />} />
           <Route path="/report/buyer" element={<BuyerReport />} />
@@ -89,6 +89,7 @@ function AppRoutes() {
             path="/report/single-item-stock"
             element={<SingleItemStock />}
           />
+          <Route path="/report/godown-stock" element={<StockGoDown />} />
           <Route path="/report/purchase" element={<PurchaseReport />} />
           <Route path="/report/dispatch" element={<DispatchReport />} />
         </Route>
