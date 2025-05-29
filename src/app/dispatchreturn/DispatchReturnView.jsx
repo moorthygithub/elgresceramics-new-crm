@@ -1,28 +1,29 @@
+import { DISPATCH_EDIT_LIST, DISPATCH_RETURN_EDIT_LIST } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import { decryptId } from "@/components/common/Encryption";
-import BASE_URL from "@/config/BaseUrl";
-import { useQuery } from "@tanstack/react-query";
-import React, { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import Page from "../dashboard/page";
-import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ButtonConfig } from "@/config/ButtonConfig";
-import { useReactToPrint } from "react-to-print";
-import moment from "moment";
+import { useQuery } from "@tanstack/react-query";
 import html2pdf from "html2pdf.js";
-import { fetchSalesReturnById } from "@/api";
-import Loader from "@/components/loader/Loader";
+import { Printer } from "lucide-react";
+import moment from "moment";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
+import { useReactToPrint } from "react-to-print";
+import Page from "../dashboard/page";
 
-const SalesReturnView = () => {
+const DispatchReturnView = () => {
   const { id } = useParams();
   const decryptedId = decryptId(id);
   const containerRef = useRef();
-  const [sales, setSales] = useState({});
-  const [buyers, setBuyers] = useState({});
-  const [salessubData, setSalesSubData] = useState([]);
+  const token = usetoken();
+  const [dispatch, setDispatch] = useState({});
+  const [buyer, setBuyer] = useState({});
+  const [dispatchsubData, setDispatchSubData] = useState([]);
   const handlePrintPdf = useReactToPrint({
     content: () => containerRef.current,
-    documentTitle: "Dispatch-return",
+    documentTitle: "Dispatch_Return",
     pageStyle: `
       @page {
     size: A4 portrait;
@@ -44,28 +45,38 @@ const SalesReturnView = () => {
     `,
   });
   const {
-    data: SalesId,
+    data: DispatchId,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["salesByid", id],
-    queryFn: () => fetchSalesReturnById(id),
+    queryKey: ["dispatchByid", decryptedId],
+    queryFn: async () => {
+      const response = await apiClient.get(
+        `${DISPATCH_RETURN_EDIT_LIST}/${decryptedId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    },
   });
 
   useEffect(() => {
-    if (SalesId) {
-      setSales(SalesId.sales);
-      setBuyers(SalesId.buyer);
-      setSalesSubData(SalesId.salesSub);
+    if (DispatchId) {
+      setDispatch(DispatchId.dispatch);
+      setBuyer(DispatchId.buyer);
+      setDispatchSubData(DispatchId.dispatchSub);
     }
-  }, [SalesId]);
-  const totalSalesSubBox = salessubData.reduce(
-    (total, row) => total + row.sales_sub_box,
+  }, [DispatchId]);
+  const totalDispatchSubBox = dispatchsubData.reduce(
+    (total, row) => total + row.dispatch_sub_box,
     0
   );
-  const totalSaleWeight = salessubData.reduce(
-    (total, row) => total + row.item_weight * row.sales_sub_box,
+  const totalDispatchWeight = dispatchsubData.reduce(
+    (total, row) => total + row.item_weight * row.dispatch_sub_box,
     0
   );
 
@@ -79,22 +90,14 @@ const SalesReturnView = () => {
       .from(containerRef.current)
       .set({
         margin: 10, // Standard margin
-        filename: "Dispatch Return.pdf",
+        filename: "Dispatch_Return.pdf",
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       })
       .save();
   };
-  if (isLoading) {
-    return (
-      <Page>
-        <div className="flex justify-center items-center h-full">
-          <Loader />
-        </div>
-      </Page>
-    );
-  }
+
   return (
     <Page>
       <div
@@ -132,19 +135,20 @@ const SalesReturnView = () => {
         <div className="w-full border border-black mb-4 grid grid-cols-2">
           <div className="border-r border-black">
             <div className="p-2 border-b border-black">
-              <span className="font-medium">Name:</span> {buyers?.buyer_name}
+              <span className="font-medium">Name:</span> {buyer.buyer_name}
             </div>
             <div className="p-2">
-              <span className="font-medium">Ref No:</span> {sales.sales_ref_no}
+              <span className="font-medium">Ref No:</span>{" "}
+              {dispatch.dispatch_ref_no}
             </div>
           </div>
           <div>
             <div className="p-2 border-b border-black">
-              <span className="font-medium">City:</span> {buyers?.buyer_city}
+              <span className="font-medium">City:</span> {buyer.buyer_city}
             </div>
             <div className="p-2">
               <span className="font-medium">Date:</span>{" "}
-              {moment(sales.sales_date).format("DD-MMM-YYYY")}
+              {moment(dispatch.dispatch_date).format("DD-MMM-YYYY")}
             </div>
           </div>
         </div>
@@ -163,13 +167,13 @@ const SalesReturnView = () => {
 
           {/* Table Body */}
           <tbody>
-            {salessubData.map((row, index) => (
+            {dispatchsubData.map((row, index) => (
               <tr key={index} className="border border-black">
                 <td className="p-2 border border-black">{row.item_name}</td>
                 <td className="p-2 border border-black">{row.item_size}</td>
                 {/* <td className="p-2 border border-black">{row.item_brand}</td> */}
                 <td className="p-2 border border-black text-right">
-                  {row.sales_sub_box}
+                  {row.dispatch_sub_box}
                 </td>
               </tr>
             ))}
@@ -180,7 +184,7 @@ const SalesReturnView = () => {
               <td className="p-2 border border-black"></td>
               {/* <td className="p-2 border border-black"></td> */}
               <td className="p-2 border border-black text-right">
-                {totalSalesSubBox}
+                {totalDispatchSubBox}
               </td>
             </tr>
           </tbody>
@@ -188,19 +192,19 @@ const SalesReturnView = () => {
 
         {/* Footer Details */}
         <div className="mt-2 text-sm border border-black">
-          {totalSaleWeight && (
+          {totalDispatchWeight && (
             <p className="py-1 px-2 border-b border-black">
-              WEIGHT : {totalSaleWeight} KG
+              WEIGHT : {totalDispatchWeight} KG
             </p>
           )}
           <p className="py-1 px-2 border-b border-black">
-            VEHICLE : {sales.sales_vehicle_no}
+            VEHICLE : {dispatch.dispatch_vehicle_no}
           </p>
-          <p className="py-1 px-2">REMARK : {sales.sales_remark}</p>
+          <p className="py-1 px-2">REMARK : {dispatch.dispatch_remark}</p>
         </div>
       </div>
     </Page>
   );
 };
 
-export default SalesReturnView;
+export default DispatchReturnView;

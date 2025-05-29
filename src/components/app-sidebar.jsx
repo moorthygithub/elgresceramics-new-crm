@@ -1,20 +1,10 @@
-import * as React from "react";
 import {
-  AudioWaveform,
-  BadgeIndianRupee,
-  Blocks,
-  Command,
   File,
   Frame,
   GalleryVerticalEnd,
-  Map,
-  NotebookText,
   Package,
-  ReceiptText,
-  Settings,
   Settings2,
   ShoppingBag,
-  TicketPlus,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -27,12 +17,14 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { NavMainUser } from "./nav-main-user";
+import { useSelector } from "react-redux";
 import companyname from "../json/company.json";
+import { NavMainUser } from "./nav-main-user";
+
 export function AppSidebar({ ...props }) {
-  const nameL = localStorage.getItem("name");
-  const emailL = localStorage.getItem("email");
-  const id = localStorage.getItem("userType");
+  const nameL = useSelector((state) => state.auth.name);
+  const emailL = useSelector((state) => state.auth.email);
+  const id = useSelector((state) => state.auth.user_type);
   const initialData = {
     user: {
       name: `${nameL}`,
@@ -40,20 +32,13 @@ export function AppSidebar({ ...props }) {
       avatar: "/avatars/shadcn.jpg",
     },
     teams: [
+      // {
+      //   name: `${companyname?.CompanyName}`,
+      // },
       {
         name: `${companyname?.CompanyName}`,
         logo: GalleryVerticalEnd,
         plan: "",
-      },
-      {
-        name: "Acme Corp.",
-        logo: AudioWaveform,
-        plan: "Startup",
-      },
-      {
-        name: "Evil Corp.",
-        logo: Command,
-        plan: "Free",
       },
     ],
     navMain: [
@@ -82,6 +67,10 @@ export function AppSidebar({ ...props }) {
                 {
                   title: "Buyer",
                   url: "/master/buyer",
+                },
+                {
+                  title: "Go Down",
+                  url: "/master/go-down",
                 },
                 ...(id == 3
                   ? [
@@ -127,14 +116,12 @@ export function AppSidebar({ ...props }) {
         icon: ShoppingBag,
         isActive: false,
       },
-
       {
         title: "Stock View",
         url: "/stock-view",
         icon: Package,
         isActive: false,
       },
-
       {
         title: "Report",
         url: "#",
@@ -145,6 +132,10 @@ export function AppSidebar({ ...props }) {
           {
             title: "Stock",
             url: "/report/stock",
+          },
+          {
+            title: "GoDown Stock",
+            url: "/report/godown-stock",
           },
           ...(id != 1
             ? [

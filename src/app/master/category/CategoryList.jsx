@@ -1,4 +1,8 @@
+import { CATEGORY_LIST } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import Page from "@/app/dashboard/page";
+import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,8 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import BASE_URL from "@/config/BaseUrl";
-import * as SwitchPrimitive from "@radix-ui/react-switch";
+import { ButtonConfig } from "@/config/ButtonConfig";
+import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
@@ -27,28 +31,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import axios from "axios";
-import { ArrowUpDown, ChevronDown, Loader2, Search } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
-import { ButtonConfig } from "@/config/ButtonConfig";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import CreateCategory from "./CreateCategory";
-import { CATEGORY_LIST } from "@/api";
-import Loader from "@/components/loader/Loader";
 
 const CategoryList = () => {
+  const token = usetoken();
+
   const {
     data: category,
     isLoading,
-    isFetching,
     isError,
     refetch,
   } = useQuery({
     queryKey: ["category"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${CATEGORY_LIST}`, {
+      const response = await apiClient.get(`${CATEGORY_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.category;
@@ -61,67 +59,7 @@ const CategoryList = () => {
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-  const [togglingId, setTogglingId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isActive, setIsActive] = useState(false);
-  const queryClient = useQueryClient();
-  const handleToggle = async (categoryId, currentStatus) => {
-    setTogglingId(categoryId);
-
-    try {
-      const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
-
-      await handleSubmit({ categoryId, status: newStatus }); // API call
-
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-    } catch (error) {
-      console.error("Failed to update category:", error);
-    } finally {
-      setTogglingId(null); // Hide loader after API response
-    }
-  };
-
-  const handleSubmit = async ({ categoryId, status }) => {
-    if (!status) {
-      toast({
-        title: "Error",
-        description: "Status is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${BASE_URL}/api/categorys/${categoryId}`,
-        { category_status: status },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response?.data.code == 200) {
-        toast({
-          title: "Success",
-          description: response.data.msg,
-        });
-        refetch();
-      } else {
-        toast({
-          title: "Error",
-          description: response.data.msg,
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update buyer",
-        variant: "destructive",
-      });
-    }
-  };
   const columns = [
     {
       accessorKey: "index",
@@ -158,39 +96,15 @@ const CategoryList = () => {
       header: "Action",
       cell: ({ row }) => {
         const categoryId = row.original.id;
-        const currentStatus = row.original.category_status;
-        return (
-          <SwitchPrimitive.Root
-            checked={currentStatus === "Active"}
-            onCheckedChange={() => handleToggle(categoryId, currentStatus)}
-            disabled={togglingId === categoryId}
-            title={currentStatus}
-            className={`relative inline-flex items-center h-6 w-11 rounded-full
-              ${currentStatus === "Active" ? "bg-green-500" : "bg-gray-400"} 
-              ${
-                togglingId == categoryId
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
-              }
-            `}
-          >
-            <SwitchPrimitive.Thumb
-              className={`block w-4 h-4 bg-white rounded-full transform transition-transform
-                ${
-                  currentStatus === "Active" ? "translate-x-6" : "translate-x-1"
-                }
-              `}
-            />
-          </SwitchPrimitive.Root>
-        );
+        return <CreateCategory editId={categoryId} />;
       },
     },
   ];
-
-  const filteredCategories =
-    category?.filter((item) =>
-      item.category.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
+  const filteredCategories = Array.isArray(category)
+    ? category.filter((item) =>
+        item?.category?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   // Create the table instance
   const table = useReactTable({
@@ -218,7 +132,7 @@ const CategoryList = () => {
   });
 
   // Render loading state
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -302,36 +216,7 @@ const CategoryList = () => {
                       >
                         {item.category_status}
                       </span>
-
-                      <SwitchPrimitive.Root
-                        checked={item.category_status === "Active"}
-                        onCheckedChange={() =>
-                          handleToggle(item.id, item.category_status)
-                        }
-                        disabled={togglingId === item.id}
-                        className={`relative inline-flex items-center h-4 w-10 rounded
-                   ${
-                     item.category_status === "Active"
-                       ? "bg-green-500"
-                       : "bg-gray-400"
-                   } 
-                   ${
-                     togglingId === item.id
-                       ? "opacity-50 cursor-not-allowed"
-                       : "cursor-pointer"
-                   }
-                 `}
-                      >
-                        <SwitchPrimitive.Thumb
-                          className={`block w-3 h-3 bg-black  rounded transform transition-transform
-                     ${
-                       item.category_status === "Active"
-                         ? "translate-x-6"
-                         : "translate-x-1"
-                     }
-                   `}
-                        />
-                      </SwitchPrimitive.Root>
+                      <CreateCategory editId={item.id} />
                     </div>
                   </div>
                 </div>
@@ -361,7 +246,6 @@ const CategoryList = () => {
               />
             </div>
 
-            {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

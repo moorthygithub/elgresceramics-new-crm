@@ -1,33 +1,32 @@
-import React, { useRef, useState } from "react";
-import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import Page from "@/app/dashboard/page";
-import BASE_URL from "@/config/BaseUrl";
-import { Download, Loader2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { Printer } from "lucide-react";
+import { useRef, useState } from "react";
 
-import { useReactToPrint } from "react-to-print";
+import { STOCK_REPORT } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
+import Loader from "@/components/loader/Loader";
+import { Input } from "@/components/ui/input";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import moment from "moment";
-import { Input } from "@/components/ui/input";
-import { STOCK_REPORT } from "@/api";
-import Loader from "@/components/loader/Loader";
-import { RiFileExcel2Line, RiFileExcelLine } from "react-icons/ri";
-import ExcelJS from "exceljs";
+import { useReactToPrint } from "react-to-print";
+import { useSelector } from "react-redux";
 
 const Stock = () => {
   const containerRef = useRef();
+  const singlebranch = useSelector((state) => state.auth.branch_s_unit);
+  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
   const [formData, setFormData] = useState({
     from_date: moment().startOf("month").format("YYYY-MM-DD"),
     to_date: moment().format("YYYY-MM-DD"),
   });
-  const { toast } = useToast();
+  const token = usetoken();
 
   const fetchBuyerData = async () => {
-    const token = localStorage.getItem("token");
-    const response = await axios.post(
+    const response = await apiClient.post(
       `${STOCK_REPORT}`,
       { ...formData },
       {
@@ -71,77 +70,6 @@ const Stock = () => {
       }
     `,
   });
-
-  const downloadExcel = async () => {
-    if (!buyerData || buyerData.length === 0) {
-      toast({
-        title: "No Data",
-        description: "No data available to export",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Stock Report");
-    worksheet.addRow(["Stock Report"]).font = { bold: true };
-    worksheet.addRow([
-      `From: ${moment(formData.from_date).format("DD-MM-YYYY")} To: ${moment(
-        formData.to_date
-      ).format("DD-MM-YYYY")}`,
-    ]);
-    worksheet.addRow([]);
-    const headers = [
-      "Item Name",
-      "Opening Balance",
-      "Purchase",
-      "Dispatch",
-      "Closing Balance",
-    ];
-    const headerRow = worksheet.addRow(headers);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "F3F4F6" },
-      };
-      cell.alignment = { horizontal: "center" };
-      cell.border = {
-        top: { style: "thin" },
-        bottom: { style: "thin" },
-      };
-    });
-    buyerData.forEach((transaction) => {
-      const opening =
-        transaction.openpurch -
-        transaction.closesale -
-        Number(transaction.purchR) +
-        Number(transaction.saleR);
-      const purchase = transaction.purch;
-      const dispatch = transaction.sale;
-      const closing = opening + (purchase - dispatch);
-
-      worksheet.addRow([
-        transaction.item_name,
-        opening,
-        purchase,
-        dispatch,
-        closing,
-      ]);
-    });
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Stock_Report_${moment().format("YYYY-MM-DD")}.xlsx`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
 
   if (isLoading) {
     return (
@@ -228,24 +156,14 @@ const Stock = () => {
             />
           </div>
         </div>
-        <div className="flex gap-2  mt-5">
+
+        {/* Print Button */}
+        <div className="flex justify-center md:justify-end w-full md:w-auto">
           <Button
-            type="button"
-            size="sm"
             className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
-            // className="h-8 w-24"
             onClick={handlePrintPdf}
           >
-            <Printer className="h-3 w-3 mr-1" /> Print
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
-            // className="h-8 w-24"
-            onClick={downloadExcel}
-          >
-            <RiFileExcel2Line className="h-3 w-3 mr-1" /> Excel
+            <Printer className="h-4 w-4 mr-1" /> Print
           </Button>
         </div>
       </div>
@@ -257,28 +175,16 @@ const Stock = () => {
       <div className="p-0 md:p-4">
         <div className="sm:hidden">
           <div
-            className={`sm:sticky relative top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm px-3 pb-3 mb-2`}
+            className={`sm:sticky relative top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm p-3 mb-2`}
           >
             <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
-              <div className="flex justify-between items-center">
-                <h1 className="text-base font-bold text-gray-800 px-2">
+              {/* Title Section */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800">
                   Stock Summary
                 </h1>
-                <div className="flex gap-[2px]">
-                  <button
-                    className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-b-md `}
-                    onClick={downloadExcel}
-                  >
-                    <RiFileExcel2Line className="h-3 w-3 " />
-                  </button>
-                  <button
-                    className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-b-md `}
-                    onClick={handlePrintPdf}
-                  >
-                    <Printer className="h-3 w-3 " />
-                  </button>
-                </div>
               </div>
+
               {/* Date Inputs */}
               <div className="flex  flex-row items-center gap-2 w-full md:w-auto">
                 <div className="w-full sm:w-auto">
@@ -311,6 +217,16 @@ const Stock = () => {
                   />
                 </div>
               </div>
+
+              {/* Print Button */}
+              <div className="absolute top-0 right-0 ">
+                <button
+                  className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-bl-2xl `}
+                  onClick={handlePrintPdf}
+                >
+                  <Printer className="h-3 w-3 " />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -320,7 +236,7 @@ const Stock = () => {
         </div>
 
         <div
-          className="overflow-x-auto text-[11px] grid grid-cols-1"
+          className="overflow-x-auto text-[11px] grid grid-cols-1 p-6 print:p-4"
           ref={containerRef}
         >
           <div className="hidden print:block">
@@ -341,67 +257,259 @@ const Stock = () => {
           <table className="w-full border-collapse border border-black">
             <thead className="bg-gray-100 sticky top-0 z-10">
               <tr>
-                <th className="border border-black px-2 py-2 text-center">
+                <th
+                  className="border border-black px-2 py-2 text-center"
+                  rowSpan={2}
+                >
                   Item Name
                 </th>
-                <th className="border border-black px-2 py-2 text-center">
-                  Open Balance
-                </th>
-                <th className="border border-black px-2 py-2 text-center">
-                  Purchase
-                </th>
-                <th className="border border-black px-2 py-2 text-center">
-                  PR
-                </th>
-                <th className="border border-black px-2 py-2 text-center">
-                  Dispatch
-                </th>
-                <th className="border border-black px-2 py-2 text-center">
-                  DR
-                </th>
 
-                <th className="border border-black px-2 py-2 text-center">
-                  Close Balance
-                </th>
+                {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                  <>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Open Balance
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Purchase
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Purchase Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Dispatch
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Dispatch Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Close Balance
+                    </th>
+                  </>
+                ) : (
+                  <>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Open Balance
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Purchase
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Purchase Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Dispatch
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Dispatch Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Close Balance
+                    </th>
+                  </>
+                )}
               </tr>
+
+              {singlebranch === "Yes" && doublebranch === "Yes" && (
+                <tr>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                </tr>
+              )}
             </thead>
+
             {buyerData && (
               <tbody>
-                {buyerData.map((buyer, index) => (
-                  <>
+                {buyerData.map((buyer, index) => {
+                  const itemPiece = Number(buyer.item_piece) || 1;
+
+                  const openingPurch =
+                    Number(buyer.openpurch) * itemPiece +
+                    Number(buyer.openpurch_piece);
+                  const openingSale =
+                    Number(buyer.closesale) * itemPiece +
+                    Number(buyer.closesale_piece);
+                  const openingPurchR =
+                    Number(buyer.openpurchR) * itemPiece +
+                    Number(buyer.openpurchR_piece);
+                  const openingSaleR =
+                    Number(buyer.closesaleR) * itemPiece +
+                    Number(buyer.closesaleR_piece);
+
+                  const opening =
+                    openingPurch - openingSale - openingPurchR + openingSaleR;
+
+                  const purchase =
+                    Number(buyer.purch) * itemPiece + Number(buyer.purch_piece);
+                  const purchaseR =
+                    Number(buyer.purchR) * itemPiece +
+                    Number(buyer.purchR_piece);
+                  const sale =
+                    Number(buyer.sale) * itemPiece + Number(buyer.sale_piece);
+                  const saleR =
+                    Number(buyer.saleR) * itemPiece + Number(buyer.saleR_piece);
+
+                  const total = opening + purchase - purchaseR - sale + saleR;
+
+                  const toBoxPiece = (val) => ({
+                    box: Math.floor(val / itemPiece),
+                    piece: val % itemPiece,
+                  });
+
+                  const openingBP = toBoxPiece(opening);
+                  const purchaseBP = toBoxPiece(purchase);
+                  const purchaseRBP = toBoxPiece(purchaseR);
+                  const saleBP = toBoxPiece(sale);
+                  const saleRBP = toBoxPiece(saleR);
+                  const totalBP = toBoxPiece(total);
+
+                  return (
                     <tr
                       key={buyer.id || buyer.item_name}
                       className="hover:bg-gray-50"
                     >
-                      <td className="border border-black px-2 py-2 ">
+                      <td className="border border-black px-2 py-2">
                         {buyer.item_name}
                       </td>
-                      <td className="border border-black px-2 py-2 text-center">
-                        {buyer.openpurch - buyer.closesale}
-                      </td>
-                      <td className="border border-black px-2 py-2 text-center">
-                        {buyer.purch}
-                      </td>
-                      <td className="border border-black px-2 py-2 text-center">
-                        {buyer.purchR}
-                      </td>
-                      <td className="border border-black px-2 py-2 text-center">
-                        {buyer.sale}
-                      </td>
-                      <td className="border border-black px-2 py-2 text-center">
-                        {buyer.saleR}
-                      </td>
 
-                      <td className="border border-black px-2 py-2 text-center">
-                        {Number(buyer.openpurch) -
-                          Number(buyer.closesale) +
-                          (Number(buyer.purch) - Number(buyer.sale)) -
-                          Number(buyer.purchR) +
-                          Number(buyer.saleR)}
-                      </td>
+                      {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                        <>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {openingBP.box}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {openingBP.piece}
+                          </td>
+
+                          <td className="border border-black px-2 py-2 text-right">
+                            {purchaseBP.box}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {purchaseBP.piece}
+                          </td>
+
+                          <td className="border border-black px-2 py-2 text-right">
+                            {purchaseRBP.box}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {purchaseRBP.piece}
+                          </td>
+
+                          <td className="border border-black px-2 py-2 text-right">
+                            {saleBP.box}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {saleBP.piece}
+                          </td>
+
+                          <td className="border border-black px-2 py-2 text-right">
+                            {saleRBP.box}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {saleRBP.piece}
+                          </td>
+
+                          <td className="border border-black px-2 py-2 text-right">
+                            {totalBP.box}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {totalBP.piece}
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {opening}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {purchase}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {purchaseR}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {sale}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {saleR}
+                          </td>
+                          <td className="border border-black px-2 py-2 text-right">
+                            {total}
+                          </td>
+                        </>
+                      )}
                     </tr>
-                  </>
-                ))}
+                  );
+                })}
               </tbody>
             )}
           </table>

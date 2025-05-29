@@ -31,7 +31,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import axios from "axios";
 import {
   ChevronDown,
   Edit,
@@ -44,14 +43,21 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
-  fetchSalesById,
-  navigateTOSalesReturnEdit,
-  navigateTOSalesReturnView,
-  SALES_RETURN_LIST,
+  DISPATCH_EDIT_LIST,
+  DISPATCH_LIST,
+  fetchDispatchById,
+  navigateTODispatchEdit,
+  navigateTODispatchView,
 } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import { encryptId } from "@/components/common/Encryption";
 import Loader from "@/components/loader/Loader";
 import StatusToggle from "@/components/toggle/StatusToggle";
+import { ButtonConfig } from "@/config/ButtonConfig";
+import { useToast } from "@/hooks/use-toast";
+import moment from "moment";
+import { RiWhatsappFill } from "react-icons/ri";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,54 +68,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import BASE_URL from "@/config/BaseUrl";
-import { ButtonConfig } from "@/config/ButtonConfig";
-import { useToast } from "@/hooks/use-toast";
-import moment from "moment";
-import { RiWhatsappFill } from "react-icons/ri";
-
-const SalesReturnList = () => {
+import { useSelector } from "react-redux";
+const DispatchList = () => {
+  const token = usetoken();
   const {
-    data: sales,
+    data: dispatch,
     isLoading,
-    isFetching,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["salesreturn"],
+    queryKey: ["dispatch"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${SALES_RETURN_LIST}`, {
+      const response = await apiClient.get(`${DISPATCH_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return response.data.sales;
+      return response.data.dispatch;
     },
   });
-
   // State for table management
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [deleteItemId, setDeleteItemId] = useState(null);
+
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const UserId = localStorage.getItem("userType");
-  const { toast } = useToast();
-  const whatsapp = localStorage.getItem("whatsapp-number");
+  const UserId = useSelector((state) => state.auth.user_type);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState(null);
+  const whatsapp = useSelector((state) => state.auth.whatsapp_number);
   const queryClient = useQueryClient();
-
+  const [selectedDate, setSelectedDate] = useState(
+    moment().format("YYYY-MM-DD")
+  );
+  const { toast } = useToast();
   const handleDeleteRow = (productId) => {
     setDeleteItemId(productId);
     setDeleteConfirmOpen(true);
   };
   const confirmDelete = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await axios.delete(
-        `${BASE_URL}/api/sales-return/${deleteItemId}`,
+      const response = await apiClient.delete(
+        `${DISPATCH_EDIT_LIST}/${deleteItemId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -119,13 +119,13 @@ const SalesReturnList = () => {
 
       const data = response.data;
 
-      if (data.code === 200) {
+      if (data.code == 200) {
         toast({
           title: "Success",
           description: data.msg,
         });
         refetch();
-      } else if (data.code === 400) {
+      } else if (data.code == 400) {
         toast({
           title: "Duplicate Entry",
           description: data.msg,
@@ -153,59 +153,60 @@ const SalesReturnList = () => {
       setDeleteItemId(null);
     }
   };
-  const handleFetchSalesById = async (salesId) => {
+  const handleFetchDispatchById = async (dispatchId) => {
     try {
       const data = await queryClient.fetchQuery({
-        queryKey: ["salesByid", salesId],
-        queryFn: () => fetchSalesById(salesId),
+        queryKey: ["dispatchByid", dispatchId],
+        queryFn: () => fetchDispatchById(dispatchId, token),
       });
 
-      if (data?.sales && data?.salesSub) {
-        handleSendWhatsApp(data.sales, data.salesSub, data.buyer);
+      if (data?.dispatch && data?.dispatchSub) {
+        handleSendWhatsApp(data.dispatch, data.dispatchSub, data.buyer);
       } else {
         console.error("Incomplete data received");
       }
     } catch (error) {
-      console.error("Failed to fetch purchase data or send WhatsApp:", error);
+      console.error("Failed to fetch dispatch data or send WhatsApp:", error);
     }
   };
-
-  const handleSendWhatsApp = (sales, salesSub, buyer) => {
-    const { sales_ref_no, sales_date, sales_vehicle_no } = sales;
+  const handleSendWhatsApp = (dispatch, dispatchSub, buyer) => {
+    const { dispatch_ref, dispatch_date, dispatch_vehicle_no } = dispatch;
     const { buyer_name, buyer_city } = buyer;
-    const salesNo = sales_ref_no?.split("-").pop();
-
-    const itemLines = salesSub.map((item) => {
-      const name = item.item_name.trim();
-      const qty = String(item.sales_sub_box).replace(/\D/g, "");
-      return `${name}   (${qty})`;
+    const salesNo = dispatch_ref?.split("-").pop();
+    const itemLines = dispatchSub.map((item) => {
+      const name = item.item_name.padEnd(25, " ");
+      const box = `(${String(item.dispatch_sub_box).replace(
+        /\D/g,
+        ""
+      )})`.padStart(4, " ");
+      return `${name}   ${box}`;
     });
 
-    const totalQty = salesSub.reduce((sum, item) => {
-      const qty = parseInt(item.sales_sub_box, 10) || 0;
+    const totalQty = dispatchSub.reduce((sum, item) => {
+      const qty = parseInt(item.dispatch_sub_box, 10) || 0;
       return sum + qty;
     }, 0);
 
     const message = `=== DispatchList ===
-No       : ${salesNo}
-Date     : ${moment(sales_date).format("DD-MM-YYYY")}
-Party    : ${buyer_name}
-City     : ${buyer_city}
-Vehicle  : ${sales_vehicle_no}
-======================
-Product [SIZE] (QTY)
-======================
-${itemLines.join("\n")}
-======================
-*Total QTY: ${totalQty}*
-======================`;
-    // const phoneNumber = "919360485526";
+  No.        : ${salesNo}
+  Date       : ${moment(dispatch_date).format("DD-MM-YYYY")}
+  Party      : ${buyer_name}
+  City       : ${buyer_city}
+  VEHICLE NO : ${dispatch_vehicle_no}
+  ======================
+  Product    [SIZE]   (QTY)
+  ======================
+${itemLines.map((line) => "  " + line).join("\n")}
+  ======================
+  *Total QTY: ${totalQty}*
+  ======================`;
+
     const phoneNumber = `${whatsapp}`;
+    // const phoneNumber = "919360485526";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
-
   const columns = [
     {
       accessorKey: "index",
@@ -214,11 +215,11 @@ ${itemLines.join("\n")}
       cell: ({ row }) => <div>{row.index + 1}</div>,
     },
     {
-      accessorKey: "sales_date",
+      accessorKey: "dispatch_date",
       header: "Date",
       id: "Date",
       cell: ({ row }) => {
-        const date = row.original.sales_date;
+        const date = row.original.dispatch_date;
         return moment(date).format("DD-MMM-YYYY");
       },
     },
@@ -229,16 +230,16 @@ ${itemLines.join("\n")}
       cell: ({ row }) => <div>{row.original.buyer_name}</div>,
     },
     {
-      accessorKey: "sales_ref_no",
+      accessorKey: "dispatch_ref_no",
       header: "Ref No",
       id: "Ref No",
-      cell: ({ row }) => <div>{row.original.sales_ref_no}</div>,
+      cell: ({ row }) => <div>{row.original.dispatch_ref_no}</div>,
     },
     {
-      accessorKey: "sales_vehicle_no",
+      accessorKey: "dispatch_vehicle_no",
       header: "Vehicle No",
       id: "Vehicle No",
-      cell: ({ row }) => <div>{row.original.sales_vehicle_no}</div>,
+      cell: ({ row }) => <div>{row.original.dispatch_vehicle_no}</div>,
     },
     ...(UserId == 3
       ? [
@@ -252,11 +253,11 @@ ${itemLines.join("\n")}
         ]
       : []),
     {
-      accessorKey: "sales_status",
+      accessorKey: "dispatch_status",
       header: "Status",
       id: "Status",
       cell: ({ row }) => {
-        const status = row.original.sales_status;
+        const status = row.original.dispatch_status;
         const statusId = row.original.id;
         return (
           <StatusToggle
@@ -273,7 +274,7 @@ ${itemLines.join("\n")}
       id: "actions",
       header: "Action",
       cell: ({ row }) => {
-        const salesId = row.original.id;
+        const DispatchId = row.original.id;
 
         return (
           <div className="flex flex-row space-x-2">
@@ -285,7 +286,7 @@ ${itemLines.join("\n")}
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        navigateTOSalesReturnEdit(navigate, salesId);
+                        navigateTODispatchEdit(navigate, DispatchId);
                       }}
                     >
                       <Edit />
@@ -305,7 +306,7 @@ ${itemLines.join("\n")}
                     variant="ghost"
                     size="icon"
                     onClick={() => {
-                      navigateTOSalesReturnView(navigate, salesId);
+                      navigateTODispatchView(navigate, DispatchId);
                     }}
                   >
                     <View />
@@ -322,7 +323,7 @@ ${itemLines.join("\n")}
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
-                      onClick={() => handleDeleteRow(salesId)}
+                      onClick={() => handleDeleteRow(DispatchId)}
                       className="text-red-500"
                       type="button"
                     >
@@ -335,13 +336,14 @@ ${itemLines.join("\n")}
                 </Tooltip>
               </TooltipProvider>
             )}
-
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
-                    onClick={() => handleFetchSalesById(encryptId(salesId))}
+                    onClick={() =>
+                      handleFetchDispatchById(encryptId(DispatchId))
+                    }
                     className="text-green-500"
                     type="button"
                   >
@@ -359,8 +361,22 @@ ${itemLines.join("\n")}
     },
   ];
 
+  const filteredItem = useMemo(() => {
+    if (!dispatch) return [];
+
+    return dispatch.filter((item) => {
+      const itemDate = moment(item.sales_date).format("YYYY-MM-DD");
+      const matchesDate = !selectedDate || itemDate === selectedDate;
+      const matchesSearch = item.buyer_name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      return matchesDate && matchesSearch;
+    });
+  }, [dispatch, selectedDate, searchQuery]);
+
   const table = useReactTable({
-    data: sales || [],
+    data: filteredItem || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -384,7 +400,7 @@ ${itemLines.join("\n")}
   });
 
   // Render loading state
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -401,7 +417,7 @@ ${itemLines.join("\n")}
         <Card className="w-full max-w-md mx-auto mt-10">
           <CardHeader>
             <CardTitle className="text-destructive">
-              Error Fetching Dispatch Return
+              Error Fetching Dispatch
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -420,16 +436,16 @@ ${itemLines.join("\n")}
         <div className="sm:hidden">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl md:text-2xl text-gray-800 font-medium">
-              Dispatch Return List
+              Dispatch List
             </h1>
             {UserId != 3 && (
               <div>
                 <Button
                   variant="default"
                   className={`md:ml-2 bg-yellow-400 hover:bg-yellow-600 text-black rounded-l-full`}
-                  onClick={() => navigate("/dispatch-return/create")}
+                  onClick={() => navigate("/dispatch/create")}
                 >
-                  <SquarePlus className="h-4 w-4 " /> Dispatch Return
+                  <SquarePlus className="h-4 w-4 " /> Dispatch
                 </Button>
               </div>
             )}
@@ -440,21 +456,27 @@ ${itemLines.join("\n")}
             <div className="relative w-full md:w-72">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search dispatch return..."
+                placeholder="Search dispatch..."
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
               />
             </div>
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
+            />
           </div>
 
           <div className="space-y-3">
-            {sales.length > 0 ? (
-              sales.map((item, index) => (
+            {filteredItem.length > 0 ? (
+              filteredItem.map((item, index) => (
                 <div
                   key={item.id}
                   onClick={() => {
-                    navigateTOSalesReturnView(navigate, item.id);
+                    navigateTODispatchView(navigate, item.id);
                   }}
                   className="relative bg-white rounded-lg shadow-sm border-l-4 border-r border-b border-t border-yellow-500 overflow-hidden"
                 >
@@ -472,14 +494,14 @@ ${itemLines.join("\n")}
                       <div className="flex items-center justify-between gap-2 ">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.sales_status === "Active"
+                            item.dispatch_status === "Active"
                               ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-800"
                           }`}
                           onClick={(e) => e.stopPropagation()}
                         >
                           <StatusToggle
-                            initialStatus={item.sales_status}
+                            initialStatus={item.dispatch_status}
                             teamId={item.id}
                             onStatusChange={() => {
                               refetch();
@@ -491,30 +513,18 @@ ${itemLines.join("\n")}
                             className={`px-2 py-1 bg-yellow-400 hover:bg-yellow-600 rounded-lg text-black text-xs`}
                             onClick={(event) => {
                               event.stopPropagation();
-                              navigateTOSalesReturnEdit(navigate, item.id);
+                              navigateTODispatchEdit(navigate, item.id);
                             }}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                         )}
 
-                        {UserId != 1 && (
-                          <button
-                            variant="ghost"
-                            type="button"
-                            onClick={() => {
-                              e.stopPropagation();
-                              handleDeleteRow(item.id);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </button>
-                        )}
                         <button
                           variant="ghost"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleFetchSalesById(encryptId(item.id));
+                            handleFetchDispatchById(encryptId(item.id));
                           }}
                           className="text-green-500"
                           type="button"
@@ -525,7 +535,7 @@ ${itemLines.join("\n")}
                     </div>
 
                     <div className="flex flex-wrap justify-between gap-1">
-                      {item.sales_ref_no && (
+                      {item.dispatch_ref_no && (
                         <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -543,11 +553,11 @@ ${itemLines.join("\n")}
                           </svg>
                           <span className="text-xs text-gray-700">
                             <span className="text-[10px]">Ref No:</span>
-                            {item.sales_ref_no}
+                            {item.dispatch_ref_no}
                           </span>
                         </div>
                       )}
-                      {item.sales_vehicle_no && (
+                      {item.dispatch_vehicle_no && (
                         <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -568,11 +578,11 @@ ${itemLines.join("\n")}
                           </svg>
                           <span className="text-xs text-gray-700">
                             <span className="text-[10px]">Vehicle No:</span>
-                            {item.sales_vehicle_no}
+                            {item.dispatch_vehicle_no}
                           </span>
                         </div>
                       )}
-                      {item.sales_date && (
+                      {item.dispatch_date && (
                         <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -599,40 +609,9 @@ ${itemLines.join("\n")}
                             <line x1="3" y1="10" x2="21" y2="10" />
                           </svg>
                           <span className="text-xs text-gray-700">
-                            {moment(item.sales_date).format("DD-MMM-YY")}
+                            {moment(item.dispatch_date).format("DD-MMM-YY")}
                           </span>
                         </div>
-                      )}
-                      {UserId == 3 && (
-                        <>
-                          {item.branch_name && (
-                            <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="10"
-                                height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-600 mr-1"
-                              >
-                                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-                                <path d="M13 5v2" />
-                                <path d="M13 17v2" />
-                                <path d="M13 11v2" />
-                              </svg>
-                              <span className="text-xs text-gray-700">
-                                <span className="text-[10px]">
-                                  Branch Name:
-                                </span>
-                                {item.branch_name}
-                              </span>
-                            </div>
-                          )}
-                        </>
                       )}
                     </div>
                   </div>
@@ -648,14 +627,14 @@ ${itemLines.join("\n")}
 
         <div className="hidden sm:block">
           <div className="flex text-left text-2xl text-gray-800 font-[400]">
-            Dispatch Return List
+            Dispatch List
           </div>
           <div className="flex flex-col md:flex-row md:items-center py-4 gap-2">
             {/* Search Input */}
             <div className="relative w-full md:w-72">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
-                placeholder="Search Dispatch Return..."
+                placeholder="Search Dispatch..."
                 value={table.getState().globalFilter || ""}
                 onChange={(event) => table.setGlobalFilter(event.target.value)}
                 className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
@@ -664,6 +643,12 @@ ${itemLines.join("\n")}
 
             {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full md:w-auto">
@@ -695,9 +680,9 @@ ${itemLines.join("\n")}
                   <Button
                     variant="default"
                     className={`w-full md:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
-                    onClick={() => navigate("/dispatch-return/create")}
+                    onClick={() => navigate("/dispatch/create")}
                   >
-                    <SquarePlus className="h-4 w-4 mr-2" /> Dispatch Return
+                    <SquarePlus className="h-4 w-4 mr-2" /> Dispatch
                   </Button>
                 </>
               )}
@@ -791,7 +776,7 @@ ${itemLines.join("\n")}
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              disapatch return.
+              dispatch.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -809,4 +794,4 @@ ${itemLines.join("\n")}
   );
 };
 
-export default SalesReturnList;
+export default DispatchList;

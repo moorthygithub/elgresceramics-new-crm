@@ -33,21 +33,20 @@ import { BRANCH_LIST } from "@/api";
 import Loader from "@/components/loader/Loader";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import BranchForm from "./BranchForm";
-// import CreateBuyer from "./CreateBuyer";
-// import EditBuyer from "./EditBuyer ";
-
+import usetoken from "@/api/usetoken";
+import apiClient from "@/api/axios";
 const BranchList = () => {
+  const token = usetoken();
+
   const {
     data: branch,
     isLoading,
-    isFetching,
     isError,
     refetch,
   } = useQuery({
     queryKey: ["branchs"],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`${BRANCH_LIST}`, {
+      const response = await apiClient.get(`${BRANCH_LIST}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.branch;
@@ -86,6 +85,18 @@ const BranchList = () => {
       accessorKey: "branch_email",
       header: "Email",
       cell: ({ row }) => <div>{row.original.branch_email}</div>,
+    },
+    {
+      id: "S Unit",
+      accessorKey: "branch_s_unit",
+      header: "S Unit",
+      cell: ({ row }) => <div>{row.original.branch_s_unit}</div>,
+    },
+    {
+      id: "D Unit",
+      accessorKey: "branch_d_unit",
+      header: "D Unit",
+      cell: ({ row }) => <div>{row.original.branch_d_unit}</div>,
     },
     {
       id: "Status",
@@ -151,7 +162,7 @@ const BranchList = () => {
   });
 
   // Render loading state
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <Page>
         <div className="flex justify-center items-center h-full">
@@ -318,7 +329,6 @@ const BranchList = () => {
               />
             </div>
 
-            {/* Dropdown Menu & Sales Button */}
             <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

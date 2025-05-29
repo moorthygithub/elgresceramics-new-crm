@@ -1,71 +1,67 @@
+import { PANEL_CHECK } from "@/api";
+import apiClient from "@/api/axios";
+import usetoken from "@/api/usetoken";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
-  DialogTitle,
   DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import BASE_URL from "@/config/BaseUrl";
-import axios from "axios";
+import useLogout from "@/hooks/useLogout";
+import { setShowUpdateDialog } from "@/redux/versionSlice";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
-  const token = localStorage.getItem("token");
+const VersionCheck = () => {
+  const token = usetoken();
+  const localVersion = useSelector((state) => state.auth?.version);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const Logout = useLogout();
   const [retryPopup, setRetryPopup] = useState(false);
-  const [serverVersion, setServerVersion] = useState(null);
-  //   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const localVersion = localStorage.getItem("version");
-
+  const isDialogOpen = useSelector((state) => state.version.showUpdateDialog);
+  const serverVersion = useSelector((state) => state?.version?.version);
+  // console.log(
+  //   localVersion,
+  //   "localVersion in ",
+  //   serverVersion,
+  //   "serverVersion in"
+  // );
   const handleCloseDialog = () => {
-    setIsDialogOpen(false);
+    dispatch(
+      setShowUpdateDialog({
+        showUpdateDialog: false,
+        version: serverVersion,
+      })
+    );
   };
+  const handleLogout = async () => {
+    setLoading(true);
 
-  const handleLogout = () => {
     try {
-      localStorage.clear();
-      navigate("/");
-      setIsDialogOpen(false);
+      await new Promise((res) => setTimeout(res, 1000));
+      await Logout();
     } catch (error) {
-      console.error("Logout error:", error);
+      console.log("error", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const checkVersion = async () => {
-      try {
-        const statusRes = await axios.get(`${BASE_URL}/api/panelCheck`);
-        const serverVer = statusRes?.data?.version?.version_panel;
-
-        setServerVersion(serverVer);
-        if (token && statusRes.data?.msg == "success") {
-          localStorage.setItem("serverversion", serverVer);
-
-          if (localVersion !== serverVer) {
-            setIsDialogOpen(true);
-          } else {
-            localStorage.setItem("version", serverVer);
-          }
-        }
-      } catch (error) {
-        console.error("Panel status check failed:", error);
-      }
-    };
-
-    checkVersion();
-  }, [token, navigate]);
-
-  useEffect(() => {
     if (retryPopup) {
       const timeout = setTimeout(() => {
-        setIsDialogOpen(true);
+        dispatch(
+          setShowUpdateDialog({
+            showUpdateDialog: true,
+            version: serverVersion,
+          })
+        );
         setRetryPopup(false);
       }, 5000);
       return () => clearTimeout(timeout);
@@ -109,6 +105,7 @@ const VersionCheck = ({ isDialogOpen, setIsDialogOpen }) => {
           </Button>
           <Button
             onClick={handleLogout}
+            disable={loading}
             className="rounded-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white"
           >
             {loading ? "Updating" : "Update Now"}
