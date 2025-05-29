@@ -25,7 +25,7 @@ export function TeamSwitcher({ teams }) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        {/* <SidebarMenuButton
+        <SidebarMenuButton
           size="lg"
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
@@ -40,8 +40,8 @@ export function TeamSwitcher({ teams }) {
             <span className="truncate text-xs">{activeTeam.plan}</span>
           </div>
           <ChevronsUpDown className="ml-auto" />
-        </SidebarMenuButton> */}
-        <SidebarMenuButton
+        </SidebarMenuButton>
+        {/* <SidebarMenuButton
           size="lg"
           className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
         >
@@ -53,7 +53,7 @@ export function TeamSwitcher({ teams }) {
             <span className="truncate text-xs">{activeTeam.plan}</span>
           </div>
           <ChevronsUpDown className="ml-auto" />
-        </SidebarMenuButton>
+        </SidebarMenuButton> */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild></DropdownMenuTrigger>
           <DropdownMenuContent

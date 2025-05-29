@@ -577,8 +577,8 @@ const SingleItemStock = () => {
 
     worksheet.columns = isYesYes
       ? [
-          { width: 14 }, 
-          { width: 20 }, 
+          { width: 14 },
+          { width: 20 },
           { width: 8 },
           { width: 6 },
           { width: 8 },
@@ -591,13 +591,13 @@ const SingleItemStock = () => {
           { width: 6 },
         ]
       : [
-          { width: 14 }, 
-          { width: 20 }, 
-          { width: 12 }, 
-          { width: 16 }, 
-          { width: 12 }, 
-          { width: 16 }, 
-          { width: 14 }, 
+          { width: 14 },
+          { width: 20 },
+          { width: 12 },
+          { width: 16 },
+          { width: 12 },
+          { width: 16 },
+          { width: 14 },
         ];
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -654,7 +654,9 @@ const SingleItemStock = () => {
       const total = toBoxPiece(totals);
       const purchaseTransactions =
         reportData?.purchase?.map((p) => {
-          const purchase = p?.purchase_sub_box + p?.purchase_sub_piece ?? 0;
+          const purchase =
+            (p?.purchase_sub_box ?? 0) + (p?.purchase_sub_piece ?? 0);
+
           const purchaseBP = toBoxPiece(purchase);
 
           return {
@@ -670,7 +672,8 @@ const SingleItemStock = () => {
       const purchaseReturnTransactions =
         reportData?.purchaseR?.map((p) => {
           const purchasereturn =
-            p?.purchase_sub_box + p?.purchase_sub_piece ?? 0;
+            (p?.purchase_sub_box ?? 0) + (p?.purchase_sub_piece ?? 0);
+
           const purchaseBPR = toBoxPiece(purchasereturn);
           return {
             date: p?.purchase_date,
@@ -684,7 +687,9 @@ const SingleItemStock = () => {
 
       const saleTransactions =
         reportData?.sale?.map((s) => {
-          const dispatch = s?.dispatch_sub_box + s?.dispatch_sub_piece ?? 0;
+          // const dispatch = s?.dispatch_sub_box + s?.dispatch_sub_piece ?? 0;
+          const dispatch =
+            (s?.dispatch_sub_box ?? 0) + (s?.dispatch_sub_piece ?? 0);
           const dispatchBP = toBoxPiece(dispatch);
           return {
             date: s?.dispatch_date,
@@ -698,8 +703,10 @@ const SingleItemStock = () => {
 
       const saleReturnTransactions =
         reportData?.saleR?.map((s) => {
+          // const dispatchreturn =
+          //   s?.dispatch_sub_box + s?.dispatch_sub_piece ?? 0;
           const dispatchreturn =
-            s?.dispatch_sub_box + s?.dispatch_sub_piece ?? 0;
+            (s?.dispatch_sub_box ?? 0) + (s?.dispatch_sub_piece ?? 0);
           const dispatchBPR = toBoxPiece(dispatchreturn);
           return {
             date: s?.dispatch_date,

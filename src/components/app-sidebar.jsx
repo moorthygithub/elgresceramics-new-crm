@@ -32,14 +32,14 @@ export function AppSidebar({ ...props }) {
       avatar: "/avatars/shadcn.jpg",
     },
     teams: [
-      // {
-      //   name: `${companyname?.CompanyName}`,
-      // },
       {
         name: `${companyname?.CompanyName}`,
-        logo: GalleryVerticalEnd,
-        plan: "",
       },
+      // {
+      //   name: `${companyname?.CompanyName}`,
+      //   logo: GalleryVerticalEnd,
+      //   plan: "",
+      // },
     ],
     navMain: [
       {
