@@ -95,7 +95,7 @@ export default function Page({ children }) {
         {/* Mobile header text - only shown on sm screens */}
 
         <div className="sm:hidden sticky top-0 flex justify-between items-center px-4 py-2  border-b z-40 bg-white  rounded-b-lg shadow-sm">
-          {/* <div className="font-semibold flex items-center space-x-2">
+          <div className="font-semibold flex items-center space-x-2">
             <div className="flex items-center">
               <Logo />
             </div>
@@ -104,10 +104,10 @@ export default function Page({ children }) {
                 {companyname?.CompanyName}
               </span>
             </div>
-          </div> */}
-          <div className="font-semibold flex items-center space-x-2">
-            <Logo showLogo="true" />
           </div>
+          {/* <div className="font-semibold flex items-center space-x-2">
+            <Logo showLogo="true" />
+          </div> */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-center relative">

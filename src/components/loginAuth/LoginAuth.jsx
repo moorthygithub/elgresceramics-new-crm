@@ -126,7 +126,7 @@ export default function LoginAuth() {
           className={`w-72 md:w-80 max-w-md ${ButtonConfig.loginBackground} ${ButtonConfig.loginText}`}
         >
           <CardHeader>
-            {/* <div className="font-semibold flex items-center space-x-2">
+            <div className="font-semibold flex items-center space-x-2">
               <div className="flex items-center">
                 <Logo />
               </div>
@@ -135,8 +135,8 @@ export default function LoginAuth() {
                   {companyname?.CompanyName}
                 </span>
               </div>
-            </div> */}
-            <Logo />
+            </div>
+            {/* <Logo /> */}
 
             <CardTitle
               className={`text-2xl text-center${ButtonConfig.loginText}`}
