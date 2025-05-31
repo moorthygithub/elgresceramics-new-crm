@@ -62,7 +62,6 @@ const CreateDispatch = () => {
   const decryptedId = decryptId(id);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
-
   const userType = useSelector((state) => state.auth.user_type);
   const editId = Boolean(id);
   const { toast } = useToast();
