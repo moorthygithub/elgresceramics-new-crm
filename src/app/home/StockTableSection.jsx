@@ -361,7 +361,7 @@ function StockTableSection({
                     <tr className="font-bold bg-gray-200">
                       <td
                         className="border border-black px-2 py-2 text-right"
-                        colSpan={2}
+                        colSpan={3}
                       >
                         Total:
                       </td>
