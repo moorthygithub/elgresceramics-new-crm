@@ -240,7 +240,7 @@ function StockTableSection({
                       Category
                     </th>
                     <th
-                      className="border border-black px-2 py-2 text-center hidden md:block print:table-cell"
+                      className="border border-black px-2 py-2 text-center "
                       rowSpan={2}
                     >
                       Brand
@@ -254,8 +254,8 @@ function StockTableSection({
                       </th>
                     )}
 
-                    {(singlebranch === "Yes" && doublebranch === "No") ||
-                    (singlebranch === "No" && doublebranch === "Yes") ? (
+                    {(singlebranch == "Yes" && doublebranch == "No") ||
+                    (singlebranch == "No" && doublebranch == "Yes") ? (
                       <th
                         className="border border-black px-2 py-2 text-center"
                         rowSpan={2}
@@ -264,7 +264,7 @@ function StockTableSection({
                       </th>
                     ) : null}
 
-                    {singlebranch === "Yes" && doublebranch === "Yes" && (
+                    {singlebranch == "Yes" && doublebranch == "Yes" && (
                       <th
                         className="border border-black px-2 py-2 text-center"
                         colSpan={2}
@@ -327,7 +327,7 @@ function StockTableSection({
                           {item.item_category}
                         </td>
                         <td className="border border-black px-2 py-2 text-right hidden md:block print:table-cell">
-                          {item.item_brand}
+                          {item.item_brand || "-"}
                         </td>
 
                         {item.item_size !== undefined && (
@@ -338,17 +338,29 @@ function StockTableSection({
 
                         {(singlebranch === "Yes" && doublebranch === "No") ||
                         (singlebranch === "No" && doublebranch === "Yes") ? (
-                          <td className="border border-black px-2 py-2 text-right">
+                          <td
+                            className={`border border-black px-2 py-2 text-right ${
+                              total == "0" ? "opacity-50" : ""
+                            }`}
+                          >
                             {total}
                           </td>
                         ) : null}
 
                         {singlebranch === "Yes" && doublebranch === "Yes" && (
                           <>
-                            <td className="border border-black px-2 py-2 text-center">
+                            <td
+                              className={`border border-black px-2 py-2 text-center ${
+                                box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-center">
+                            <td
+                              className={`border border-black px-2 py-2 text-center ${
+                                piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {piece}
                             </td>
                           </>

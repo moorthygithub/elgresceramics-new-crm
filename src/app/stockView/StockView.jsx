@@ -24,6 +24,7 @@ const StockView = () => {
   const [selectedBrands, setSelectedBrands] = useState("All Brands");
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  console.log(singlebranch, doublebranch);
   const token = usetoken();
   const { toast } = useToast();
   const fetchStockData = async () => {
