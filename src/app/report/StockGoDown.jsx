@@ -29,6 +29,7 @@ const StockGoDown = () => {
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+
   const fetchGodownData = async () => {
     const response = await apiClient.post(
       `${STOCK_GODOWN_REPORT}`,
@@ -46,6 +47,7 @@ const StockGoDown = () => {
     data: stock,
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     queryKey: ["godownData", formData],
     queryFn: fetchGodownData,
@@ -560,7 +562,7 @@ const StockGoDown = () => {
                   </tr>
 
                   {godown.items.map((item) => {
-                    const itemPiece = 1;
+                    const itemPiece = item.item_piece;
 
                     const openPurch =
                       Number(item.open_purchase_box) * itemPiece +
@@ -611,66 +613,139 @@ const StockGoDown = () => {
 
                         {singlebranch === "Yes" && doublebranch === "Yes" ? (
                           <>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                openingBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {openingBP.box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                openingBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {openingBP.piece}
                             </td>
 
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {purchaseBP.box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {purchaseBP.piece}
                             </td>
 
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseRBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {purchaseRBP.box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseRBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {purchaseRBP.piece}
                             </td>
 
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {saleBP.box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {saleBP.piece}
                             </td>
 
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleRBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {saleRBP.box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleRBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {saleRBP.piece}
                             </td>
 
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                totalBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {totalBP.box}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                totalBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {totalBP.piece}
                             </td>
                           </>
                         ) : (
                           <>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                opening == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {opening}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchase == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {purchase}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseR == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {purchaseR}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                sale == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {sale}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleR == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {saleR}
                             </td>
-                            <td className="border border-black px-2 py-2 text-right">
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                total == "0" ? "opacity-50" : ""
+                              }`}
+                            >
                               {total}
                             </td>
                           </>
