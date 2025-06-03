@@ -292,11 +292,11 @@ const PurchaseList = () => {
 
     const purchaseNo = purchase_ref_no?.split("-").pop();
 
-    const NAME_WIDTH = 25;
+    const NAME_WIDTH = 25; // Adjust padding space here
 
     const itemLines = purchaseSub.map((item) => {
-      let name = item.item_name.slice(0, 20);
-      name = name.padEnd(NAME_WIDTH, " ");
+      let name = item.item_name.slice(0, 16); // Trim to max 15 characters always
+      name = name.padEnd(NAME_WIDTH, " "); // Pad to align with qty
       const box = `${String(item.purchase_sub_box || 0)}`;
       return `${name}${box}`;
     });
@@ -306,7 +306,23 @@ const PurchaseList = () => {
       0
     );
 
-    const message = `\`\`\`
+    //     const message = `\`\`\`
+    // === PackList ===
+    // No.        : ${purchaseNo}
+    // Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
+    // Party      : ${buyer_name}
+    // City       : ${buyer_city}
+    // VEHICLE NO : ${purchase_vehicle_no}
+    // ======================
+    // Product              (QTY)
+    // ======================
+    // ${itemLines.join("\n")}
+    // ======================
+    // *Total QTY: ${totalQty}*
+    // ======================
+    // \`\`\``;
+
+    const message = `
 === PackList ===
 No.        : ${purchaseNo}
 Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
@@ -314,17 +330,15 @@ Party      : ${buyer_name}
 City       : ${buyer_city}
 VEHICLE NO : ${purchase_vehicle_no}
 ======================
-Product [SIZE]          (QTY)
+Product [SIZE]              (QTY)
 ======================
 ${itemLines.join("\n")}
 ======================
 Total QTY: ${totalQty}
 ======================
-\`\`\``;
+`;
 
-    // const phoneNumber = "919360485526";
-    const phoneNumber = `${whatsapp}`;
-
+    const phoneNumber = "919360485526"; // Replace with actual WhatsApp number if needed
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");

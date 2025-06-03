@@ -239,6 +239,12 @@ function StockTableSection({
                     >
                       Category
                     </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center hidden md:block print:table-cell"
+                      rowSpan={2}
+                    >
+                      Brand
+                    </th>
                     {filteredItems[0]?.item_size !== undefined && (
                       <th
                         className="hidden print:table-cell border border-black px-2 py-2 text-center"
@@ -320,6 +326,9 @@ function StockTableSection({
                         <td className="border border-black px-2 py-2 text-right">
                           {item.item_category}
                         </td>
+                        <td className="border border-black px-2 py-2 text-right hidden md:block print:table-cell">
+                          {item.item_brand}
+                        </td>
 
                         {item.item_size !== undefined && (
                           <td className="hidden print:table-cell border border-black px-2 py-2 text-right">
@@ -352,7 +361,7 @@ function StockTableSection({
                     <tr className="font-bold bg-gray-200">
                       <td
                         className="border border-black px-2 py-2 text-right"
-                        colSpan={2}
+                        colSpan={3}
                       >
                         Total:
                       </td>
