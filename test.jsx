@@ -1,510 +1,88 @@
 import Page from "@/app/dashboard/page";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { ChevronDown, Edit, Search, SquarePlus, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  fetchPurchaseById,
-  navigateToPurchaseEdit,
-  PURCHASE_EDIT_LIST,
-  PURCHASE_LIST,
-} from "@/api";
+import { useQuery } from "@tanstack/react-query";
+import { Printer } from "lucide-react";
+import { useRef, useState } from "react";
+
+import { STOCK_REPORT } from "@/api";
 import apiClient from "@/api/axios";
 import usetoken from "@/api/usetoken";
-import { encryptId } from "@/components/common/Encryption";
 import Loader from "@/components/loader/Loader";
-import StatusToggle from "@/components/toggle/StatusToggle";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import moment from "moment";
-import { RiWhatsappFill } from "react-icons/ri";
-import { useToast } from "@/hooks/use-toast";
+import { useReactToPrint } from "react-to-print";
 import { useSelector } from "react-redux";
 
-const PurchaseList = () => {
+const Stock = () => {
+  const containerRef = useRef();
+  const singlebranch = useSelector((state) => state.auth.branch_s_unit);
+  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  // const doublebranch = "No";
+  const [availableData, setAvailableData] = useState("");
+
+  const [formData, setFormData] = useState({
+    from_date: moment().startOf("month").format("YYYY-MM-DD"),
+    to_date: moment().format("YYYY-MM-DD"),
+  });
   const token = usetoken();
 
+  const fetchBuyerData = async () => {
+    const response = await apiClient.post(
+      `${STOCK_REPORT}`,
+      { ...formData },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data.stock;
+  };
   const {
-    data: purchase,
+    data: buyerData,
     isLoading,
     isError,
-    refetch,
   } = useQuery({
-    queryKey: ["purchase"],
-    queryFn: async () => {
-      const response = await apiClient.get(`${PURCHASE_LIST}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.data.purchase;
-    },
+    queryKey: ["buyerData", formData],
+    queryFn: fetchBuyerData,
   });
 
-  // State for table management
-  const { toast } = useToast();
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [deleteItemId, setDeleteItemId] = useState(null);
-  const [sorting, setSorting] = useState([]);
-  const [columnFilters, setColumnFilters] = useState([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const UserId = useSelector((state) => state.auth.user_type);
-  const queryClient = useQueryClient();
-  const whatsapp = useSelector((state) => state.auth.whatsapp_number);
-
-  // const doublebranch = "Yes";
-  const navigate = useNavigate();
-  const handleDeleteRow = (productId) => {
-    setDeleteItemId(productId);
-    setDeleteConfirmOpen(true);
-  };
-  const confirmDelete = async () => {
-    try {
-      const response = await apiClient.delete(
-        `${PURCHASE_EDIT_LIST}/${deleteItemId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+  const handlePrintPdf = useReactToPrint({
+    content: () => containerRef.current,
+    documentTitle: "Stock",
+    pageStyle: `
+      @page {
+    size: A4 portrait;
+         margin: 5mm;
+      }
+      @media print {
+        body {
+          font-size: 10px; 
+          margin: 0mm;
+          padding: 0mm;
         }
-      );
-
-      const data = response.data;
-      console.log(data, "data");
-      if (data.code == 200) {
-        toast({
-          title: "Success",
-          description: data.msg,
-        });
-        refetch();
-      } else if (data.code == 400) {
-        toast({
-          title: "Duplicate Entry",
-          description: data.msg,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: data.msg || "Something went wrong.",
-          variant: "destructive",
-        });
+        table {
+          font-size: 11px;
+        }
+        .print-hide {
+          display: none;
+        }
       }
-    } catch (error) {
-      toast({
-        title: "Unexpected Error",
-        description:
-          error?.response?.data?.msg ||
-          error.message ||
-          "Something unexpected happened.",
-        variant: "destructive",
-      });
-      console.error("Failed to delete product:", error);
-    } finally {
-      setDeleteConfirmOpen(false);
-      setDeleteItemId(null);
-    }
-  };
-  const handleFetchPurchaseById = async (purchaseId) => {
-    try {
-      const data = await queryClient.fetchQuery({
-        queryKey: ["purchaseByid", purchaseId],
-        queryFn: () => fetchPurchaseById(purchaseId, token),
-      });
-
-      if (data?.purchase && data?.purchaseSub) {
-        handleSendWhatsApp(data.purchase, data.purchaseSub, data.buyer);
-      } else {
-        console.error("Incomplete data received");
-      }
-    } catch (error) {
-      console.error("Failed to fetch purchase data or send WhatsApp:", error);
-    }
-  };
-
-  //   const handleSendWhatsApp = (
-  //     purchase,
-  //     purchaseSub,
-  //     buyer,
-  //     singlebranch,
-  //     doublebranch
-  //   ) => {
-  //     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
-  //     const { buyer_name, buyer_city } = buyer;
-
-  //     const purchaseNo = purchase_ref_no?.split("-").pop();
-
-  //     const NAME_WIDTH = 24;
-  //     const BOX_WIDTH = 7;
-  //     const itemLine = purchaseSub.map((item) => {
-  //       const name = item.item_name.padEnd(NAME_WIDTH, " ");
-  //       const box = `(${String(item.purchase_sub_box || 0)})`.padEnd(
-  //         BOX_WIDTH,
-  //         " "
-  //       );
-
-  //       const piece = String(item.purchase_sub_piece || 0);
-  //       return `${name}${box}${piece}`;
-  //     });
-
-  //     const itemLines = purchaseSub.map((item) => {
-  //       const name = item.item_name.padEnd(NAME_WIDTH, " ");
-  //       const box = `(${String(item.purchase_sub_box || 0)})`;
-  //       return `${name}${box}`;
-  //     });
-
-  //     const totalQty = purchaseSub.reduce(
-  //       (sum, item) => sum + (parseInt(item.purchase_sub_piece, 10) || 0),
-  //       0
-  //     );
-  //     const totalQtyBox = purchaseSub.reduce(
-  //       (sum, item) => sum + (parseInt(item.purchase_sub_box, 10) || 0),
-  //       0
-  //     );
-
-  //     const isBothYes = singlebranch == "Yes" && doublebranch == "Yes";
-
-  //   //  const productHeader = isBothYes
-  //   //     ? `Product  [SIZE]     (QTY)   (Piece)`
-  //   //     : `Product  [SIZE]     (QTY)`;
-  //       const productHeader = isBothYes
-  //       ? `Product  [SIZE]           (QTY)   (Piece)`
-  //       : `Product  [SIZE]           (QTY)`;
-  //     const productBody = isBothYes ? itemLine.join("\n") : itemLines.join("\n");
-
-  //     const totalLine = isBothYes
-  //       ? `*Total QTY: ${totalQtyBox}   ${totalQty}*`
-  //       : `*Total QTY: ${totalQtyBox}*`;
-
-  //     const message = `
-  // === PackList ===
-  // No.        : ${purchaseNo}
-  // Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-  // Party      : ${buyer_name}
-  // City       : ${buyer_city}
-  // VEHICLE NO : ${purchase_vehicle_no}
-  // ======================
-  // ${productHeader}
-  // ======================
-  // ${productBody}
-  // ======================
-  // ${totalLine}
-  // ======================
-  // `;
-
-  //     // const phoneNumber = "919360485526";
-  //     const phoneNumber = `${whatsapp}`;
-
-  //     const encodedMessage = encodeURIComponent(message);
-  //     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-  //     window.open(whatsappUrl, "_blank");
-  //   };
-
-  //   const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
-  //     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
-  //     const { buyer_name, buyer_city } = buyer;
-
-  //     const purchaseNo = purchase_ref_no?.split("-").pop();
-
-  //     const NAME_WIDTH = 25;
-
-  //     const itemLines = purchaseSub.map((item) => {
-  //       let name = item.item_name;
-  //       if (name.length > 18) {
-  //         name = name.slice(0, 16); // trim to 16 if longer than 18
-  //       }
-  //       name = name.padEnd(NAME_WIDTH, " "); // align all names to 25 chars
-  //       const box = `${String(item.purchase_sub_box || 0)}`;
-  //       return `${name}${box}`;
-  //     });
-
-  //     const totalQty = purchaseSub.reduce(
-  //       (sum, item) => sum + (parseInt(item.purchase_sub_box, 10) || 0),
-  //       0
-  //     );
-
-  //     const message = `\`\`\`
-  // === PackList ===
-  // No.        : ${purchaseNo}
-  // Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-  // Party      : ${buyer_name}
-  // City       : ${buyer_city}
-  // VEHICLE NO : ${purchase_vehicle_no}
-  // ======================
-  // Product    [SIZE]        (QTY)
-  // ======================
-  // ${itemLines.join("\n")}
-  // ======================
-  // *Total QTY: ${totalQty}*
-  // ======================
-  // \`\`\``;
-
-  //     const phoneNumber = "919360485526";
-  //     // const phoneNumber = `${whatsapp}`;
-
-  //     const encodedMessage = encodeURIComponent(message);
-  //     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-  //     window.open(whatsappUrl, "_blank");
-  //   };
-  const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
-    const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
-    const { buyer_name, buyer_city } = buyer;
-
-    const purchaseNo = purchase_ref_no?.split("-").pop();
-
-    const NAME_WIDTH = 25; // Adjust padding space here
-
-    const itemLines = purchaseSub.map((item) => {
-      let name = item.item_name.slice(0, 16); // Trim to max 15 characters always
-      name = name.padEnd(NAME_WIDTH, " "); // Pad to align with qty
-      const box = `${String(item.purchase_sub_box || 0)}`;
-      return `${name}${box}`;
-    });
-
-    const totalQty = purchaseSub.reduce(
-      (sum, item) => sum + (parseInt(item.purchase_sub_box, 10) || 0),
-      0
-    );
-
-    //     const message = `\`\`\`
-    // === PackList ===
-    // No.        : ${purchaseNo}
-    // Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-    // Party      : ${buyer_name}
-    // City       : ${buyer_city}
-    // VEHICLE NO : ${purchase_vehicle_no}
-    // ======================
-    // Product              (QTY)
-    // ======================
-    // ${itemLines.join("\n")}
-    // ======================
-    // *Total QTY: ${totalQty}*
-    // ======================
-    // \`\`\``;
-
-    const message = `
-=== PackList ===
-No.        : ${purchaseNo}
-Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-Party      : ${buyer_name}
-City       : ${buyer_city}
-VEHICLE NO : ${purchase_vehicle_no}
-======================
-Product [SIZE]              (QTY)
-======================
-${itemLines.join("\n")}
-======================
-Total QTY: ${totalQty}
-======================
-`;
-
-    const phoneNumber = "919360485526"; // Replace with actual WhatsApp number if needed
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, "_blank");
-  };
-
-  const columns = [
-    {
-      accessorKey: "index",
-      header: "Sl No",
-      cell: ({ row }) => <div>{row.index + 1}</div>,
-    },
-    {
-      accessorKey: "purchase_date",
-      header: "Date",
-      id: "Date",
-      cell: ({ row }) => {
-        const date = row.original.purchase_date;
-        return moment(date).format("DD-MMM-YYYY");
-      },
-    },
-    {
-      accessorKey: "buyer_name",
-      header: "Buyer Name",
-      id: "Buyer Name",
-      cell: ({ row }) => <div>{row.original.buyer_name}</div>,
-    },
-    {
-      accessorKey: "purchase_ref_no",
-      header: "Ref No",
-      id: "Ref No",
-      cell: ({ row }) => <div>{row.original.purchase_ref_no}</div>,
-    },
-    {
-      accessorKey: "purchase_vehicle_no",
-      header: "Vehicle No",
-      id: "Vehicle No",
-      cell: ({ row }) => <div>{row.original.purchase_vehicle_no}</div>,
-    },
-    ...(UserId == 3
-      ? [
-          {
-            accessorKey: "branch_name",
-            header: "Branch Name",
-            cell: ({ row }) => <div>{row.original.branch_name}</div>,
-          },
-        ]
-      : []),
-    {
-      accessorKey: "purchase_status",
-      header: "Status",
-      cell: ({ row }) => {
-        const status = row.original.purchase_status;
-        const statusId = row.original.id;
-        return (
-          <StatusToggle
-            initialStatus={status}
-            teamId={statusId}
-            onStatusChange={() => {
-              refetch();
-            }}
-          />
-        );
-      },
-    },
-    {
-      id: "actions",
-      header: "Action",
-      cell: ({ row }) => {
-        const purchaseId = row.original.id;
-        return (
-          <div className="flex flex-row">
-            {UserId != 3 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        navigateToPurchaseEdit(navigate, purchaseId);
-                      }}
-                    >
-                      <Edit />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit Purchase</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {UserId != 1 && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleDeleteRow(purchaseId)}
-                      className="text-red-500"
-                      type="button"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete Purchase</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    onClick={() =>
-                      handleFetchPurchaseById(encryptId(purchaseId))
-                    }
-                    className="text-green-500"
-                    type="button"
-                  >
-                    <RiWhatsappFill className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Whatsapp Purchase</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        );
-      },
-    },
-  ];
-
-  const filteredItems =
-    purchase?.filter((item) =>
-      item.buyer_name.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
-
-  // Create the table instance
-  const table = useReactTable({
-    data: purchase || [],
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 20,
-      },
-    },
+    `,
   });
+  const handleInputChange = (field, valueOrEvent) => {
+    const value =
+      typeof valueOrEvent === "object" && valueOrEvent.target
+        ? valueOrEvent.target.value
+        : valueOrEvent;
 
-  // Render loading state
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
   if (isLoading) {
     return (
       <Page>
@@ -515,14 +93,13 @@ Total QTY: ${totalQty}
     );
   }
 
-  // Render error state
   if (isError) {
     return (
       <Page>
         <Card className="w-full max-w-md mx-auto mt-10">
           <CardHeader>
             <CardTitle className="text-destructive">
-              Error Fetching purchase
+              Error Fetching Stock
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -534,384 +111,557 @@ Total QTY: ${totalQty}
       </Page>
     );
   }
-
   return (
     <Page>
-      <div className="w-full p-0 md:p-4 grid grid-cols-1">
+      <div className="p-0 md:p-4">
         <div className="sm:hidden">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl md:text-2xl text-gray-800 font-medium">
-              Purchase List
-            </h1>
-            {UserId != 3 && (
-              <div>
-                <Button
-                  variant="default"
-                  className={`md:ml-2 bg-yellow-400 hover:bg-yellow-600 text-black rounded-l-full`}
-                  onClick={() => {
-                    navigate("/purchase/create");
-                  }}
-                >
-                  <SquarePlus className="h-4 w-4 " /> Purchase
-                </Button>
+          <div
+            className={`sm:sticky relative top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm p-3 mb-2`}
+          >
+            <div className="flex flex-col md:flex-row md:items-center gap-2 sm:gap-4">
+              {/* Title Section */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+                  Stock Summary
+                </h1>
               </div>
-            )}
-          </div>
 
-          <div className="flex flex-col md:flex-row md:items-center py-4 gap-2">
-            {/* Search Input */}
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search purchase..."
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {filteredItems.length > 0 ? (
-              filteredItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="relative bg-white rounded-lg shadow-sm border-l-4 border-r border-b border-t border-yellow-500 overflow-hidden"
-                >
-                  <div className="p-2 flex flex-col gap-2">
-                    {/* Sl No and Item Name */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="bg-gray-100 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center text-xs font-medium">
-                          {index + 1}
-                        </div>
-                        <h3 className="font-medium text-sm text-gray-800">
-                          {item.buyer_name}
-                        </h3>
-                      </div>
-                      <div className="flex items-center justify-between gap-2 ">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.purchase_status === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          <StatusToggle
-                            initialStatus={item.purchase_status}
-                            teamId={item.id}
-                            onStatusChange={() => {
-                              refetch();
-                            }}
-                          />
-                        </span>
-                        {UserId != 3 && (
-                          <button
-                            variant="ghost"
-                            className={`px-2 py-1 bg-yellow-400 hover:bg-yellow-600 rounded-lg text-black text-xs`}
-                            onClick={() => {
-                              navigateToPurchaseEdit(navigate, item.id);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFetchPurchaseById(encryptId(item.id));
-                          }}
-                          className="text-green-500"
-                          type="button"
-                        >
-                          <RiWhatsappFill className="h-4 w-4" />
-                        </button>{" "}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap justify-between gap-1">
-                      {item.purchase_ref_no && (
-                        <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-600 mr-1"
-                          >
-                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-                          </svg>
-                          <span className="text-xs text-gray-700">
-                            <span className="text-[10px]">Ref No:</span>
-                            {item.purchase_ref_no}
-                          </span>
-                        </div>
-                      )}
-                      {item.purchase_vehicle_no && (
-                        <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-600 mr-1"
-                          >
-                            <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-                            <path d="M13 5v2" />
-                            <path d="M13 17v2" />
-                            <path d="M13 11v2" />
-                          </svg>
-                          <span className="text-xs text-gray-700">
-                            <span className="text-[10px]">Vehicle No:</span>
-                            {item.purchase_vehicle_no}
-                          </span>
-                        </div>
-                      )}
-                      {item.purchase_date && (
-                        <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-600 mr-1"
-                          >
-                            <rect
-                              width="18"
-                              height="18"
-                              x="3"
-                              y="4"
-                              rx="2"
-                              ry="2"
-                            />
-                            <line x1="16" y1="2" x2="16" y2="6" />
-                            <line x1="8" y1="2" x2="8" y2="6" />
-                            <line x1="3" y1="10" x2="21" y2="10" />
-                          </svg>
-                          <span className="text-xs text-gray-700">
-                            {moment(item.purchase_date).format("DD-MMM-YY")}
-                          </span>
-                        </div>
-                      )}
-                      {UserId == 3 && (
-                        <>
-                          {item.branch_name && (
-                            <div className="inline-flex items-center bg-gray-100 rounded-full px-2 py-1">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="10"
-                                height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-600 mr-1"
-                              >
-                                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-                                <path d="M13 5v2" />
-                                <path d="M13 17v2" />
-                                <path d="M13 11v2" />
-                              </svg>
-                              <span className="text-xs text-gray-700">
-                                <span className="text-[10px]">
-                                  Branch Name:
-                                </span>
-                                {item.branch_name}
-                              </span>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
+              {/* Date Inputs */}
+              <div className="flex  flex-row items-center gap-2 w-full md:w-auto">
+                <div className="w-full sm:w-auto">
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-xs mb-1 font-medium`}
+                  >
+                    From Date <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.from_date}
+                    className="bg-white w-full sm:w-auto text-sm p-1"
+                    onChange={(e) => handleInputChange("from_date", e)}
+                    placeholder="From Date"
+                  />
                 </div>
-              ))
-            ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 text-center text-gray-500">
-                No items found.
+
+                <div className="w-full sm:w-auto">
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-xs mb-1 font-medium`}
+                  >
+                    To Date <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    className="bg-white w-full sm:w-auto text-sm p-1"
+                    value={formData.to_date}
+                    onChange={(e) => handleInputChange("to_date", e)}
+                    placeholder="To Date"
+                  />
+                </div>
               </div>
-            )}
+
+              {/* Print Button */}
+              <div className="absolute top-0 right-0 ">
+                <button
+                  className={` sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-3 rounded-bl-2xl `}
+                  onClick={handlePrintPdf}
+                >
+                  <Printer className="h-3 w-3 " />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="hidden sm:block">
-          <div className="flex text-left text-2xl text-gray-800 font-[400]">
-            Purchase List
-          </div>
+          <div
+            className={`sticky top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm p-4 mb-2`}
+          >
+            <div className="flex flex-col md:flex-row md:items-center gap-4 sm:gap-8">
+              {/* Title Section */}
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                  Stock Summary
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Add a Stock to Visit Report
+                </p>
+              </div>
 
-          <div className="flex flex-col md:flex-row md:items-center py-4 gap-2">
-            {/* Search Input */}
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search Purchase..."
-                value={table.getState().globalFilter || ""}
-                onChange={(event) => table.setGlobalFilter(event.target.value)}
-                className="pl-8 bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-200 w-full"
-              />
-            </div>
-
-            <div className="flex flex-col md:flex-row md:ml-auto gap-2 w-full md:w-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full md:w-auto">
-                    Columns <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {UserId != 3 && (
-                <>
-                  <Button
-                    variant="default"
-                    className={`ml-2 ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
-                    onClick={() => {
-                      navigate("/purchase/create");
-                    }}
+              {/* Date Inputs */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                <div className="w-full sm:w-auto">
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-sm mb-1 font-medium`}
                   >
-                    <SquarePlus className="h-4 w-4 mr-2" /> Purchase
-                  </Button>{" "}
-                </>
-              )}
-            </div>
-          </div>
-          {/* table  */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead
-                          key={header.id}
-                          className={` ${ButtonConfig.tableHeader} ${ButtonConfig.tableLabel}`}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          {/* row slection and pagintaion button  */}
-          <div className="flex items-center justify-end space-x-2 py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
-              Total Purchase : &nbsp;
-              {table.getFilteredRowModel().rows.length}
-            </div>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
+                    From Date <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    value={formData.from_date}
+                    className="bg-white w-full sm:w-auto"
+                    onChange={(e) => handleInputChange("from_date", e)}
+                    placeholder="Enter From Date"
+                  />
+                </div>
+
+                <div className="w-full sm:w-auto">
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-sm mb-1 font-medium`}
+                  >
+                    To Date <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    className="bg-white w-full sm:w-auto"
+                    value={formData.to_date}
+                    onChange={(e) => handleInputChange("to_date", e)}
+                    placeholder="Enter To Date"
+                  />
+                </div>
+
+                <div className="w-full sm:w-auto">
+                  <label
+                    className={`block ${ButtonConfig.cardLabel} text-sm mb-1 font-medium`}
+                  >
+                    Available
+                  </label>
+                  <Input
+                    value={availableData}
+                    className="bg-white w-full sm:w-auto"
+                    onChange={(e) => {
+                      const onlyDigits = e.target.value.replace(/\D/g, "");
+                      setAvailableData(onlyDigits);
+                    }}
+                    placeholder="Enter Available for search"
+                  />
+                </div>
+              </div>
+
+              {/* Print Button */}
+              <div className="flex justify-center md:justify-end w-full md:w-auto">
+                <Button
+                  className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
+                  onClick={handlePrintPdf}
+                >
+                  <Printer className="h-4 w-4 mr-1" /> Print
+                </Button>
+              </div>
             </div>
           </div>
         </div>
+
+        <div
+          className="overflow-x-auto text-[11px] grid grid-cols-1 p-6 print:p-4"
+          ref={containerRef}
+        >
+          <div className="hidden print:block">
+            <div className="flex justify-between ">
+              <h1 className="text-left text-2xl font-semibold mb-3 ">
+                Stock Summary
+              </h1>
+              <div className="flex space-x-6">
+                <h1>
+                  {" "}
+                  From - {moment(formData.from_date).format("DD-MMM-YYYY")}
+                </h1>
+                <h1>To -{moment(formData.to_date).format("DD-MMM-YYYY")}</h1>
+              </div>
+            </div>
+          </div>
+
+          <table className="w-full border-collapse border border-black">
+            <thead className="bg-gray-100 sticky top-0 z-10">
+              <tr>
+                <th
+                  className="border border-black px-2 py-2 text-center"
+                  rowSpan={2}
+                >
+                  Item Name
+                </th>
+
+                {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                  <>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Open Balance
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Purchase
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Purchase Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Dispatch
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Dispatch Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      colSpan={2}
+                    >
+                      Close Balance
+                    </th>
+                  </>
+                ) : (
+                  <>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Open Balance
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Purchase
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Purchase Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Dispatch
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Dispatch Return
+                    </th>
+                    <th
+                      className="border border-black px-2 py-2 text-center"
+                      rowSpan={2}
+                    >
+                      Close Balance
+                    </th>
+                  </>
+                )}
+              </tr>
+
+              {singlebranch === "Yes" && doublebranch === "Yes" && (
+                <tr>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Box
+                  </th>
+                  <th className="border border-black px-2 py-2 text-center">
+                    Piece
+                  </th>
+                </tr>
+              )}
+            </thead>
+
+            {buyerData && (
+              <tbody>
+                {buyerData
+                  .filter((buyer) => {
+                    const itemPiece = Number(buyer.item_piece) || 1;
+
+                    const openingPurch =
+                      Number(buyer.openpurch) * itemPiece +
+                      Number(buyer.openpurch_piece);
+                    const openingSale =
+                      Number(buyer.closesale) * itemPiece +
+                      Number(buyer.closesale_piece);
+                    const openingPurchR =
+                      Number(buyer.openpurchR) * itemPiece +
+                      Number(buyer.openpurchR_piece);
+                    const openingSaleR =
+                      Number(buyer.closesaleR) * itemPiece +
+                      Number(buyer.closesaleR_piece);
+
+                    const opening =
+                      openingPurch - openingSale - openingPurchR + openingSaleR;
+
+                    const purchase =
+                      Number(buyer.purch) * itemPiece +
+                      Number(buyer.purch_piece);
+                    const purchaseR =
+                      Number(buyer.purchR) * itemPiece +
+                      Number(buyer.purchR_piece);
+                    const sale =
+                      Number(buyer.sale) * itemPiece + Number(buyer.sale_piece);
+                    const saleR =
+                      Number(buyer.saleR) * itemPiece +
+                      Number(buyer.saleR_piece);
+
+                    const total = opening + purchase - purchaseR - sale + saleR;
+                    console.log(availableData);
+                    console.log(total, "total");
+                    return availableData
+                      ? Number(availableData) <= total
+                      : true;
+                  })
+                  .map((buyer, index) => {
+                    const itemPiece = Number(buyer.item_piece) || 1;
+
+                    const openingPurch =
+                      Number(buyer.openpurch) * itemPiece +
+                      Number(buyer.openpurch_piece);
+                    const openingSale =
+                      Number(buyer.closesale) * itemPiece +
+                      Number(buyer.closesale_piece);
+                    const openingPurchR =
+                      Number(buyer.openpurchR) * itemPiece +
+                      Number(buyer.openpurchR_piece);
+                    const openingSaleR =
+                      Number(buyer.closesaleR) * itemPiece +
+                      Number(buyer.closesaleR_piece);
+
+                    const opening =
+                      openingPurch - openingSale - openingPurchR + openingSaleR;
+
+                    const purchase =
+                      Number(buyer.purch) * itemPiece +
+                      Number(buyer.purch_piece);
+                    const purchaseR =
+                      Number(buyer.purchR) * itemPiece +
+                      Number(buyer.purchR_piece);
+                    const sale =
+                      Number(buyer.sale) * itemPiece + Number(buyer.sale_piece);
+                    const saleR =
+                      Number(buyer.saleR) * itemPiece +
+                      Number(buyer.saleR_piece);
+
+                    const total = opening + purchase - purchaseR - sale + saleR;
+
+                    const toBoxPiece = (val) => ({
+                      box: Math.floor(val / itemPiece),
+                      piece: val % itemPiece,
+                    });
+
+                    const openingBP = toBoxPiece(opening);
+                    const purchaseBP = toBoxPiece(purchase);
+                    const purchaseRBP = toBoxPiece(purchaseR);
+                    const saleBP = toBoxPiece(sale);
+                    const saleRBP = toBoxPiece(saleR);
+                    const totalBP = toBoxPiece(total);
+
+                    return (
+                      <tr
+                        key={buyer.id || buyer.item_name}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="border border-black px-2 py-2">
+                          {buyer.item_name}
+                        </td>
+
+                        {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                          <>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                openingBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {openingBP.box}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                openingBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {openingBP.piece}
+                            </td>
+
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {purchaseBP.box}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {purchaseBP.piece}
+                            </td>
+
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseRBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {purchaseRBP.box}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseRBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {purchaseRBP.piece}
+                            </td>
+
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {saleBP.box}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {saleBP.piece}
+                            </td>
+
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleRBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {saleRBP.box}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleRBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {saleRBP.piece}
+                            </td>
+
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                totalBP.box == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {totalBP.box}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                totalBP.piece == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {totalBP.piece}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                opening == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {opening}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchase == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {purchase}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                purchaseR == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {purchaseR}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                sale == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {sale}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                saleR == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {saleR}
+                            </td>
+                            <td
+                              className={`border border-black px-2 py-2 text-right ${
+                                total == "0" ? "opacity-50" : ""
+                              }`}
+                            >
+                              {" "}
+                              {total}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            )}
+          </table>
+        </div>
       </div>
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              purchase.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className={`${ButtonConfig.backgroundColor}  ${ButtonConfig.textColor} text-black hover:bg-red-600`}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Page>
   );
 };
 
-export default PurchaseList;
+export default Stock;
