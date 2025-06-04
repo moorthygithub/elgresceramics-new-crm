@@ -209,7 +209,7 @@ function StockTableSection({
         <CardContent className="p-2">
           {filteredItems?.length ? (
             <div
-              className="overflow-x-auto text-[11px] grid grid-cols-1 p-6 print:p-4"
+              className="overflow-x-auto text-[11px] grid grid-cols-1 p-0 md:p-6 print:p-4"
               ref={containerRef}
             >
               <div className="hidden print:block">
@@ -326,7 +326,7 @@ function StockTableSection({
                         <td className="border border-black px-2 py-2 text-right">
                           {item.item_category}
                         </td>
-                        <td className="border border-black px-2 py-2 text-right hidden md:block print:table-cell">
+                        <td className="border border-black px-2 py-2 text-right">
                           {item.item_brand || "-"}
                         </td>
 
@@ -336,8 +336,8 @@ function StockTableSection({
                           </td>
                         )}
 
-                        {(singlebranch === "Yes" && doublebranch === "No") ||
-                        (singlebranch === "No" && doublebranch === "Yes") ? (
+                        {(singlebranch == "Yes" && doublebranch == "No") ||
+                        (singlebranch == "No" && doublebranch == "Yes") ? (
                           <td
                             className={`border border-black px-2 py-2 text-right ${
                               total == "0" ? "opacity-50" : ""

@@ -190,10 +190,7 @@ const StockGoDown = () => {
           </p>
         </div>
 
-        <form
-          // onSubmit={handleSubmit}
-          className="bg-white p-3 rounded-md shadow-xs  "
-        >
+        <form className="bg-white p-3 rounded-md shadow-xs  ">
           <div className="flex flex-col lg:flex-col lg:items-end gap-3  ">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2 flex-1  items-center">
               <div className="space-y-1 ">
