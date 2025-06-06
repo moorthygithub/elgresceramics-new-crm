@@ -176,7 +176,6 @@ const Stock = () => {
       </Page>
     );
   }
-  const STEP = 1;
 
   return (
     <Page>
