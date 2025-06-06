@@ -37,8 +37,8 @@ function StockTableSection({
 }) {
   const { toast } = useToast();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
-  // const doublebranch = useSelector((state) => state.auth.branch_d_unit);
-  const doublebranch = "Yes";
+  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  // const doublebranch = "Yes";
   const dispatch = useDispatch();
   const columnVisibility = useSelector((state) => state.columnVisibility);
   const handleToggle = (key) => {
@@ -79,17 +79,17 @@ function StockTableSection({
     }
 
     if (isDoubleBranch) {
-      if ((key == "box" || key == "piece") && newVisibility[key]) {
-        newVisibility.available_box = false;
-      }
-      if (key == "available_box" && newVisibility[key]) {
+      if (key === "available_box" && !newVisibility[key]) {
         newVisibility.box = false;
         newVisibility.piece = false;
       }
+      if (key === "available_box" && newVisibility[key]) {
+        newVisibility.box = true;
+      }
     }
-    dispatch(toggleColumn(key));
+    // dispatch(toggleColumn(key));
+    dispatch(setColumnVisibility(newVisibility));
   };
-
 
   const totals = filteredItems.reduce(
     (acc, item) => {
