@@ -1,3 +1,4 @@
+import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,8 +11,6 @@ import { Input } from "@/components/ui/input";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, Download, Printer, Search } from "lucide-react";
-import Page from "../dashboard/page";
-import Loader from "@/components/loader/Loader";
 import { useSelector } from "react-redux";
 
 function StockTableSection({

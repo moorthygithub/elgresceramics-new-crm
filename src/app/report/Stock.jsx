@@ -148,15 +148,15 @@ const Stock = () => {
       [field]: value,
     }));
   };
-  if (isLoading || loading) {
-    return (
-      <Page>
-        <div className="flex justify-center items-center h-full">
-          <Loader />
-        </div>
-      </Page>
-    );
-  }
+  // if (isLoading || loading) {
+  //   return (
+  //     <Page>
+  //       <div className="flex justify-center items-center h-full">
+  //         <Loader />
+  //       </div>
+  //     </Page>
+  //   );
+  // }
 
   if (isError) {
     return (
@@ -476,412 +476,427 @@ const Stock = () => {
             </div>
           </div>
         </div>
-
-        <div
-          className="overflow-x-auto text-[11px] grid grid-cols-1 p-6 print:p-4"
-          ref={containerRef}
-        >
-          <div className="hidden print:block">
-            <div className="flex justify-between ">
-              <h1 className="text-left text-2xl font-semibold mb-3 ">
-                Stock Summary
-              </h1>
-              <div className="flex space-x-6">
-                <h1>
-                  {" "}
-                  From - {moment(formData.from_date).format("DD-MMM-YYYY")}
+        {loading || isLoading ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <Loader />
+          </div>
+        ) : (
+          <div
+            className="overflow-x-auto text-[11px] grid grid-cols-1 p-6 print:p-4"
+            ref={containerRef}
+          >
+            <div className="hidden print:block">
+              <div className="flex justify-between ">
+                <h1 className="text-left text-2xl font-semibold mb-3 ">
+                  Stock Summary
                 </h1>
-                <h1>To -{moment(formData.to_date).format("DD-MMM-YYYY")}</h1>
+                <div className="flex space-x-6">
+                  <h1>
+                    {" "}
+                    From - {moment(formData.from_date).format("DD-MMM-YYYY")}
+                  </h1>
+                  <h1>To -{moment(formData.to_date).format("DD-MMM-YYYY")}</h1>
+                </div>
               </div>
             </div>
-          </div>
 
-          <table className="w-full border-collapse border border-black">
-            <thead className="bg-gray-100 sticky top-0 z-10">
-              <tr>
-                <th
-                  className="border border-black px-2 py-2 text-center"
-                  rowSpan={2}
-                >
-                  Item Name
-                </th>
-
-                {singlebranch === "Yes" && doublebranch === "Yes" ? (
-                  <>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      colSpan={2}
-                    >
-                      Open Balance
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      colSpan={2}
-                    >
-                      Purchase
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      colSpan={2}
-                    >
-                      Purchase Return
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      colSpan={2}
-                    >
-                      Dispatch
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      colSpan={2}
-                    >
-                      Dispatch Return
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      colSpan={2}
-                    >
-                      Close Balance
-                    </th>
-                  </>
-                ) : (
-                  <>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      rowSpan={2}
-                    >
-                      Open Balance
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      rowSpan={2}
-                    >
-                      Purchase
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      rowSpan={2}
-                    >
-                      Purchase Return
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      rowSpan={2}
-                    >
-                      Dispatch
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      rowSpan={2}
-                    >
-                      Dispatch Return
-                    </th>
-                    <th
-                      className="border border-black px-2 py-2 text-center"
-                      rowSpan={2}
-                    >
-                      Close Balance
-                    </th>
-                  </>
-                )}
-              </tr>
-
-              {singlebranch === "Yes" && doublebranch === "Yes" && (
+            <table className="w-full border-collapse border border-black">
+              <thead className="bg-gray-100 sticky top-0 z-10">
                 <tr>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Box
+                  <th
+                    className="border border-black px-2 py-2 text-center"
+                    rowSpan={2}
+                  >
+                    Item Name
                   </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Piece
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Box
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Piece
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Box
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Piece
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Box
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Piece
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Box
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Piece
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Box
-                  </th>
-                  <th className="border border-black px-2 py-2 text-center">
-                    Piece
-                  </th>
-                </tr>
-              )}
-            </thead>
 
-            {buyerData && (
-              <tbody>
-                {buyerData
-                  .filter((buyer) => {
-                    const itemPiece = Number(buyer.item_piece) || 1;
-
-                    const openingPurch =
-                      Number(buyer.openpurch) * itemPiece +
-                      Number(buyer.openpurch_piece);
-                    const openingSale =
-                      Number(buyer.closesale) * itemPiece +
-                      Number(buyer.closesale_piece);
-                    const openingPurchR =
-                      Number(buyer.openpurchR) * itemPiece +
-                      Number(buyer.openpurchR_piece);
-                    const openingSaleR =
-                      Number(buyer.closesaleR) * itemPiece +
-                      Number(buyer.closesaleR_piece);
-
-                    const opening =
-                      openingPurch - openingSale - openingPurchR + openingSaleR;
-
-                    const purchase =
-                      Number(buyer.purch) * itemPiece +
-                      Number(buyer.purch_piece);
-                    const purchaseR =
-                      Number(buyer.purchR) * itemPiece +
-                      Number(buyer.purchR_piece);
-                    const sale =
-                      Number(buyer.sale) * itemPiece + Number(buyer.sale_piece);
-                    const saleR =
-                      Number(buyer.saleR) * itemPiece +
-                      Number(buyer.saleR_piece);
-
-                    const total = opening + purchase - purchaseR - sale + saleR;
-                    return total >= range[0] && total <= range[1];
-                  })
-                  .map((buyer, index) => {
-                    const itemPiece = Number(buyer.item_piece) || 1;
-
-                    const openingPurch =
-                      Number(buyer.openpurch) * itemPiece +
-                      Number(buyer.openpurch_piece);
-                    const openingSale =
-                      Number(buyer.closesale) * itemPiece +
-                      Number(buyer.closesale_piece);
-                    const openingPurchR =
-                      Number(buyer.openpurchR) * itemPiece +
-                      Number(buyer.openpurchR_piece);
-                    const openingSaleR =
-                      Number(buyer.closesaleR) * itemPiece +
-                      Number(buyer.closesaleR_piece);
-
-                    const opening =
-                      openingPurch - openingSale - openingPurchR + openingSaleR;
-
-                    const purchase =
-                      Number(buyer.purch) * itemPiece +
-                      Number(buyer.purch_piece);
-                    const purchaseR =
-                      Number(buyer.purchR) * itemPiece +
-                      Number(buyer.purchR_piece);
-                    const sale =
-                      Number(buyer.sale) * itemPiece + Number(buyer.sale_piece);
-                    const saleR =
-                      Number(buyer.saleR) * itemPiece +
-                      Number(buyer.saleR_piece);
-
-                    const total = opening + purchase - purchaseR - sale + saleR;
-
-                    const toBoxPiece = (val) => ({
-                      box: Math.floor(val / itemPiece),
-                      piece: val % itemPiece,
-                    });
-
-                    const openingBP = toBoxPiece(opening);
-                    const purchaseBP = toBoxPiece(purchase);
-                    const purchaseRBP = toBoxPiece(purchaseR);
-                    const saleBP = toBoxPiece(sale);
-                    const saleRBP = toBoxPiece(saleR);
-                    const totalBP = toBoxPiece(total);
-
-                    return (
-                      <tr
-                        key={buyer.id || buyer.item_name}
-                        className="hover:bg-gray-50"
+                  {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                    <>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        colSpan={2}
                       >
-                        <td className="border border-black px-2 py-2">
-                          {buyer.item_name}
-                        </td>
+                        Open Balance
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        colSpan={2}
+                      >
+                        Purchase
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        colSpan={2}
+                      >
+                        Purchase Return
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        colSpan={2}
+                      >
+                        Dispatch
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        colSpan={2}
+                      >
+                        Dispatch Return
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        colSpan={2}
+                      >
+                        Close Balance
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        rowSpan={2}
+                      >
+                        Open Balance
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        rowSpan={2}
+                      >
+                        Purchase
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        rowSpan={2}
+                      >
+                        Purchase Return
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        rowSpan={2}
+                      >
+                        Dispatch
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        rowSpan={2}
+                      >
+                        Dispatch Return
+                      </th>
+                      <th
+                        className="border border-black px-2 py-2 text-center"
+                        rowSpan={2}
+                      >
+                        Close Balance
+                      </th>
+                    </>
+                  )}
+                </tr>
 
-                        {singlebranch === "Yes" && doublebranch === "Yes" ? (
-                          <>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                openingBP.box == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {openingBP.box}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                openingBP.piece == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {openingBP.piece}
-                            </td>
+                {singlebranch === "Yes" && doublebranch === "Yes" && (
+                  <tr>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Box
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Piece
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Box
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Piece
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Box
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Piece
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Box
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Piece
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Box
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Piece
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Box
+                    </th>
+                    <th className="border border-black px-2 py-2 text-center">
+                      Piece
+                    </th>
+                  </tr>
+                )}
+              </thead>
 
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                purchaseBP.box == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {purchaseBP.box}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                purchaseBP.piece == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {purchaseBP.piece}
-                            </td>
+              {buyerData && (
+                <tbody>
+                  {buyerData
+                    .filter((buyer) => {
+                      const itemPiece = Number(buyer.item_piece) || 1;
 
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                purchaseRBP.box == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {purchaseRBP.box}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                purchaseRBP.piece == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {purchaseRBP.piece}
-                            </td>
+                      const openingPurch =
+                        Number(buyer.openpurch) * itemPiece +
+                        Number(buyer.openpurch_piece);
+                      const openingSale =
+                        Number(buyer.closesale) * itemPiece +
+                        Number(buyer.closesale_piece);
+                      const openingPurchR =
+                        Number(buyer.openpurchR) * itemPiece +
+                        Number(buyer.openpurchR_piece);
+                      const openingSaleR =
+                        Number(buyer.closesaleR) * itemPiece +
+                        Number(buyer.closesaleR_piece);
 
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                saleBP.box == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {saleBP.box}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                saleBP.piece == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {saleBP.piece}
-                            </td>
+                      const opening =
+                        openingPurch -
+                        openingSale -
+                        openingPurchR +
+                        openingSaleR;
 
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                saleRBP.box == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {saleRBP.box}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                saleRBP.piece == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {saleRBP.piece}
-                            </td>
+                      const purchase =
+                        Number(buyer.purch) * itemPiece +
+                        Number(buyer.purch_piece);
+                      const purchaseR =
+                        Number(buyer.purchR) * itemPiece +
+                        Number(buyer.purchR_piece);
+                      const sale =
+                        Number(buyer.sale) * itemPiece +
+                        Number(buyer.sale_piece);
+                      const saleR =
+                        Number(buyer.saleR) * itemPiece +
+                        Number(buyer.saleR_piece);
 
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                totalBP.box == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {totalBP.box}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                totalBP.piece == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {totalBP.piece}
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                opening == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {opening}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                purchase == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {purchase}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                purchaseR == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {purchaseR}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                sale == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {sale}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                saleR == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {saleR}
-                            </td>
-                            <td
-                              className={`border border-black px-2 py-2 text-right ${
-                                total == "0" ? "opacity-50" : ""
-                              }`}
-                            >
-                              {" "}
-                              {total}
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            )}
-          </table>
-        </div>
+                      const total =
+                        opening + purchase - purchaseR - sale + saleR;
+                      return total >= range[0] && total <= range[1];
+                    })
+                    .map((buyer, index) => {
+                      const itemPiece = Number(buyer.item_piece) || 1;
+
+                      const openingPurch =
+                        Number(buyer.openpurch) * itemPiece +
+                        Number(buyer.openpurch_piece);
+                      const openingSale =
+                        Number(buyer.closesale) * itemPiece +
+                        Number(buyer.closesale_piece);
+                      const openingPurchR =
+                        Number(buyer.openpurchR) * itemPiece +
+                        Number(buyer.openpurchR_piece);
+                      const openingSaleR =
+                        Number(buyer.closesaleR) * itemPiece +
+                        Number(buyer.closesaleR_piece);
+
+                      const opening =
+                        openingPurch -
+                        openingSale -
+                        openingPurchR +
+                        openingSaleR;
+
+                      const purchase =
+                        Number(buyer.purch) * itemPiece +
+                        Number(buyer.purch_piece);
+                      const purchaseR =
+                        Number(buyer.purchR) * itemPiece +
+                        Number(buyer.purchR_piece);
+                      const sale =
+                        Number(buyer.sale) * itemPiece +
+                        Number(buyer.sale_piece);
+                      const saleR =
+                        Number(buyer.saleR) * itemPiece +
+                        Number(buyer.saleR_piece);
+
+                      const total =
+                        opening + purchase - purchaseR - sale + saleR;
+
+                      const toBoxPiece = (val) => ({
+                        box: Math.floor(val / itemPiece),
+                        piece: val % itemPiece,
+                      });
+
+                      const openingBP = toBoxPiece(opening);
+                      const purchaseBP = toBoxPiece(purchase);
+                      const purchaseRBP = toBoxPiece(purchaseR);
+                      const saleBP = toBoxPiece(sale);
+                      const saleRBP = toBoxPiece(saleR);
+                      const totalBP = toBoxPiece(total);
+
+                      return (
+                        <tr
+                          key={buyer.id || buyer.item_name}
+                          className="hover:bg-gray-50"
+                        >
+                          <td className="border border-black px-2 py-2">
+                            {buyer.item_name}
+                          </td>
+
+                          {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                            <>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  openingBP.box == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {openingBP.box}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  openingBP.piece == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {openingBP.piece}
+                              </td>
+
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  purchaseBP.box == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {purchaseBP.box}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  purchaseBP.piece == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {purchaseBP.piece}
+                              </td>
+
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  purchaseRBP.box == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {purchaseRBP.box}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  purchaseRBP.piece == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {purchaseRBP.piece}
+                              </td>
+
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  saleBP.box == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {saleBP.box}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  saleBP.piece == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {saleBP.piece}
+                              </td>
+
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  saleRBP.box == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {saleRBP.box}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  saleRBP.piece == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {saleRBP.piece}
+                              </td>
+
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  totalBP.box == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {totalBP.box}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  totalBP.piece == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {totalBP.piece}
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  opening == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {opening}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  purchase == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {purchase}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  purchaseR == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {purchaseR}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  sale == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {sale}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  saleR == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {saleR}
+                              </td>
+                              <td
+                                className={`border border-black px-2 py-2 text-right ${
+                                  total == "0" ? "opacity-50" : ""
+                                }`}
+                              >
+                                {" "}
+                                {total}
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              )}
+            </table>
+          </div>
+        )}
       </div>
     </Page>
   );

@@ -53,6 +53,18 @@ const StockView = () => {
     queryFn: fetchStockData,
   });
 
+  // useEffect(() => {
+  //   if (stockData && stockData.length > 0) {
+  //     const uniqueCategories = [
+  //       ...new Set(stockData.map((item) => item.item_category)),
+  //     ];
+  //     const uniqueBrands = [
+  //       ...new Set(stockData.map((item) => item.item_brand)),
+  //     ];
+  //     setBrands(["All Brands", ...uniqueBrands]);
+  //     setCategories(["All Categories", ...uniqueCategories]);
+  //   }
+  // }, [stockData]);
   useEffect(() => {
     if (stockData && stockData.length > 0) {
       const uniqueCategories = [
@@ -61,8 +73,16 @@ const StockView = () => {
       const uniqueBrands = [
         ...new Set(stockData.map((item) => item.item_brand)),
       ];
-      setBrands(["All Brands", ...uniqueBrands]);
-      setCategories(["All Categories", ...uniqueCategories]);
+      const sortedBrands = uniqueBrands
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+      const sortedCategories = uniqueCategories
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+      setBrands(["All Brands", ...sortedBrands]);
+      setCategories(["All Categories", ...sortedCategories]);
     }
   }, [stockData]);
 
