@@ -29,8 +29,8 @@ const CategoryStock = () => {
   const { toast } = useToast();
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
-  // const doublebranch = useSelector((state) => state.auth.branch_d_unit);
-  const doublebranch = "Yes";
+  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  // const doublebranch = "No";
   console.log(singlebranch, doublebranch);
   const fetchCategorystockdata = async () => {
     const response = await apiClient.post(
@@ -69,35 +69,6 @@ const CategoryStock = () => {
     refetch();
   };
   const { data: categoryData } = useFetchCategory();
-  // const handlePrintPdf = useReactToPrint({
-  //   if(Categorystockdata.stock.length < 0){
-  //     toast({
-  //       title: "No Data",
-  //       description: "Please search the category data",
-  //       variant: "destructive",
-  //     });
-  //   }
-  //   content: () => containerRef.current,
-  //   // documentTitle: "Category Stock Summary",
-  //   pageStyle: `
-  //     @page {
-  //       size: A4 portrait;
-  //     }
-  //     @media print {
-  //       body {
-  //         font-size: 10px;
-  //         margin: 0;
-  //         padding: 0;
-  //       }
-  //       table {
-  //         font-size: 11px;
-  //       }
-  //       .print-hide {
-  //         display: none;
-  //       }
-  //     }
-  //   `,
-  // });
   const print = useReactToPrint({
     content: () => containerRef.current,
     pageStyle: `
@@ -186,15 +157,12 @@ const CategoryStock = () => {
       const openPurch =
         (Number(item.openpurch) || 0) * itemPiece +
         (Number(item.openpurch_piece) || 0);
-
       const openSale =
         (Number(item.closesale) || 0) * itemPiece +
         (Number(item.closesale_piece) || 0);
-
       const openPurchR =
         (Number(item.openpurchR) || 0) * itemPiece +
         (Number(item.openpurchR_piece) || 0);
-
       const openSaleR =
         (Number(item.closesaleR) || 0) * itemPiece +
         (Number(item.closesaleR_piece) || 0);
@@ -203,30 +171,22 @@ const CategoryStock = () => {
 
       const purchase =
         (Number(item.purch) || 0) * itemPiece + (Number(item.purch_piece) || 0);
-
       const purchaseR =
         (Number(item.purchR) || 0) * itemPiece +
         (Number(item.purchR_piece) || 0);
-
       const sale =
         (Number(item.sale) || 0) * itemPiece + (Number(item.sale_piece) || 0);
-
       const saleR =
         (Number(item.saleR) || 0) * itemPiece + (Number(item.saleR_piece) || 0);
 
       const total = opening + purchase - purchaseR - sale + saleR;
+
       return {
         ...item,
         itemPiece,
-        opening,
-        purchase,
-        purchaseR,
-        sale,
-        saleR,
         total,
       };
     }) || [];
-
   const BranchHeader = () => (
     <div
       className={`sticky top-0 z-10 border border-gray-200 rounded-lg ${ButtonConfig.cardheaderColor} shadow-sm p-3 mb-2`}
@@ -325,10 +285,8 @@ const CategoryStock = () => {
     box: Math.floor(val / itemPiece),
     piece: val % itemPiece,
   });
+  const grandTotal = processedStock.reduce((acc, item) => acc + item.total, 0);
 
-  const grand = {
-    total: processedStock.reduce((sum, g) => sum + (Number(g.total) || 0), 0),
-  };
   return (
     <Page>
       <div className="p-0 md:p-4">
@@ -555,12 +513,15 @@ const CategoryStock = () => {
                           const total =
                             opening + purchase - purchaseR - sale + saleR;
 
-                          const toBoxPiece = (val) => ({
+                          const toBoxPiece = (val, itemPiece) => ({
                             box: Math.floor(val / itemPiece),
                             piece: val % itemPiece,
                           });
 
-                          const totalBP = toBoxPiece(total);
+                          const totalBP = toBoxPiece(
+                            item.total,
+                            item.itemPiece
+                          );
 
                           return (
                             <tr key={item.item_id} className="hover:bg-gray-50">
@@ -588,7 +549,7 @@ const CategoryStock = () => {
                                     total == "0" ? "opacity-50" : ""
                                   }`}
                                 >
-                                  {total}
+                                  {item.total}{" "}
                                 </td>
                               ) : null}
 
@@ -618,28 +579,37 @@ const CategoryStock = () => {
                         })}
                       </React.Fragment>
 
-                      <tr className=" font-bold">
+                      <tr className="font-bold">
                         <td
                           className="border border-black px-2 py-2 text-center text-lg"
                           colSpan={2}
                         >
                           Total:
                         </td>
+
                         {singlebranch === "Yes" && doublebranch === "Yes" ? (
                           <>
-                            <td className="border border-black px-2 py-2 text-right  text-lg">
-                              {toBoxPiece(grand.total).box}
+                            <td className="border border-black px-2 py-2 text-right text-lg">
+                              {
+                                toBoxPiece(
+                                  grandTotal,
+                                  processedStock[0]?.itemPiece || 1
+                                ).box
+                              }
                             </td>
-                            <td className="border border-black px-2 py-2 text-right  text-lg">
-                              {toBoxPiece(grand.total).piece}
+                            <td className="border border-black px-2 py-2 text-right text-lg">
+                              {
+                                toBoxPiece(
+                                  grandTotal,
+                                  processedStock[0]?.itemPiece || 1
+                                ).piece
+                              }
                             </td>
                           </>
                         ) : (
-                          <>
-                            <td className="border border-black px-2 py-2 text-right">
-                              {grand.total}
-                            </td>
-                          </>
+                          <td className="border border-black px-2 py-2 text-right text-lg">
+                            {grandTotal}
+                          </td>
                         )}
                       </tr>
                     </tbody>
