@@ -136,7 +136,7 @@ function StockTableSection({
       <CardHeader className="px-3 py-2 border-b">
         <div className="flex flex-col space-y-2">
           {/* Title and Buttons */}
-          <div className="flex items-center justify-between">
+          {/* <div className="flex items-center justify-between">
             <CardTitle className="text-sm md:text-lg font-semibold text-black">
               {title}
             </CardTitle>
@@ -239,6 +239,116 @@ function StockTableSection({
                 <Download className="h-4 w-4 mr-1" />
               </button>
             </div>
+          </div> */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <CardTitle className="text-sm md:text-lg font-semibold text-black">
+              {title}
+            </CardTitle>
+
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full sm:w-32 truncate">
+                    <span className="truncate">{selectedCategory}</span>
+                    <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="max-h-60 w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto"
+                  align="start"
+                  sideOffset={5}
+                  collisionPadding={10}
+                >
+                  {categories.map((category, index) => (
+                    <DropdownMenuItem
+                      key={index}
+                      onSelect={() => setSelectedCategory(category)}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="truncate">{category}</span>
+                      {selectedCategory === category && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="flex-shrink-0 ml-2"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {title === "Stock View" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-32 truncate"
+                    >
+                      <span className="truncate">{selectedBrands}</span>
+                      <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="max-h-60 w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto"
+                    align="start"
+                    sideOffset={5}
+                    collisionPadding={10}
+                  >
+                    {brands.map((brands) => (
+                      <DropdownMenuItem
+                        key={brands}
+                        onSelect={() => setSelectedBrands(brands)}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="truncate">{brands}</span>
+                        {selectedCategory === brands && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="flex-shrink-0 ml-2"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {print === "true" && (
+                <button
+                  className={`flex items-center justify-center w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-2 rounded-lg`}
+                  onClick={handlePrintPdf}
+                >
+                  <Printer className="h-4 w-4 mr-1" />
+                </button>
+              )}
+
+              <button
+                className={`flex items-center justify-center w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor} text-sm p-2 rounded-lg`}
+                onClick={() => downloadCSV(filteredItems, toast)}
+              >
+                <Download className="h-4 w-4 mr-1" />
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between space-x-2">
@@ -283,31 +393,35 @@ function StockTableSection({
                   </label>
                 ))}
               </div> */}
-              <div className="flex flex-wrap gap-4 mb-4">
-                {Object.entries(columnVisibility).map(([key, value]) => {
-                  if (
-                    (key === "box" || key === "piece") &&
-                    !(singlebranch === "Yes" && doublebranch === "Yes")
-                  ) {
-                    return null;
-                  }
 
-                  return (
-                    <label
-                      key={key}
-                      className="flex items-center space-x-2 px-3 py-1 bg-gray-100 rounded shadow-sm hover:bg-gray-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={value}
-                        onChange={() => handleToggle(key)}
-                      />
-                      <span className="capitalize">
-                        {key.replace("_", " ")}
-                      </span>
-                    </label>
-                  );
-                })}
+              <div className="flex justify-center">
+                <div className="flex flex-wrap justify-center gap-4 p-4  rounded-xl  w-full max-w-4xl">
+                  {Object.entries(columnVisibility).map(([key, value]) => {
+                    if (
+                      (key === "box" || key === "piece") &&
+                      !(singlebranch === "Yes" && doublebranch === "Yes")
+                    ) {
+                      return null;
+                    }
+
+                    return (
+                      <label
+                        key={key}
+                        className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition duration-200"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={value}
+                          onChange={() => handleToggle(key)}
+                          className="accent-blue-600 w-4 h-4"
+                        />
+                        <span className="capitalize text-[10px] sm:text-sm font-medium text-gray-700">
+                          {key.replace("_", " ")}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div

@@ -127,7 +127,8 @@ const StockGoDown = () => {
     let total = 0;
 
     godown.items.forEach((item) => {
-      const itemPiece = 1;
+      // const itemPiece = 1;
+      const itemPiece = item?.item_piece;
 
       const openPurch =
         Number(item.open_purchase_box) * itemPiece +

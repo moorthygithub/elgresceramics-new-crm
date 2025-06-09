@@ -145,141 +145,57 @@ const StockView = () => {
       `,
   });
 
-  const downloadCSV = (filteredItems, toast) => {
-    if (!filteredItems || filteredItems.length === 0) {
-      if (toast) {
-        toast({
-          title: "No Data",
-          description: "No data available to export",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
-
-    const headers = ["Item Name", "Category", "Size"];
-    let showAvailable = false;
-    let showBoxPiece = false;
-
-    if (
-      (singlebranch == "Yes" && doublebranch == "No") ||
-      (singlebranch == "No" && doublebranch == "Yes")
-    ) {
-      headers.push("Available");
-      showAvailable = true;
-    } else if (singlebranch === "Yes" && doublebranch === "Yes") {
-      headers.push("Available Box", "Available Piece");
-      showBoxPiece = true;
-    }
-
-    // 2. Define row data logic
-    const getRowData = (item) => {
-      const itemPiece = Number(item.item_piece) || 1;
-      const total =
-        Number(item.openpurch) -
-        Number(item.closesale) +
-        (Number(item.purch) - Number(item.sale)) * itemPiece +
-        Number(item.openpurch_piece) -
-        Number(item.closesale_piece) +
-        (Number(item.purch_piece) - Number(item.sale_piece));
-
-      const box = Math.floor(total / itemPiece);
-      const piece = total % itemPiece;
-
-      const row = [
-        item.item_name || "",
-        item.item_category || "",
-        item.item_size || "",
-      ];
-
-      if (showAvailable) {
-        row.push(total);
-      } else if (showBoxPiece) {
-        row.push(box, piece);
-      }
-
-      return row;
-    };
-
-    downloadExcel({
-      data: filteredItems,
-      sheetName: "Stock Summary",
-      headers,
-      getRowData,
-      fileNamePrefix: "stock_summary",
-      toast,
-      emptyDataCallback: () => ({
-        title: "No Data",
-        description: "No data available to export",
-        variant: "destructive",
-      }),
-    });
-  };
   // const downloadCSV = (filteredItems, toast) => {
   //   if (!filteredItems || filteredItems.length === 0) {
-  //     toast?.({
-  //       title: "No Data",
-  //       description: "No data available to export",
-  //       variant: "destructive",
-  //     });
+  //     if (toast) {
+  //       toast({
+  //         title: "No Data",
+  //         description: "No data available to export",
+  //         variant: "destructive",
+  //       });
+  //     }
   //     return;
   //   }
 
-  //   const headers = [];
+  //   const headers = ["Item Name", "Category", "Size"];
   //   let showAvailable = false;
   //   let showBoxPiece = false;
 
-  //   // Push visible headers
-  //   if (columnVisibility?.item_name) headers.push("Item Name");
-  //   if (columnVisibility?.category) headers.push("Category");
-  //   if (columnVisibility?.size) headers.push("Size");
-
-  //   // Available logic
-  //   const isSingleBranchOnly =
-  //     (singlebranch === "Yes" && doublebranch === "No") ||
-  //     (singlebranch === "No" && doublebranch === "Yes");
-
-  //   const isDoubleBranch = singlebranch === "Yes" && doublebranch === "Yes";
-
-  //   if (columnVisibility.available_box) {
-  //     if (isSingleBranchOnly) {
-  //       headers.push("Available");
-  //       showAvailable = true;
-  //     } else if (isDoubleBranch) {
-  //       if (columnVisibility.box) headers.push("Available Box");
-  //       if (columnVisibility.piece) headers.push("Available Piece");
-  //       showBoxPiece = true;
-  //     }
+  //   if (
+  //     (singlebranch == "Yes" && doublebranch == "No") ||
+  //     (singlebranch == "No" && doublebranch == "Yes")
+  //   ) {
+  //     headers.push("Available");
+  //     showAvailable = true;
+  //   } else if (singlebranch === "Yes" && doublebranch === "Yes") {
+  //     headers.push("Available Box", "Available Piece");
+  //     showBoxPiece = true;
   //   }
 
+  //   // 2. Define row data logic
   //   const getRowData = (item) => {
   //     const itemPiece = Number(item.item_piece) || 1;
-
-  //     const openingPurch =
-  //       Number(item.openpurch) * itemPiece + Number(item.openpurch_piece);
-  //     const openingSale =
-  //       Number(item.closesale) * itemPiece + Number(item.closesale_piece);
-  //     const purchase =
-  //       Number(item.purch) * itemPiece + Number(item.purch_piece);
-  //     const sale = Number(item.sale) * itemPiece + Number(item.sale_piece);
-
-  //     const total = openingPurch - openingSale + (purchase - sale);
+  //     const total =
+  //       Number(item.openpurch) -
+  //       Number(item.closesale) +
+  //       (Number(item.purch) - Number(item.sale)) * itemPiece +
+  //       Number(item.openpurch_piece) -
+  //       Number(item.closesale_piece) +
+  //       (Number(item.purch_piece) - Number(item.sale_piece));
 
   //     const box = Math.floor(total / itemPiece);
   //     const piece = total % itemPiece;
 
-  //     const row = [];
-  //     if (columnVisibility.item_name) row.push(item.item_name || "");
-  //     if (columnVisibility.category) row.push(item.item_category || "");
-  //     if (columnVisibility.size) row.push(item.item_size || "");
+  //     const row = [
+  //       item.item_name || "",
+  //       item.item_category || "",
+  //       item.item_size || "",
+  //     ];
 
-  //     if (columnVisibility.available_box) {
-  //       if (showAvailable) {
-  //         row.push(total);
-  //       } else if (showBoxPiece) {
-  //         if (columnVisibility.box) row.push(box);
-  //         if (columnVisibility.piece) row.push(piece);
-  //       }
+  //     if (showAvailable) {
+  //       row.push(total);
+  //     } else if (showBoxPiece) {
+  //       row.push(box, piece);
   //     }
 
   //     return row;
@@ -299,6 +215,90 @@ const StockView = () => {
   //     }),
   //   });
   // };
+  const downloadCSV = (filteredItems, toast) => {
+    if (!filteredItems || filteredItems.length === 0) {
+      toast?.({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = [];
+    let showAvailable = false;
+    let showBoxPiece = false;
+
+    // Push visible headers
+    if (columnVisibility?.item_name) headers.push("Item Name");
+    if (columnVisibility?.category) headers.push("Category");
+    if (columnVisibility?.size) headers.push("Size");
+
+    // Available logic
+    const isSingleBranchOnly =
+      (singlebranch === "Yes" && doublebranch === "No") ||
+      (singlebranch === "No" && doublebranch === "Yes");
+
+    const isDoubleBranch = singlebranch === "Yes" && doublebranch === "Yes";
+
+    if (columnVisibility.available_box) {
+      if (isSingleBranchOnly) {
+        headers.push("Available");
+        showAvailable = true;
+      } else if (isDoubleBranch) {
+        if (columnVisibility.box) headers.push("Available Box");
+        if (columnVisibility.piece) headers.push("Available Piece");
+        showBoxPiece = true;
+      }
+    }
+
+    const getRowData = (item) => {
+      const itemPiece = Number(item.item_piece) || 1;
+
+      const openingPurch =
+        Number(item.openpurch) * itemPiece + Number(item.openpurch_piece);
+      const openingSale =
+        Number(item.closesale) * itemPiece + Number(item.closesale_piece);
+      const purchase =
+        Number(item.purch) * itemPiece + Number(item.purch_piece);
+      const sale = Number(item.sale) * itemPiece + Number(item.sale_piece);
+
+      const total = openingPurch - openingSale + (purchase - sale);
+
+      const box = Math.floor(total / itemPiece);
+      const piece = total % itemPiece;
+
+      const row = [];
+      if (columnVisibility.item_name) row.push(item.item_name || "");
+      if (columnVisibility.category) row.push(item.item_category || "");
+      if (columnVisibility.size) row.push(item.item_size || "");
+
+      if (columnVisibility.available_box) {
+        if (showAvailable) {
+          row.push(total);
+        } else if (showBoxPiece) {
+          if (columnVisibility.box) row.push(box);
+          if (columnVisibility.piece) row.push(piece);
+        }
+      }
+
+      return row;
+    };
+
+    downloadExcel({
+      data: filteredItems,
+      sheetName: "Stock Summary",
+      headers,
+      getRowData,
+      fileNamePrefix: "stock_summary",
+      toast,
+      emptyDataCallback: () => ({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      }),
+    });
+  };
 
   if (isErrorStock) {
     return (
