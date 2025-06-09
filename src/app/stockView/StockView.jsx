@@ -112,7 +112,6 @@ const StockView = () => {
     pageStyle: `
       @page {
         size: A4;
-        margin: 5mm;
       }
     
         @media print {
@@ -145,76 +144,6 @@ const StockView = () => {
       `,
   });
 
-  // const downloadCSV = (filteredItems, toast) => {
-  //   if (!filteredItems || filteredItems.length === 0) {
-  //     if (toast) {
-  //       toast({
-  //         title: "No Data",
-  //         description: "No data available to export",
-  //         variant: "destructive",
-  //       });
-  //     }
-  //     return;
-  //   }
-
-  //   const headers = ["Item Name", "Category", "Size"];
-  //   let showAvailable = false;
-  //   let showBoxPiece = false;
-
-  //   if (
-  //     (singlebranch == "Yes" && doublebranch == "No") ||
-  //     (singlebranch == "No" && doublebranch == "Yes")
-  //   ) {
-  //     headers.push("Available");
-  //     showAvailable = true;
-  //   } else if (singlebranch === "Yes" && doublebranch === "Yes") {
-  //     headers.push("Available Box", "Available Piece");
-  //     showBoxPiece = true;
-  //   }
-
-  //   // 2. Define row data logic
-  //   const getRowData = (item) => {
-  //     const itemPiece = Number(item.item_piece) || 1;
-  //     const total =
-  //       Number(item.openpurch) -
-  //       Number(item.closesale) +
-  //       (Number(item.purch) - Number(item.sale)) * itemPiece +
-  //       Number(item.openpurch_piece) -
-  //       Number(item.closesale_piece) +
-  //       (Number(item.purch_piece) - Number(item.sale_piece));
-
-  //     const box = Math.floor(total / itemPiece);
-  //     const piece = total % itemPiece;
-
-  //     const row = [
-  //       item.item_name || "",
-  //       item.item_category || "",
-  //       item.item_size || "",
-  //     ];
-
-  //     if (showAvailable) {
-  //       row.push(total);
-  //     } else if (showBoxPiece) {
-  //       row.push(box, piece);
-  //     }
-
-  //     return row;
-  //   };
-
-  //   downloadExcel({
-  //     data: filteredItems,
-  //     sheetName: "Stock Summary",
-  //     headers,
-  //     getRowData,
-  //     fileNamePrefix: "stock_summary",
-  //     toast,
-  //     emptyDataCallback: () => ({
-  //       title: "No Data",
-  //       description: "No data available to export",
-  //       variant: "destructive",
-  //     }),
-  //   });
-  // };
   const downloadCSV = (filteredItems, toast) => {
     if (!filteredItems || filteredItems.length === 0) {
       toast?.({
@@ -232,6 +161,7 @@ const StockView = () => {
     // Push visible headers
     if (columnVisibility?.item_name) headers.push("Item Name");
     if (columnVisibility?.category) headers.push("Category");
+    if (columnVisibility?.brand) headers.push("Brand");
     if (columnVisibility?.size) headers.push("Size");
 
     // Available logic
@@ -271,6 +201,7 @@ const StockView = () => {
       const row = [];
       if (columnVisibility.item_name) row.push(item.item_name || "");
       if (columnVisibility.category) row.push(item.item_category || "");
+      if (columnVisibility.brand) row.push(item.item_brand || "");
       if (columnVisibility.size) row.push(item.item_size || "");
 
       if (columnVisibility.available_box) {

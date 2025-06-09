@@ -29,7 +29,8 @@ const CategoryStock = () => {
   const { toast } = useToast();
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
-  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  // const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  const doublebranch = "Yes";
   console.log(singlebranch, doublebranch);
   const fetchCategorystockdata = async () => {
     const response = await apiClient.post(
@@ -68,29 +69,69 @@ const CategoryStock = () => {
     refetch();
   };
   const { data: categoryData } = useFetchCategory();
-  const handlePrintPdf = useReactToPrint({
+  // const handlePrintPdf = useReactToPrint({
+  //   if(Categorystockdata.stock.length < 0){
+  //     toast({
+  //       title: "No Data",
+  //       description: "Please search the category data",
+  //       variant: "destructive",
+  //     });
+  //   }
+  //   content: () => containerRef.current,
+  //   // documentTitle: "Category Stock Summary",
+  //   pageStyle: `
+  //     @page {
+  //       size: A4 portrait;
+  //     }
+  //     @media print {
+  //       body {
+  //         font-size: 10px;
+  //         margin: 0;
+  //         padding: 0;
+  //       }
+  //       table {
+  //         font-size: 11px;
+  //       }
+  //       .print-hide {
+  //         display: none;
+  //       }
+  //     }
+  //   `,
+  // });
+  const print = useReactToPrint({
     content: () => containerRef.current,
-    documentTitle: "Stock",
     pageStyle: `
-      @page {
-        size: A4 portrait;
-        margin: 15mm 20mm 15mm 20mm; /* top right bottom left */
+    @page {
+      size: A4 portrait;
+    }
+    @media print {
+      body {
+        font-size: 10px;
+        margin: 0;
+        padding: 0;
       }
-      @media print {
-        body {
-          font-size: 10px;
-          margin: 0;
-          padding: 0;
-        }
-        table {
-          font-size: 11px;
-        }
-        .print-hide {
-          display: none;
-        }
+      table {
+        font-size: 11px;
       }
-    `,
+      .print-hide {
+        display: none;
+      }
+    }
+  `,
   });
+  const handlePrintPdf = () => {
+    if (!Categorystockdata?.stock || Categorystockdata.stock.length === 0) {
+      toast({
+        title: "No Data",
+        description: "Please search the category data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    print();
+  };
+
   const handleSaveAsPdf = () => {
     if (!containerRef.current) {
       console.error("Element not found");
@@ -395,195 +436,215 @@ const CategoryStock = () => {
           ) : (
             <>
               {processedStock?.length > 0 && (
-                <table className="w-full border-collapse border border-black">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th
-                        className="border border-black px-2 py-2 text-center"
-                        colSpan={3}
-                      >
-                        {" "}
-                        <div className="flex items-center justify-center text-lg">
-                          {Categorystockdata?.item?.category}
-                        </div>
-                      </th>
-                    </tr>
-                    <tr>
-                      <th
-                        className="border border-black px-2 py-2 text-center"
-                        rowSpan={2}
-                      >
-                        DESIGN
-                      </th>
-                      <th
-                        className="border border-black px-2 py-2 text-center"
-                        rowSpan={2}
-                      >
-                        PHOTO
-                      </th>
+                <>
+                  <h1 className="text-lg mb-4 font-bold">
+                    Category Stock Summary
+                  </h1>
+                  <table className="w-full border-collapse border border-black">
+                    <thead className="bg-gray-100">
+                      {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                        <tr>
+                          <th
+                            className="border border-black px-2 py-2 text-center"
+                            colSpan={4}
+                          >
+                            <div className="flex items-center justify-center text-lg">
+                              {Categorystockdata?.item?.category}
+                            </div>
+                          </th>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <th
+                            className="border border-black px-2 py-2 text-center"
+                            colSpan={3}
+                          >
+                            <div className="flex items-center justify-center text-lg">
+                              {Categorystockdata?.item?.category}
+                            </div>
+                          </th>
+                        </tr>
+                      )}
 
-                      {(singlebranch === "Yes" && doublebranch === "No") ||
-                      (singlebranch === "No" && doublebranch === "Yes") ? (
+                      <tr>
+                        <th
+                          className="border border-black px-2 py-2 text-center w-[30%]"
+                          rowSpan={2}
+                        >
+                          DESIGN
+                        </th>
                         <th
                           className="border border-black px-2 py-2 text-center"
-                          colSpan={2}
+                          rowSpan={2}
                         >
-                          STOCK
+                          PHOTO
                         </th>
-                      ) : null}
+
+                        {(singlebranch === "Yes" && doublebranch === "No") ||
+                        (singlebranch === "No" && doublebranch === "Yes") ? (
+                          <th
+                            className="border border-black px-2 py-2 text-center  w-[10%] "
+                            colSpan={2}
+                          >
+                            STOCK
+                          </th>
+                        ) : null}
+
+                        {singlebranch === "Yes" && doublebranch === "Yes" && (
+                          <th
+                            className="border border-black px-2 py-2 text-center w-[15%]"
+                            colSpan={2}
+                          >
+                            STOCK
+                          </th>
+                        )}
+                      </tr>
 
                       {singlebranch === "Yes" && doublebranch === "Yes" && (
-                        <th
-                          className="border border-black px-2 py-2 text-center"
+                        <tr>
+                          <th className="border border-black px-2 py-2 text-center">
+                            Box
+                          </th>
+                          <th className="border border-black px-2 py-2 text-center">
+                            Piece
+                          </th>
+                        </tr>
+                      )}
+                    </thead>
+
+                    <tbody>
+                      <React.Fragment>
+                        {processedStock?.map((item) => {
+                          const itemPiece = item.item_piece || 1;
+
+                          const openPurch =
+                            (Number(item.openpurch) || 0) * itemPiece +
+                            (Number(item.openpurch_piece) || 0);
+
+                          const openSale =
+                            (Number(item.closesale) || 0) * itemPiece +
+                            (Number(item.closesale_piece) || 0);
+
+                          const openPurchR =
+                            (Number(item.openpurchR) || 0) * itemPiece +
+                            (Number(item.openpurchR_piece) || 0);
+
+                          const openSaleR =
+                            (Number(item.closesaleR) || 0) * itemPiece +
+                            (Number(item.closesaleR_piece) || 0);
+
+                          const opening =
+                            openPurch - openSale - openPurchR + openSaleR;
+
+                          const purchase =
+                            (Number(item.purch) || 0) * itemPiece +
+                            (Number(item.purch_piece) || 0);
+
+                          const purchaseR =
+                            (Number(item.purchR) || 0) * itemPiece +
+                            (Number(item.purchR_piece) || 0);
+
+                          const sale =
+                            (Number(item.sale) || 0) * itemPiece +
+                            (Number(item.sale_piece) || 0);
+
+                          const saleR =
+                            (Number(item.saleR) || 0) * itemPiece +
+                            (Number(item.saleR_piece) || 0);
+
+                          const total =
+                            opening + purchase - purchaseR - sale + saleR;
+
+                          const toBoxPiece = (val) => ({
+                            box: Math.floor(val / itemPiece),
+                            piece: val % itemPiece,
+                          });
+
+                          const totalBP = toBoxPiece(total);
+
+                          return (
+                            <tr key={item.item_id} className="hover:bg-gray-50">
+                              <td className="border border-black px-2 py-2 text-sm text-center">
+                                {item.item_name}
+                              </td>
+                              <td className="border border-black px-2 py-2 text-center">
+                                <img
+                                  src={
+                                    item.item_image
+                                      ? `${IMAGE_URL}/${item.item_image}`
+                                      : NO_IMAGE_URL
+                                  }
+                                  alt={"Category Image"}
+                                  className="w-full h-40 object-cover"
+                                />
+                              </td>
+
+                              {(singlebranch == "Yes" &&
+                                doublebranch == "No") ||
+                              (singlebranch == "No" &&
+                                doublebranch == "Yes") ? (
+                                <td
+                                  className={`border border-black px-2 py-2 text-right text-sm ${
+                                    total == "0" ? "opacity-50" : ""
+                                  }`}
+                                >
+                                  {total}
+                                </td>
+                              ) : null}
+
+                              {singlebranch === "Yes" &&
+                                doublebranch === "Yes" && (
+                                  <>
+                                    <td
+                                      className={`border border-black px-2 py-2 text-right text-sm ${
+                                        totalBP.box == "0" ? "opacity-50" : ""
+                                      }`}
+                                    >
+                                      {" "}
+                                      {totalBP.box}
+                                    </td>
+                                    <td
+                                      className={`border border-black px-2 py-2 text-right ${
+                                        totalBP.piece == "0" ? "opacity-50" : ""
+                                      }`}
+                                    >
+                                      {" "}
+                                      {totalBP.piece}
+                                    </td>
+                                  </>
+                                )}
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
+
+                      <tr className=" font-bold">
+                        <td
+                          className="border border-black px-2 py-2 text-center text-lg"
                           colSpan={2}
                         >
-                          STOCK
-                        </th>
-                      )}
-                    </tr>
-
-                    {singlebranch === "Yes" && doublebranch === "Yes" && (
-                      <tr>
-                        <th className="border border-black px-2 py-2 text-center">
-                          Box
-                        </th>
-                        <th className="border border-black px-2 py-2 text-center">
-                          Piece
-                        </th>
+                          Total:
+                        </td>
+                        {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                          <>
+                            <td className="border border-black px-2 py-2 text-right  text-lg">
+                              {toBoxPiece(grand.total).box}
+                            </td>
+                            <td className="border border-black px-2 py-2 text-right  text-lg">
+                              {toBoxPiece(grand.total).piece}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="border border-black px-2 py-2 text-right">
+                              {grand.total}
+                            </td>
+                          </>
+                        )}
                       </tr>
-                    )}
-                  </thead>
-
-                  <tbody>
-                    <React.Fragment>
-                      {processedStock?.map((item) => {
-                        const itemPiece = item.item_piece || 1;
-
-                        const openPurch =
-                          (Number(item.openpurch) || 0) * itemPiece +
-                          (Number(item.openpurch_piece) || 0);
-
-                        const openSale =
-                          (Number(item.closesale) || 0) * itemPiece +
-                          (Number(item.closesale_piece) || 0);
-
-                        const openPurchR =
-                          (Number(item.openpurchR) || 0) * itemPiece +
-                          (Number(item.openpurchR_piece) || 0);
-
-                        const openSaleR =
-                          (Number(item.closesaleR) || 0) * itemPiece +
-                          (Number(item.closesaleR_piece) || 0);
-
-                        const opening =
-                          openPurch - openSale - openPurchR + openSaleR;
-
-                        const purchase =
-                          (Number(item.purch) || 0) * itemPiece +
-                          (Number(item.purch_piece) || 0);
-
-                        const purchaseR =
-                          (Number(item.purchR) || 0) * itemPiece +
-                          (Number(item.purchR_piece) || 0);
-
-                        const sale =
-                          (Number(item.sale) || 0) * itemPiece +
-                          (Number(item.sale_piece) || 0);
-
-                        const saleR =
-                          (Number(item.saleR) || 0) * itemPiece +
-                          (Number(item.saleR_piece) || 0);
-
-                        const total =
-                          opening + purchase - purchaseR - sale + saleR;
-
-                        const toBoxPiece = (val) => ({
-                          box: Math.floor(val / itemPiece),
-                          piece: val % itemPiece,
-                        });
-
-                        const totalBP = toBoxPiece(total);
-
-                        return (
-                          <tr key={item.item_id} className="hover:bg-gray-50">
-                            <td className="border border-black px-2 py-2">
-                              {item.item_category}
-                            </td>
-                            <td className="border border-black px-2 py-2 text-center">
-                              <img
-                                src={
-                                  item.item_image
-                                    ? `${IMAGE_URL}/${item.item_image}`
-                                    : NO_IMAGE_URL
-                                }
-                                alt={item.item_name || "Item Image"}
-                                className="w-16 h-16 object-cover mx-auto"
-                              />
-                            </td>
-
-                            {(singlebranch == "Yes" && doublebranch == "No") ||
-                            (singlebranch == "No" && doublebranch == "Yes") ? (
-                              <td
-                                className={`border border-black px-2 py-2 text-right ${
-                                  total == "0" ? "opacity-50" : ""
-                                }`}
-                              >
-                                {total}
-                              </td>
-                            ) : null}
-
-                            {singlebranch === "Yes" &&
-                              doublebranch === "Yes" && (
-                                <>
-                                  <td
-                                    className={`border border-black px-2 py-2 text-right ${
-                                      totalBP.box == "0" ? "opacity-50" : ""
-                                    }`}
-                                  >
-                                    {" "}
-                                    {totalBP.box}
-                                  </td>
-                                  <td
-                                    className={`border border-black px-2 py-2 text-right ${
-                                      totalBP.piece == "0" ? "opacity-50" : ""
-                                    }`}
-                                  >
-                                    {" "}
-                                    {totalBP.piece}
-                                  </td>
-                                </>
-                              )}
-                          </tr>
-                        );
-                      })}
-                    </React.Fragment>
-
-                    <tr className=" font-bold">
-                      <td
-                        className="border border-black px-2 py-2 text-center"
-                        colSpan={2}
-                      >
-                        Grand Total:
-                      </td>
-                      {singlebranch === "Yes" && doublebranch === "Yes" ? (
-                        <>
-                          <td className="border border-black px-2 py-2 text-right">
-                            {toBoxPiece(grand.total).box}
-                          </td>
-                          <td className="border border-black px-2 py-2 text-right">
-                            {toBoxPiece(grand.total).piece}
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="border border-black px-2 py-2 text-right">
-                            {grand.total}
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </>
               )}
             </>
           )}
