@@ -536,7 +536,7 @@ const CategoryStock = () => {
                                       : NO_IMAGE_URL
                                   }
                                   alt={"Category Image"}
-                                  className="w-full h-40 object-cover"
+                                  className="w-full h-40 object-contain"
                                 />
                               </td>
 
