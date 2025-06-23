@@ -81,7 +81,9 @@ export const DISPATCH_REPORT = `/report-dispatch-data`;
 // ROUTE CONFIGURATION
 export const ROUTES = {
   PURCHASE_EDIT: (id) => `/purchase/edit/${encryptId(id)}`,
+  PURCHASE_VIEW: (id) => `/purchase/view/${encryptId(id)}`,
   PURCHASE_RETURN_EDIT: (id) => `/purchase-return/edit/${encryptId(id)}`,
+  PURCHASE_RETURN_VIEW: (id) => `/purchase-return/view/${encryptId(id)}`,
   DISPATCH_EDIT: (id) => `/dispatch/edit/${encryptId(id)}`,
   DISPATCH_RETURN_EDIT: (id) => `/dispatch-return/edit/${encryptId(id)}`,
   DISPATCH_VIEW: (id) => `/dispatch/view/${encryptId(id)}`,
@@ -90,8 +92,14 @@ export const ROUTES = {
 export const navigateToPurchaseEdit = (navigate, purchaseId) => {
   navigate(ROUTES.PURCHASE_EDIT(purchaseId));
 };
+export const navigateTOPurchaseView = (navigate, purchaseId) => {
+  navigate(ROUTES.PURCHASE_VIEW(purchaseId));
+};
 export const navigateToPurchaseReturnEdit = (navigate, purchaseId) => {
   navigate(ROUTES.PURCHASE_RETURN_EDIT(purchaseId));
+};
+export const navigateToPurchaseReturnView = (navigate, purchaseId) => {
+  navigate(ROUTES.PURCHASE_RETURN_VIEW(purchaseId));
 };
 export const navigateTODispatchEdit = (navigate, dispatchId) => {
   navigate(ROUTES.DISPATCH_EDIT(dispatchId));

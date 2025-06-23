@@ -25,7 +25,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, Edit, Search, SquarePlus, Trash2 } from "lucide-react";
+import { ChevronDown, Edit, Search, SquarePlus, Trash2, View } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -41,6 +41,7 @@ import {
 import {
   fetchPurchaseById,
   navigateToPurchaseEdit,
+  navigateTOPurchaseView,
   PURCHASE_EDIT_LIST,
   PURCHASE_LIST,
 } from "@/api";
@@ -162,130 +163,6 @@ const PurchaseList = () => {
     }
   };
 
-  //   const handleSendWhatsApp = (
-  //     purchase,
-  //     purchaseSub,
-  //     buyer,
-  //     singlebranch,
-  //     doublebranch
-  //   ) => {
-  //     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
-  //     const { buyer_name, buyer_city } = buyer;
-
-  //     const purchaseNo = purchase_ref_no?.split("-").pop();
-
-  //     const NAME_WIDTH = 24;
-  //     const BOX_WIDTH = 7;
-  //     const itemLine = purchaseSub.map((item) => {
-  //       const name = item.item_name.padEnd(NAME_WIDTH, " ");
-  //       const box = `(${String(item.purchase_sub_box || 0)})`.padEnd(
-  //         BOX_WIDTH,
-  //         " "
-  //       );
-
-  //       const piece = String(item.purchase_sub_piece || 0);
-  //       return `${name}${box}${piece}`;
-  //     });
-
-  //     const itemLines = purchaseSub.map((item) => {
-  //       const name = item.item_name.padEnd(NAME_WIDTH, " ");
-  //       const box = `(${String(item.purchase_sub_box || 0)})`;
-  //       return `${name}${box}`;
-  //     });
-
-  //     const totalQty = purchaseSub.reduce(
-  //       (sum, item) => sum + (parseInt(item.purchase_sub_piece, 10) || 0),
-  //       0
-  //     );
-  //     const totalQtyBox = purchaseSub.reduce(
-  //       (sum, item) => sum + (parseInt(item.purchase_sub_box, 10) || 0),
-  //       0
-  //     );
-
-  //     const isBothYes = singlebranch == "Yes" && doublebranch == "Yes";
-
-  //   //  const productHeader = isBothYes
-  //   //     ? `Product  [SIZE]     (QTY)   (Piece)`
-  //   //     : `Product  [SIZE]     (QTY)`;
-  //       const productHeader = isBothYes
-  //       ? `Product  [SIZE]           (QTY)   (Piece)`
-  //       : `Product  [SIZE]           (QTY)`;
-  //     const productBody = isBothYes ? itemLine.join("\n") : itemLines.join("\n");
-
-  //     const totalLine = isBothYes
-  //       ? `*Total QTY: ${totalQtyBox}   ${totalQty}*`
-  //       : `*Total QTY: ${totalQtyBox}*`;
-
-  //     const message = `
-  // === PackList ===
-  // No.        : ${purchaseNo}
-  // Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-  // Party      : ${buyer_name}
-  // City       : ${buyer_city}
-  // VEHICLE NO : ${purchase_vehicle_no}
-  // ======================
-  // ${productHeader}
-  // ======================
-  // ${productBody}
-  // ======================
-  // ${totalLine}
-  // ======================
-  // `;
-
-  //     // const phoneNumber = "919360485526";
-  //     const phoneNumber = `${whatsapp}`;
-
-  //     const encodedMessage = encodeURIComponent(message);
-  //     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-  //     window.open(whatsappUrl, "_blank");
-  //   };
-
-  //   const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
-  //     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
-  //     const { buyer_name, buyer_city } = buyer;
-
-  //     const purchaseNo = purchase_ref_no?.split("-").pop();
-
-  //     const NAME_WIDTH = 25;
-
-  //     const itemLines = purchaseSub.map((item) => {
-  //       let name = item.item_name;
-  //       if (name.length > 18) {
-  //         name = name.slice(0, 16); // trim to 16 if longer than 18
-  //       }
-  //       name = name.padEnd(NAME_WIDTH, " "); // align all names to 25 chars
-  //       const box = `${String(item.purchase_sub_box || 0)}`;
-  //       return `${name}${box}`;
-  //     });
-
-  //     const totalQty = purchaseSub.reduce(
-  //       (sum, item) => sum + (parseInt(item.purchase_sub_box, 10) || 0),
-  //       0
-  //     );
-
-  //     const message = `\`\`\`
-  // === PackList ===
-  // No.        : ${purchaseNo}
-  // Date       : ${moment(purchase_date).format("DD-MM-YYYY")}
-  // Party      : ${buyer_name}
-  // City       : ${buyer_city}
-  // VEHICLE NO : ${purchase_vehicle_no}
-  // ======================
-  // Product    [SIZE]        (QTY)
-  // ======================
-  // ${itemLines.join("\n")}
-  // ======================
-  // *Total QTY: ${totalQty}*
-  // ======================
-  // \`\`\``;
-
-  //     const phoneNumber = "919360485526";
-  //     // const phoneNumber = `${whatsapp}`;
-
-  //     const encodedMessage = encodeURIComponent(message);
-  //     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-  //     window.open(whatsappUrl, "_blank");
-  //   };
   const handleSendWhatsApp = (purchase, purchaseSub, buyer) => {
     const { purchase_ref_no, purchase_date, purchase_vehicle_no } = purchase;
     const { buyer_name, buyer_city } = buyer;
@@ -416,6 +293,24 @@ Total QTY: ${totalQty}
                 </Tooltip>
               </TooltipProvider>
             )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      navigateTOPurchaseView(navigate, purchaseId);
+                    }}
+                  >
+                    <View />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>View Purchase</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {UserId != 1 && (
               <TooltipProvider>
                 <Tooltip>
