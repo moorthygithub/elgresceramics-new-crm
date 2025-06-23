@@ -34,6 +34,8 @@ import Stock from "@/app/report/Stock";
 import ValidationWrapper from "@/utils/ValidationWrapper";
 import StockGoDown from "@/app/report/StockGoDown";
 import CategoryStock from "@/app/report/CategoryStock/CategoryStock";
+import PurchaseView from "@/app/purchase/PurchaseView";
+import PurchaseReturnView from "@/app/purchasereturn/PurchaseReturnView";
 
 function AppRoutes() {
   return (
@@ -57,6 +59,7 @@ function AppRoutes() {
           <Route path="/purchase" element={<PurchaseList />} />
           <Route path="/purchase/create" element={<CreatePurchase />} />
           <Route path="/purchase/edit/:id" element={<CreatePurchase />} />
+          <Route path="/purchase/view/:id" element={<PurchaseView />} />
           <Route path="/purchase-return" element={<PurchaseReturnList />} />
           <Route
             path="/purchase-return/create"
@@ -66,6 +69,11 @@ function AppRoutes() {
             path="/purchase-return/edit/:id"
             element={<CreatePurchaseReturn />}
           />
+          <Route
+            path="/purchase-return/view/:id"
+            element={<PurchaseReturnView />}
+          />
+
           <Route path="/dispatch" element={<DispatchList />} />
           <Route path="/dispatch/create" element={<CreateDispatch />} />
           <Route path="/dispatch/edit/:id" element={<CreateDispatch />} />

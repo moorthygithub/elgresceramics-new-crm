@@ -1,4 +1,4 @@
-import { DISPATCH_EDIT_LIST } from "@/api";
+import { PURCHASE_EDIT_LIST } from "@/api";
 import apiClient from "@/api/axios";
 import usetoken from "@/api/usetoken";
 import { decryptId } from "@/components/common/Encryption";
@@ -9,25 +9,24 @@ import html2pdf from "html2pdf.js";
 import { Printer } from "lucide-react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import Page from "../dashboard/page";
-import { useSelector } from "react-redux";
 
-const DispatchView = () => {
+const PurchaseView = () => {
   const { id } = useParams();
   const decryptedId = decryptId(id);
   const containerRef = useRef();
   const token = usetoken();
-  const [dispatch, setDispatch] = useState({});
+  const [purchase, setPurchase] = useState({});
   const [buyer, setBuyer] = useState({});
-  const [dispatchsubData, setDispatchSubData] = useState([]);
+  const [purchasesubData, setPurchaseSubData] = useState([]);
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
-  // const doublebranch = "Yes";
   const handlePrintPdf = useReactToPrint({
     content: () => containerRef.current,
-    documentTitle: "Dispatch",
+    documentTitle: "Purchase",
     pageStyle: `
       @page {
     size: A4 portrait;
@@ -49,15 +48,15 @@ const DispatchView = () => {
     `,
   });
   const {
-    data: DispatchId,
+    data: PurchaseId,
     isLoading,
     isError,
     refetch,
   } = useQuery({
-    queryKey: ["dispatchByid", decryptedId],
+    queryKey: ["purchaseByid", decryptedId],
     queryFn: async () => {
       const response = await apiClient.get(
-        `${DISPATCH_EDIT_LIST}/${decryptedId}`,
+        `${PURCHASE_EDIT_LIST}/${decryptedId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -69,22 +68,22 @@ const DispatchView = () => {
   });
 
   useEffect(() => {
-    if (DispatchId) {
-      setDispatch(DispatchId.dispatch);
-      setBuyer(DispatchId.buyer);
-      setDispatchSubData(DispatchId.dispatchSub);
+    if (PurchaseId) {
+      setPurchase(PurchaseId.purchase);
+      setBuyer(PurchaseId.buyer);
+      setPurchaseSubData(PurchaseId.purchaseSub);
     }
-  }, [DispatchId]);
-  const totalDispatchSubPiece = dispatchsubData.reduce(
-    (total, row) => total + row.dispatch_sub_piece,
+  }, [PurchaseId]);
+  const totalPurchaseSubPiece = purchasesubData.reduce(
+    (total, row) => total + row.purchase_sub_piece,
     0
   );
-  const totalDispatchSubBox = dispatchsubData.reduce(
-    (total, row) => total + row.dispatch_sub_box,
+  const totalPurchaseSubBox = purchasesubData.reduce(
+    (total, row) => total + row.purchase_sub_box,
     0
   );
-  const totalDispatchWeight = dispatchsubData.reduce(
-    (total, row) => total + row.item_weight * row.dispatch_sub_box,
+  const totalPurchaseWeight = purchasesubData.reduce(
+    (total, row) => total + row.item_weight * row.purchase_sub_box,
     0
   );
 
@@ -98,7 +97,7 @@ const DispatchView = () => {
       .from(containerRef.current)
       .set({
         margin: 10, // Standard margin
-        filename: "Dispatch.pdf",
+        filename: "Purchase.pdf",
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
@@ -114,7 +113,7 @@ const DispatchView = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Title Section */}
           <h1 className="text-lg sm:text-xl font-bold text-center sm:text-left">
-            Dispatch
+            Purchase
           </h1>
 
           {/* Button Section */}
@@ -138,7 +137,7 @@ const DispatchView = () => {
         className="w-full max-w-3xl mx-auto px-4 pb-4 border border-black bg-white"
         ref={containerRef}
       >
-        <h2 className="text-center font-bold text-lg py-2 ">RUFF PERFORMA</h2>
+        <h2 className="text-center font-bold text-lg py-2 ">PURCHASE</h2>
 
         <div className="w-full border border-black mb-4 grid grid-cols-2">
           <div className="border-r border-black">
@@ -147,7 +146,7 @@ const DispatchView = () => {
             </div>
             <div className="p-2">
               <span className="font-medium">Ref No:</span>{" "}
-              {dispatch.dispatch_ref_no}
+              {purchase.purchase_ref}
             </div>
           </div>
           <div>
@@ -156,7 +155,7 @@ const DispatchView = () => {
             </div>
             <div className="p-2">
               <span className="font-medium">Date:</span>{" "}
-              {moment(dispatch.dispatch_date).format("DD-MMM-YYYY")}
+              {moment(purchase.purchase_date).format("DD-MMM-YYYY")}
             </div>
           </div>
         </div>
@@ -201,31 +200,24 @@ const DispatchView = () => {
 
           {/* Table Body */}
           <tbody>
-            {dispatchsubData.map((row, index) => {
+            {purchasesubData.map((row, index) => {
               return (
                 <tr key={index} className="border border-black">
                   <td className="p-2 border border-black">{row.item_name}</td>
                   <td className="p-2 border border-black">{row.item_size}</td>
 
-                  {/* {(singlebranch === "Yes" && doublebranch === "No") ||
-                  (singlebranch === "No" && doublebranch === "Yes") ? (
-                    <td className="border border-black px-2 py-2 text-right">
-                      {row.dispatch_sub_box}
-                    </td>
-                  ) : null} */}
-
                   {singlebranch === "Yes" && doublebranch === "Yes" ? (
                     <>
                       <td className="border border-black px-2 py-2 text-center">
-                        {row.dispatch_sub_box}
+                        {row.purchase_sub_box}
                       </td>
                       <td className="border border-black px-2 py-2 text-center">
-                        {row.dispatch_sub_piece}
+                        {row.purchase_sub_piece}
                       </td>
                     </>
                   ) : (
                     <td className="border border-black px-2 py-2 text-right">
-                      {row.dispatch_sub_box}
+                      {row.purchase_sub_box}
                     </td>
                   )}
                 </tr>
@@ -237,48 +229,40 @@ const DispatchView = () => {
               <td className="p-2 border border-black">TOTAL</td>
               <td className="p-2 border border-black"></td>
 
-              {/* {(singlebranch === "Yes" && doublebranch === "No") ||
-              (singlebranch === "No" && doublebranch === "Yes") ? (
-                <td className="border border-black px-2 py-2 text-right">
-                  {totalDispatchSubBox}
-                </td>
-              ) : null} */}
-
               {singlebranch == "Yes" && doublebranch == "Yes" ? (
                 <>
                   <td className="border border-black px-2 py-2 text-center">
-                    {totalDispatchSubBox}
+                    {totalPurchaseSubBox}
                   </td>
                   <td className="border border-black px-2 py-2 text-center">
-                    {totalDispatchSubPiece}
+                    {totalPurchaseSubPiece}
                   </td>
                 </>
               ) : (
                 <td className="border border-black px-2 py-2 text-right">
-                  {totalDispatchSubBox}
+                  {totalPurchaseSubBox}
                 </td>
               )}
             </tr>
           </tbody>
         </table>
 
-        {/* Footer Details */}
         <div className="mt-2 text-sm border border-black">
-          {totalDispatchWeight ? (
+          {totalPurchaseWeight ? (
             <p className="py-1 px-2 border-b border-black">
-              WEIGHT : {totalDispatchWeight} KG
+              WEIGHT : {totalPurchaseWeight} KG
             </p>
           ) : (
             ""
           )}
           <p className="py-1 px-2 border-b border-black">
-            VEHICLE : {dispatch.dispatch_vehicle_no}
+            VEHICLE : {purchase.purchase_vehicle_no}
           </p>
-          <p className="py-1 px-2">REMARK : {dispatch.dispatch_remark}</p>
+          <p className="py-1 px-2">REMARK : {purchase.purchase_remark}</p>
         </div>
       </div>
     </Page>
   );
 };
 
-export default DispatchView;
+export default PurchaseView;
