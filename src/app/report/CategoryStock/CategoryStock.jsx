@@ -158,6 +158,7 @@ const CategoryStock = () => {
       setBrands(["All Brands", ...sortedBrands]);
     }
   }, [Categorystockdata]);
+
   const processedStock =
     Categorystockdata?.stock?.map((item) => {
       const itemPiece = item.item_piece || 1;
@@ -205,6 +206,10 @@ const CategoryStock = () => {
         total,
       };
     }) || [];
+  const filteredStock =
+    selectedBrands == "All Brands"
+      ? processedStock
+      : processedStock.filter((item) => item.item_brand == selectedBrands);
 
   const BranchHeader = () => (
     <div
@@ -349,7 +354,7 @@ const CategoryStock = () => {
   });
 
   const grand = {
-    total: processedStock.reduce((sum, g) => sum + (Number(g.total) || 0), 0),
+    total: filteredStock.reduce((sum, g) => sum + (Number(g.total) || 0), 0),
   };
   return (
     <Page>
@@ -494,7 +499,7 @@ const CategoryStock = () => {
             </div>
           ) : (
             <>
-              {processedStock?.length > 0 && (
+              {filteredStock?.length > 0 && (
                 <table className="w-full border-collapse border border-black">
                   <thead className="bg-gray-100">
                     <tr>
@@ -556,7 +561,7 @@ const CategoryStock = () => {
 
                   <tbody>
                     <React.Fragment>
-                      {processedStock?.map((item) => {
+                      {filteredStock?.map((item) => {
                         const itemPiece = item.item_piece || 1;
 
                         const openPurch =
