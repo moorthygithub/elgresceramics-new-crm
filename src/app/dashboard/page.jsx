@@ -163,7 +163,7 @@ export default function Page({ children }) {
                       </span>
                     </span>
                     <span className="flex items-center gap-1 font-semibold">
-                      Updated on :07/06/2025
+                      Updated on :05/07/2025
                     </span>
                   </div>
                 </div>

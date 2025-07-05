@@ -6,6 +6,12 @@ import { MemoizedSelect } from "@/components/common/MemoizedSelect";
 import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { IMAGE_URL, NO_IMAGE_URL } from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
@@ -13,9 +19,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useFetchCategory } from "@/hooks/useApi";
 import { useQuery } from "@tanstack/react-query";
 import html2pdf from "html2pdf.js";
-import { ArrowDownToLine, Printer, Search } from "lucide-react";
+import { ArrowDownToLine, ChevronDown, Printer, Search } from "lucide-react";
 import moment from "moment";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useReactToPrint } from "react-to-print";
 
@@ -30,6 +36,9 @@ const CategoryStock = () => {
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  const [brands, setBrands] = useState(["All Brands"]);
+  const [selectedBrands, setSelectedBrands] = useState("All Brands");
+
   console.log(singlebranch, doublebranch);
   const fetchCategorystockdata = async () => {
     const response = await apiClient.post(
@@ -137,7 +146,18 @@ const CategoryStock = () => {
       [field]: value,
     }));
   };
+  useEffect(() => {
+    if (Categorystockdata?.stock && Categorystockdata?.stock.length > 0) {
+      const uniqueBrands = [
+        ...new Set(Categorystockdata?.stock.map((item) => item.item_brand)),
+      ];
+      const sortedBrands = uniqueBrands
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
+      setBrands(["All Brands", ...sortedBrands]);
+    }
+  }, [Categorystockdata]);
   const processedStock =
     Categorystockdata?.stock?.map((item) => {
       const itemPiece = item.item_piece || 1;
@@ -251,6 +271,49 @@ const CategoryStock = () => {
 
             {/* Buttons Section */}
             <div className="flex flex-col md:flex-row justify-end gap-2">
+              <div className="space-y-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className=" truncate">
+                      <span className="truncate">{selectedBrands}</span>
+                      <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                    </Button>
+                  </DropdownMenuTrigger>
+
+                  <DropdownMenuContent
+                    className="max-h-60 w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto"
+                    align="start"
+                    sideOffset={5}
+                    collisionPadding={10}
+                  >
+                    {brands.map((brands) => (
+                      <DropdownMenuItem
+                        key={brands}
+                        onSelect={() => setSelectedBrands(brands)}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="truncate">{brands}</span>
+                        {selectedBrands === brands && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="flex-shrink-0 ml-2"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <Button
                 type="button"
                 size="sm"
@@ -366,6 +429,43 @@ const CategoryStock = () => {
                       placeholder="Select Category"
                     />
                   </div>
+                  <div className="space-y-1 w-full">
+                    <label
+                      className={`block ${ButtonConfig.cardLabel} text-xs font-medium`}
+                    >
+                      Brands
+                    </label>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full truncate flex justify-between"
+                        >
+                          <span className="truncate">{selectedBrands}</span>
+                          <ChevronDown className="ml-2 h-4 w-4 flex-shrink-0" />
+                        </Button>
+                      </DropdownMenuTrigger>
+
+                      <DropdownMenuContent
+                        className="w-full max-h-60 overflow-y-auto"
+                        align="start"
+                        sideOffset={5}
+                        collisionPadding={10}
+                      >
+                        {brands.map((brand) => (
+                          <DropdownMenuItem
+                            key={brand}
+                            onSelect={() => setSelectedBrands(brand)}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="truncate">{brand}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
                   <div className="space-y-1">
                     <Button
                       type="submit"
@@ -400,7 +500,7 @@ const CategoryStock = () => {
                     <tr>
                       <th
                         className="border border-black px-2 py-2 text-center"
-                        colSpan={3}
+                        colSpan={4}
                       >
                         {" "}
                         <div className="flex items-center justify-center text-lg">
