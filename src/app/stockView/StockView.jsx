@@ -112,7 +112,6 @@ const StockView = () => {
     pageStyle: `
       @page {
         size: A4;
-        margin: 5mm;
       }
     
         @media print {
@@ -162,6 +161,7 @@ const StockView = () => {
     // Push visible headers
     if (columnVisibility?.item_name) headers.push("Item Name");
     if (columnVisibility?.category) headers.push("Category");
+    if (columnVisibility?.brand) headers.push("Brand");
     if (columnVisibility?.size) headers.push("Size");
 
     // Available logic
@@ -201,6 +201,7 @@ const StockView = () => {
       const row = [];
       if (columnVisibility.item_name) row.push(item.item_name || "");
       if (columnVisibility.category) row.push(item.item_category || "");
+      if (columnVisibility.brand) row.push(item.item_brand || "");
       if (columnVisibility.size) row.push(item.item_size || "");
 
       if (columnVisibility.available_box) {

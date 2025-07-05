@@ -25,7 +25,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, Edit, Search, SquarePlus, Trash2 } from "lucide-react";
+import { ChevronDown, Edit, Search, SquarePlus, Trash2, View } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -43,6 +43,7 @@ import {
   fetchPurchaseReturnById,
   navigateToPurchaseEdit,
   navigateToPurchaseReturnEdit,
+  navigateToPurchaseReturnView,
   PURCHASE_EDIT_LIST,
   PURCHASE_LIST,
   PURCHASE_RETURN_EDIT_LIST,
@@ -323,6 +324,24 @@ Total QTY: ${totalQty}
                 </Tooltip>
               </TooltipProvider>
             )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      navigateToPurchaseReturnView(navigate, purchaseId);
+                    }}
+                  >
+                    <View />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>View Purchase Return</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             {UserId != 1 && (
               <TooltipProvider>
                 <Tooltip>

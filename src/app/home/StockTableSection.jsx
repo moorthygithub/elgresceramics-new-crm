@@ -274,7 +274,7 @@ function StockTableSection({
               
 
               <div className="flex justify-center">
-                <div className="flex flex-wrap justify-center gap-4 p-4  rounded-xl  w-full max-w-4xl">
+                <div className="flex flex-wrap justify-center gap-4 p-4  rounded-xl  w-full max-w-4xl ">
                   {Object.entries(columnVisibility).map(([key, value]) => {
                     if (
                       (key === "box" || key === "piece") &&
@@ -286,7 +286,7 @@ function StockTableSection({
                     return (
                       <label
                         key={key}
-                        className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition duration-200"
+                        className="flex cursor-pointer items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition duration-200"
                       >
                         <input
                           type="checkbox"
