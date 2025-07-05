@@ -212,11 +212,31 @@ ${itemLines.join("\n")}
 Total QTY: ${totalQty}
 ======================
 \`\`\``;
-    const phoneNumber = `${whatsapp}`;
-    // const phoneNumber = "919360485526";
+    // const phoneNumber = `${whatsapp}`;
+    // // const phoneNumber = "919360485526";
+    // const encodedMessage = encodeURIComponent(message);
+    // const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    // window.open(whatsappUrl, "_blank");
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, "_blank");
+
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      const mobileUrl = `whatsapp://send?text=${encodedMessage}`;
+      window.location.href = mobileUrl;
+    } else {
+      const webUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+      const desktopFallback = `whatsapp://send?text=${encodedMessage}`;
+
+      try {
+        window.open(webUrl, "_blank");
+        setTimeout(() => {
+          window.location.href = desktopFallback;
+        }, 500);
+      } catch (err) {
+        window.location.href = desktopFallback;
+      }
+    }
   };
   const columns = [
     {
