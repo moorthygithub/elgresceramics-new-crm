@@ -35,8 +35,7 @@ const CategoryStock = () => {
   const { toast } = useToast();
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
-  // const doublebranch = useSelector((state) => state.auth.branch_d_unit);
-  const doublebranch = "Yes";
+  const doublebranch = useSelector((state) => state.auth.branch_d_unit);
   const [brands, setBrands] = useState(["All Brands"]);
   const [selectedBrands, setSelectedBrands] = useState("All Brands");
 
@@ -354,7 +353,7 @@ const CategoryStock = () => {
     box: Math.floor(val / itemPiece),
     piece: val % itemPiece,
   });
-  const grandTotal = processedStock.reduce((acc, item) => acc + item.total, 0);
+  const grandTotal = filteredStock.reduce((acc, item) => acc + item.total, 0);
 
   const grand = {
     total: filteredStock.reduce((sum, g) => sum + (Number(g.total) || 0), 0),
