@@ -17,16 +17,25 @@ import { IMAGE_URL, NO_IMAGE_URL } from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import { useToast } from "@/hooks/use-toast";
 import { useFetchCategory } from "@/hooks/useApi";
+import { toggleCategoryColumn } from "@/redux/categoryColumnVisibilitySlice";
 import { useQuery } from "@tanstack/react-query";
 import html2pdf from "html2pdf.js";
 import { ArrowDownToLine, ChevronDown, Printer, Search } from "lucide-react";
 import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useReactToPrint } from "react-to-print";
 
 const CategoryStock = () => {
   const containerRef = useRef();
+  const dispatch = useDispatch();
+  const columnVisibility = useSelector(
+    (state) => state.categorycolumnVisibility
+  );
+  console.log(columnVisibility);
+  const handleToggle = (key) => {
+    dispatch(toggleCategoryColumn(key));
+  };
   const [formData, setFormData] = useState({
     from_date: moment().startOf("month").format("YYYY-MM-DD"),
     to_date: moment().format("YYYY-MM-DD"),
@@ -36,6 +45,7 @@ const CategoryStock = () => {
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  // const doublebranch = "Yes";
   const [brands, setBrands] = useState(["All Brands"]);
   const [selectedBrands, setSelectedBrands] = useState("All Brands");
 
@@ -275,8 +285,28 @@ const CategoryStock = () => {
               </div>
             </div>
 
-            {/* Buttons Section */}
+            {/* Buttons Sectio{columnVisibilityn */}
             <div className="flex flex-col md:flex-row justify-end gap-2">
+              <div className="flex flex-wrap justify-center gap-4 items-center  rounded-xl  w-full max-w-4xl ">
+                {Object.keys(columnVisibility).map((key) => (
+                  <>
+                    <span className="capitalize">Stock</span>
+
+                    <label
+                      key={key}
+                      className="flex cursor-pointer items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition duration-200"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={columnVisibility[key]}
+                        onChange={() => handleToggle(key)}
+                        className="accent-blue-600 w-4 h-4 cursor-pointer"
+                      />
+                    </label>
+                  </>
+                ))}
+              </div>
+
               <div className="space-y-1">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -355,9 +385,6 @@ const CategoryStock = () => {
   });
   const grandTotal = filteredStock.reduce((acc, item) => acc + item.total, 0);
 
-  const grand = {
-    total: filteredStock.reduce((sum, g) => sum + (Number(g.total) || 0), 0),
-  };
   return (
     <Page>
       <div className="p-0 md:p-4">
@@ -472,12 +499,30 @@ const CategoryStock = () => {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
+                  <div className="flex flex-wrap justify-center gap-4 items-center  rounded-xl  w-full max-w-4xl ">
+                    {Object.keys(columnVisibility).map((key) => (
+                      <>
+                        <span className="capitalize">Stock</span>
 
-                  <div className="space-y-1">
+                        <label
+                          key={key}
+                          className="flex cursor-pointer items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg  shadow hover:bg-gray-200 transition duration-200"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={columnVisibility[key]}
+                            onChange={() => handleToggle(key)}
+                            className="accent-blue-600 w-4 h-4 cursor-pointer"
+                          />
+                        </label>
+                      </>
+                    ))}
+                  </div>
+                  <div>
                     <Button
                       type="submit"
                       size="sm"
-                      className={`h-9 mt-6 w-full ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
+                      className={`h-9  w-full  ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
                     >
                       <Search className="h-3 w-3 mr-1" /> Search
                     </Button>
@@ -546,36 +591,42 @@ const CategoryStock = () => {
                           PHOTO
                         </th>
 
-                        {(singlebranch === "Yes" && doublebranch === "No") ||
-                        (singlebranch === "No" && doublebranch === "Yes") ? (
-                          <th
-                            className="border border-black px-2 py-2 text-center  w-[10%] "
-                            colSpan={2}
-                          >
-                            STOCK
-                          </th>
-                        ) : null}
+                        {columnVisibility.box &&
+                          ((singlebranch == "Yes" && doublebranch == "No") ||
+                            (singlebranch == "No" &&
+                              doublebranch == "Yes")) && (
+                            <th
+                              className="border border-black px-2 py-2 text-center w-[10%]"
+                              colSpan={2}
+                            >
+                              STOCK
+                            </th>
+                          )}
 
-                        {singlebranch === "Yes" && doublebranch === "Yes" && (
-                          <th
-                            className="border border-black px-2 py-2 text-center w-[15%]"
-                            colSpan={2}
-                          >
-                            STOCK
-                          </th>
-                        )}
+                        {columnVisibility.box &&
+                          singlebranch === "Yes" &&
+                          doublebranch === "Yes" && (
+                            <th
+                              className="border border-black px-2 py-2 text-center w-[15%]"
+                              colSpan={2}
+                            >
+                              STOCK
+                            </th>
+                          )}
                       </tr>
 
-                      {singlebranch === "Yes" && doublebranch === "Yes" && (
-                        <tr>
-                          <th className="border border-black px-2 py-2 text-center">
-                            Box
-                          </th>
-                          <th className="border border-black px-2 py-2 text-center">
-                            Piece
-                          </th>
-                        </tr>
-                      )}
+                      {columnVisibility.box &&
+                        singlebranch === "Yes" &&
+                        doublebranch === "Yes" && (
+                          <tr>
+                            <th className="border border-black px-2 py-2 text-center">
+                              Box
+                            </th>
+                            <th className="border border-black px-2 py-2 text-center">
+                              Piece
+                            </th>
+                          </tr>
+                        )}
                     </thead>
 
                     <tbody>
@@ -648,7 +699,8 @@ const CategoryStock = () => {
                                 />
                               </td>
 
-                              {(singlebranch == "Yes" &&
+                              {(columnVisibility.box &&
+                                singlebranch == "Yes" &&
                                 doublebranch == "No") ||
                               (singlebranch == "No" &&
                                 doublebranch == "Yes") ? (
@@ -661,7 +713,8 @@ const CategoryStock = () => {
                                 </td>
                               ) : null}
 
-                              {singlebranch === "Yes" &&
+                              {columnVisibility.box &&
+                                singlebranch === "Yes" &&
                                 doublebranch === "Yes" && (
                                   <>
                                     <td
@@ -686,40 +739,41 @@ const CategoryStock = () => {
                           );
                         })}
                       </React.Fragment>
-
-                      <tr className="font-bold">
-                        <td
-                          className="border border-black px-2 py-2 text-center text-lg"
-                          colSpan={2}
-                        >
-                          Total:
-                        </td>
-
-                        {singlebranch === "Yes" && doublebranch === "Yes" ? (
-                          <>
-                            <td className="border border-black px-2 py-2 text-right text-lg">
-                              {
-                                toBoxPiece(
-                                  grandTotal,
-                                  filteredStock[0]?.itemPiece || 1
-                                ).box
-                              }
-                            </td>
-                            <td className="border border-black px-2 py-2 text-right text-lg">
-                              {
-                                toBoxPiece(
-                                  grandTotal,
-                                  filteredStock[0]?.itemPiece || 1
-                                ).piece
-                              }
-                            </td>
-                          </>
-                        ) : (
-                          <td className="border border-black px-2 py-2 text-right text-lg">
-                            {grandTotal}
+                      {columnVisibility.box && (
+                        <tr className="font-bold">
+                          <td
+                            className="border border-black px-2 py-2 text-center text-lg"
+                            colSpan={2}
+                          >
+                            Total:
                           </td>
-                        )}
-                      </tr>
+
+                          {singlebranch === "Yes" && doublebranch === "Yes" ? (
+                            <>
+                              <td className="border border-black px-2 py-2 text-right text-lg">
+                                {
+                                  toBoxPiece(
+                                    grandTotal,
+                                    filteredStock[0]?.itemPiece || 1
+                                  ).box
+                                }
+                              </td>
+                              <td className="border border-black px-2 py-2 text-right text-lg">
+                                {
+                                  toBoxPiece(
+                                    grandTotal,
+                                    filteredStock[0]?.itemPiece || 1
+                                  ).piece
+                                }
+                              </td>
+                            </>
+                          ) : (
+                            <td className="border border-black px-2 py-2 text-right text-lg">
+                              {grandTotal}
+                            </td>
+                          )}
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </>
