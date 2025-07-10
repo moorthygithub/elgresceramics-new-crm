@@ -1,3 +1,5 @@
+import { PANEL_LOGIN } from "@/api";
+import apiClient from "@/api/axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,19 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import BASE_URL from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "@/json/logo";
 import { loginSuccess } from "@/redux/authSlice";
-import axios from "axios";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import companyname from "../../json/company.json";
-import apiClient from "@/api/axios";
-import { PANEL_LOGIN } from "@/api";
 export default function LoginAuth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -131,7 +129,7 @@ export default function LoginAuth() {
                 <Logo showLogo="true" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[1rem] font-bold text-yellow-900 leading-tight">
+                <span className="text-[1rem] font-bold  leading-tight">
                   {companyname?.CompanyName}
                 </span>
               </div>

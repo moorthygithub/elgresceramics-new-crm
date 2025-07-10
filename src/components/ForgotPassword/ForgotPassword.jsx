@@ -124,7 +124,7 @@ export default function ForgotPassword() {
                 <Logo showLogo="true" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[1rem] font-bold text-yellow-900 leading-tight">
+                <span className="text-[1rem] font-bold  leading-tight">
                   {companyname?.CompanyName}
                 </span>
               </div>
