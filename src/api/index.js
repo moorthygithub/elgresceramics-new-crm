@@ -25,6 +25,12 @@ export const PURCHASE_RETURN_CREATE = `/purchases-return`;
 export const PURCHASE_RETURN_SUB_DELETE = `/purchases-return-sub`;
 
 //DISPATCH
+export const PRE_BOOKING_LIST = `/pre-booking-list`;
+// export const DISPATCH_EDIT_LIST = `/pre-booking`;
+export const PRE_BOOKING_CREATE = `/pre-booking`;
+export const PRE_BOOKING_SUB_DELETE = `/pre-booking-sub`;
+// export const DISPATCH_STATUS = `/dispatch-status`;
+//DISPATCH
 export const DISPATCH_LIST = `/dispatch-list`;
 export const DISPATCH_EDIT_LIST = `/dispatch`;
 export const DISPATCH_CREATE = `/dispatch`;
@@ -84,6 +90,8 @@ export const ROUTES = {
   PURCHASE_VIEW: (id) => `/purchase/view/${encryptId(id)}`,
   PURCHASE_RETURN_EDIT: (id) => `/purchase-return/edit/${encryptId(id)}`,
   PURCHASE_RETURN_VIEW: (id) => `/purchase-return/view/${encryptId(id)}`,
+  PREBOOKING_EDIT: (id) => `/pre-booking/edit/${encryptId(id)}`,
+  PREBOOKING_VIEW: (id) => `/pre-booking/view/${encryptId(id)}`,
   DISPATCH_EDIT: (id) => `/dispatch/edit/${encryptId(id)}`,
   DISPATCH_RETURN_EDIT: (id) => `/dispatch-return/edit/${encryptId(id)}`,
   DISPATCH_VIEW: (id) => `/dispatch/view/${encryptId(id)}`,
@@ -100,6 +108,12 @@ export const navigateToPurchaseReturnEdit = (navigate, purchaseId) => {
 };
 export const navigateToPurchaseReturnView = (navigate, purchaseId) => {
   navigate(ROUTES.PURCHASE_RETURN_VIEW(purchaseId));
+};
+export const navigateToPreBookingEdit = (navigate, prebookingId) => {
+  navigate(ROUTES.PREBOOKING_EDIT(prebookingId));
+};
+export const navigateToPreBookingView = (navigate, dispatchId) => {
+  navigate(ROUTES.PREBOOKING_VIEW(dispatchId));
 };
 export const navigateTODispatchEdit = (navigate, dispatchId) => {
   navigate(ROUTES.DISPATCH_EDIT(dispatchId));
@@ -136,6 +150,23 @@ export const fetchPurchaseReturnById = async (encryptedId, token) => {
   try {
     const id = decryptId(encryptedId);
     const response = await apiClient.get(`${PURCHASE_RETURN_EDIT_LIST}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch purchase details"
+    );
+  }
+};
+export const fetchPreBookingById = async (encryptedId, token) => {
+  try {
+    if (!token) throw new Error("No authentication token found");
+
+    const id = decryptId(encryptedId);
+    const response = await apiClient.get(`${PRE_BOOKING_CREATE}/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

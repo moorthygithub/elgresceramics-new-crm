@@ -217,10 +217,27 @@ const CategoryStock = () => {
         total,
       };
     }) || [];
-  const filteredStock =
-    selectedBrands == "All Brands"
+
+  console.log(processedStock, "processedStock");
+
+  // const filteredStock = (
+  //   selectedBrands === "All Brands"
+  //     ? processedStock
+  //     : processedStock.filter((item) => item.item_brand === selectedBrands)
+  // ).sort((a, b) => a.item_name.localeCompare(b.item_name));
+  const filteredStock = (
+    selectedBrands === "All Brands"
       ? processedStock
-      : processedStock.filter((item) => item.item_brand == selectedBrands);
+      : processedStock.filter((item) => item.item_brand === selectedBrands)
+  ).sort((a, b) => {
+    const numA = parseFloat(a.item_name) || 0;
+    const numB = parseFloat(b.item_name) || 0;
+
+    if (numA !== numB) {
+      return numA - numB;
+    }
+    return a.item_name.localeCompare(b.item_name);
+  });
 
   const BranchHeader = () => (
     <div
@@ -687,7 +704,7 @@ const CategoryStock = () => {
                               <td className="border border-black px-2 py-2 text-sm text-center">
                                 {item.item_name}
                               </td>
-                              <td className="border border-black px-2 py-2 text-center">
+                              <td className="border-b border-black px-2 py-2 flex text-center justify-center ">
                                 <img
                                   src={
                                     item.item_image
@@ -695,7 +712,7 @@ const CategoryStock = () => {
                                       : NO_IMAGE_URL
                                   }
                                   alt={"Category Image"}
-                                  className="w-full h-40 object-contain"
+                                  className="w-40 h-40 object-contain"
                                 />
                               </td>
 
