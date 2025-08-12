@@ -2,22 +2,24 @@ import { DISPATCH_EDIT_LIST } from "@/api";
 import apiClient from "@/api/axios";
 import usetoken from "@/api/usetoken";
 import { decryptId } from "@/components/common/Encryption";
+import Loader from "@/components/loader/Loader";
 import { Button } from "@/components/ui/button";
+import { IMAGE_URL, NO_IMAGE_URL } from "@/config/BaseUrl";
 import { ButtonConfig } from "@/config/ButtonConfig";
+import { toggleDispatchColumn } from "@/redux/dispatchColumnVisibilitySlice";
 import { useQuery } from "@tanstack/react-query";
 import html2pdf from "html2pdf.js";
 import { Printer } from "lucide-react";
 import moment from "moment";
 import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import Page from "../dashboard/page";
-import Loader from "@/components/loader/Loader";
-import { IMAGE_URL, NO_IMAGE_URL } from "@/config/BaseUrl";
 
 const DispatchView = () => {
   const { id } = useParams();
+  const dispatched = useDispatch();
   const decryptedId = decryptId(id);
   const containerRef = useRef();
   const token = usetoken();
@@ -27,6 +29,14 @@ const DispatchView = () => {
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
   // const doublebranch = "Yes";
+
+  const columnVisibility = useSelector(
+    (state) => state.dispatchcolumnVisibility
+  );
+  const handleToggle = (key) => {
+    dispatched(toggleDispatchColumn(key));
+  };
+  console.log(columnVisibility, "columnVisibility");
   const handlePrintPdf = useReactToPrint({
     content: () => containerRef.current,
     documentTitle: "Dispatch",
@@ -127,8 +137,23 @@ const DispatchView = () => {
             Dispatch
           </h1>
 
-          {/* Button Section */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            {Object.keys(columnVisibility)
+              .filter((key) => key === "dispatchimage")
+              .map((key) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <span className="capitalize">Image</span>
+                  <label className="flex cursor-pointer items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition duration-200">
+                    <input
+                      type="checkbox"
+                      checked={columnVisibility[key]}
+                      onChange={() => handleToggle(key)}
+                      className="accent-blue-600 w-4 h-4 cursor-pointer"
+                    />
+                  </label>
+                </div>
+              ))}
+
             <Button
               className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
               onClick={handlePrintPdf}
@@ -177,6 +202,9 @@ const DispatchView = () => {
               <th className="p-2 border border-black" rowSpan={2}>
                 ITEM NAME
               </th>
+              {columnVisibility.dispatchimage && (
+                <th className="p-2 border border-black">IMAGE</th>
+              )}
               <th className="p-2 border border-black" rowSpan={2}>
                 SIZE
               </th>
@@ -214,23 +242,24 @@ const DispatchView = () => {
             {dispatchsubData.map((row, index) => {
               return (
                 <tr key={index} className="border border-black">
-                  {/* <td className="p-2 border border-black">{row.item_name}</td> */}
-                  <td className="p-2 border border-black">
-                    {row.item_image && (
-                      <img
-                        src={
-                          row.item_image
-                            ? `${IMAGE_URL}${row.item_image}`
-                            : NO_IMAGE_URL
-                        }
-                        alt={row.item_name}
-                        className="w-10 h-10 object-cover inline-block mr-2"
-                      />
-                    )}
-                    {row.item_name}
-                  </td>
-
-                  <td className="p-2 border border-black">{row.item_size}</td>
+                  <td className="p-2 border border-black">{row.item_name}</td>
+                  {columnVisibility.dispatchimage && (
+                    <td className="p-2  flex justify-center">
+                      {" "}
+                      {row.item_image && (
+                        <img
+                          src={
+                            row.item_image
+                              ? `${IMAGE_URL}${row.item_image}`
+                              : NO_IMAGE_URL
+                          }
+                          alt={row.item_name}
+                          className="w-10 h-10 object-cover inline-block mr-2"
+                        />
+                      )}
+                    </td>
+                  )}
+                  <td className="p-2 border border-black ">{row.item_size}</td>
 
                   {singlebranch === "Yes" && doublebranch === "Yes" ? (
                     <>
@@ -253,15 +282,10 @@ const DispatchView = () => {
             {/* Total Row */}
             <tr className="border border-black bg-gray-200 font-semibold">
               <td className="p-2 border border-black">TOTAL</td>
-              <td className="p-2 border border-black"></td>
-
-              {/* {(singlebranch === "Yes" && doublebranch === "No") ||
-              (singlebranch === "No" && doublebranch === "Yes") ? (
-                <td className="border border-black px-2 py-2 text-right">
-                  {totalDispatchSubBox}
-                </td>
-              ) : null} */}
-
+              <td className="p-2 border-l border-black"/>
+              {columnVisibility.dispatchimage && (
+                <td />
+              )}
               {singlebranch == "Yes" && doublebranch == "Yes" ? (
                 <>
                   <td className="border border-black px-2 py-2 text-center">

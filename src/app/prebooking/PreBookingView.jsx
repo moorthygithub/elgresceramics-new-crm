@@ -9,17 +9,28 @@ import html2pdf from "html2pdf.js";
 import { Printer } from "lucide-react";
 import moment from "moment";
 import { useRef } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useReactToPrint } from "react-to-print";
 import Page from "../dashboard/page";
+import { toggleDispatchColumn } from "@/redux/dispatchColumnVisibilitySlice";
 
 const PreBookingView = () => {
+  const dispatch = useDispatch();
+
   const { id } = useParams();
   const containerRef = useRef();
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
+  const columnVisibility = useSelector(
+    (state) => state.dispatchcolumnVisibility
+  );
+  const handleToggle = (key) => {
+    dispatch(toggleDispatchColumn(key));
+  };
+  console.log(columnVisibility, "columnVisibility");
+
   const handlePrintPdf = useReactToPrint({
     content: () => containerRef.current,
     documentTitle: "PreBooking",
@@ -101,6 +112,22 @@ const PreBookingView = () => {
 
           {/* Button Section */}
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            {Object.keys(columnVisibility)
+              .filter((key) => key === "prebookimage")
+              .map((key) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <span className="capitalize">Image</span>
+                  <label className="flex cursor-pointer items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition duration-200">
+                    <input
+                      type="checkbox"
+                      checked={columnVisibility[key]}
+                      onChange={() => handleToggle(key)}
+                      className="accent-blue-600 w-4 h-4 cursor-pointer"
+                    />
+                  </label>
+                </div>
+              ))}
+
             <Button
               className={`w-full sm:w-auto ${ButtonConfig.backgroundColor} ${ButtonConfig.hoverBackgroundColor} ${ButtonConfig.textColor}`}
               onClick={handlePrintPdf}
@@ -120,7 +147,7 @@ const PreBookingView = () => {
         className="w-full max-w-3xl mx-auto px-4 pb-4 border border-black bg-white"
         ref={containerRef}
       >
-        <h2 className="text-center font-bold text-lg py-2 ">Pre Booking</h2>
+        <h2 className="text-center font-bold text-lg py-2 ">PRE BOOK</h2>
 
         <div className="w-full border border-black mb-4 grid grid-cols-2">
           <div className="border-r border-black">
@@ -155,6 +182,9 @@ const PreBookingView = () => {
               <th className="p-2 border border-black" rowSpan={2}>
                 ITEM NAME
               </th>
+              {columnVisibility.prebookimage && (
+                <th className="p-2 border border-black">IMAGE</th>
+              )}
               <th className="p-2 border border-black" rowSpan={2}>
                 SIZE
               </th>
@@ -192,22 +222,22 @@ const PreBookingView = () => {
             {prebookingByid?.prebookingsub?.map((row, index) => {
               return (
                 <tr key={index} className="border border-black">
-                  {/* <td className="p-2 border border-black">{row.item_name}</td> */}
-                  <td className="p-2 border border-black">
-                    {row.item_image && (
-                      <img
-                        src={
-                          row.item_image
-                            ? `${IMAGE_URL}${row.item_image}`
-                            : NO_IMAGE_URL
-                        }
-                        alt={row.item_name}
-                        className="w-10 h-10 object-cover inline-block mr-2"
-                      />
-                    )}
-                    {row.item_name}
-                  </td>
-
+                  <td className="p-2 border border-black">{row.item_name}</td>
+                  {columnVisibility.prebookimage && (
+                    <td className="p-2  flex justify-center">
+                      {row.item_image && (
+                        <img
+                          src={
+                            row.item_image
+                              ? `${IMAGE_URL}${row.item_image}`
+                              : NO_IMAGE_URL
+                          }
+                          alt={row.item_name}
+                          className="w-auto h-10 object-cover inline-block mr-2"
+                        />
+                      )}
+                    </td>
+                  )}
                   <td className="p-2 border border-black">{row.item_size}</td>
 
                   {singlebranch === "Yes" && doublebranch === "Yes" ? (
@@ -230,8 +260,8 @@ const PreBookingView = () => {
 
             <tr className="border border-black bg-gray-200 font-semibold">
               <td className="p-2 border border-black">TOTAL</td>
-              <td className="p-2 border border-black"></td>
-
+              <td className="p-2 border-l border-black" />
+              {columnVisibility.prebookimage && <td />}
               {singlebranch == "Yes" && doublebranch == "Yes" ? (
                 <>
                   <td className="border border-black px-2 py-2 text-center">
