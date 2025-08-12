@@ -36,6 +36,9 @@ import StockGoDown from "@/app/report/StockGoDown";
 import CategoryStock from "@/app/report/CategoryStock/CategoryStock";
 import PurchaseView from "@/app/purchase/PurchaseView";
 import PurchaseReturnView from "@/app/purchasereturn/PurchaseReturnView";
+import PreBookingList from "@/app/prebooking/PreBookingList";
+import PreBookingForm from "@/app/prebooking/PreBookingForm";
+import PreBookingView from "@/app/prebooking/PreBookingView";
 
 function AppRoutes() {
   return (
@@ -73,6 +76,10 @@ function AppRoutes() {
             path="/purchase-return/view/:id"
             element={<PurchaseReturnView />}
           />
+          <Route path="/pre-booking" element={<PreBookingList />} />
+          <Route path="/pre-booking/create" element={<PreBookingForm />} />
+          <Route path="/pre-booking/edit/:id" element={<PreBookingForm />} />
+          <Route path="/pre-booking/view/:id" element={<PreBookingView />} />
 
           <Route path="/dispatch" element={<DispatchList />} />
           <Route path="/dispatch/create" element={<CreateDispatch />} />

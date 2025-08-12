@@ -85,10 +85,14 @@ export function AppBottombar() {
       ],
     },
     {
-      title: "Dispatch",
+      title: "Dispatch&PreBook",
       url: "#",
       icon: ShoppingBag,
       items: [
+        {
+          title: "PreBooking",
+          url: "/pre-booking",
+        },
         {
           title: "Dispatch",
           url: "/dispatch",

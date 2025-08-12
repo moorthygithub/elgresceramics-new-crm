@@ -87,7 +87,6 @@ function StockTableSection({
         newVisibility.box = true;
       }
     }
-    // dispatch(toggleColumn(key));
     dispatch(setColumnVisibility(newVisibility));
   };
 
@@ -135,7 +134,6 @@ function StockTableSection({
     <Card className="shadow-sm border-0">
       <CardHeader className="px-3 py-2 border-b">
         <div className="flex flex-col space-y-2">
-          
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <CardTitle className="text-sm md:text-lg font-semibold text-black">
               {title}
@@ -271,8 +269,6 @@ function StockTableSection({
         <CardContent className="p-2">
           {filteredItems?.length ? (
             <>
-              
-
               <div className="flex justify-center">
                 <div className="flex flex-wrap justify-center gap-4 p-4  rounded-xl  w-full max-w-4xl ">
                   {Object.entries(columnVisibility).map(([key, value]) => {
@@ -438,9 +434,16 @@ function StockTableSection({
                         opening + purchase - purchaseR - sale + saleR;
                       const box = Math.floor(total / itemPiece);
                       const piece = total % itemPiece;
-
+                     
                       return (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr
+                          key={index}
+                          className={`hover:bg-gray-50 ${
+                            item.pre_box > 0 || item.pre_piece > 0
+                              ? "bg-pink-100 hover:bg-pink-100"
+                              : ""
+                          }`}
+                        >
                           {columnVisibility.item_name && (
                             <td className="border border-black px-2 py-2">
                               {item.item_name}
