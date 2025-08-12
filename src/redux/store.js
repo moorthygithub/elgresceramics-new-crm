@@ -2,6 +2,7 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import categoryColumnVisibility from "./categoryColumnVisibilitySlice";
 import columnVisibilityReducer from "./columnVisibilitySlice";
+import dispatchColumnVisibility from "./dispatchColumnVisibilitySlice";
 import sidebarReducer from "./sidebarSlice";
 import versionReducer from "./versionSlice";
 import storage from "redux-persist/lib/storage";
@@ -14,7 +15,13 @@ const encryptor = encryptTransform({
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "columnVisibility", "categorycolumnVisibility"],
+  whitelist: [
+    "auth",
+    "columnVisibility",
+    "categorycolumnVisibility",
+    "dispatchcolumnVisibility",
+    "version",
+  ],
   transforms: [encryptor],
 };
 
@@ -22,6 +29,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   categorycolumnVisibility: categoryColumnVisibility,
+  dispatchcolumnVisibility: dispatchColumnVisibility,
   sidebar: sidebarReducer,
   version: versionReducer,
   columnVisibility: columnVisibilityReducer,

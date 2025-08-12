@@ -246,7 +246,7 @@ const CategoryStock = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="lg:w-64 xl:w-72 shrink-0">
           <h1 className="text-xl font-bold text-gray-800 truncate">
-            Category Stock Summary{" "}
+            Category Stock Summary
           </h1>
           <p className="text-md text-gray-500 truncate">
             Add a Category Stock to Visit Report{" "}
@@ -712,7 +712,7 @@ const CategoryStock = () => {
                                       : NO_IMAGE_URL
                                   }
                                   alt={"Category Image"}
-                                  className="w-40 h-40 object-contain"
+                                  className="w-auto h-40 object-contain"
                                 />
                               </td>
 
