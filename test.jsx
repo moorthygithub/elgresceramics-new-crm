@@ -45,7 +45,6 @@ const CategoryStock = () => {
   const token = usetoken();
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
-  // const doublebranch = "Yes";
   const [brands, setBrands] = useState(["All Brands"]);
   const [selectedBrands, setSelectedBrands] = useState("All Brands");
 
@@ -121,52 +120,23 @@ const CategoryStock = () => {
     print();
   };
 
-  // const handleSaveAsPdf = () => {
-  //   if (!containerRef.current) {
-  //     console.error("Element not found");
-  //     return;
-  //   }
-
-  //   html2pdf()
-  //     .from(containerRef.current)
-  //     .set({
-  //       margin:" 0 20 0 20",
-  //       filename: "Category.pdf",
-  //       image: { type: "jpeg", quality: 0.98 },
-  //       html2canvas: { scale: 2 },
-  //       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-  //     })
-  //     .save();
-  // };
-
   const handleSaveAsPdf = () => {
     if (!containerRef.current) {
       console.error("Element not found");
       return;
     }
 
-    const element = containerRef.current;
-
-    const opt = {
-      margin: 10, // top, left, bottom, right
-      filename: "Category.pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-      },
-      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
-    };
-
-    html2pdf().set(opt).from(element).save();
+    html2pdf()
+      .from(containerRef.current)
+      .set({
+        margin: 10,
+        filename: "Category.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .save();
   };
-
   if (isError) {
     return (
       <Page>
@@ -590,9 +560,9 @@ const CategoryStock = () => {
                   <h1 className="text-lg mb-4 font-bold">
                     Category Stock Summary
                   </h1>
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse border border-black">
                     <thead className="bg-gray-100">
-                      {singlebranch == "Yes" && doublebranch == "Yes" ? (
+                      {singlebranch === "Yes" && doublebranch === "Yes" ? (
                         <tr>
                           <th
                             className="border border-black px-2 py-2 text-center"
@@ -655,8 +625,8 @@ const CategoryStock = () => {
                       </tr>
 
                       {columnVisibility.box &&
-                        singlebranch == "Yes" &&
-                        doublebranch == "Yes" && (
+                        singlebranch === "Yes" &&
+                        doublebranch === "Yes" && (
                           <tr>
                             <th className="border border-black px-2 py-2 text-center">
                               Box
@@ -730,10 +700,22 @@ const CategoryStock = () => {
                                 breakInside: "avoid",
                               }}
                             >
-                              <td className="border-b border-r border-l border-black  px-2 py-2 text-sm text-center">
+                              <td
+                                className="border border-black px-2 py-2 text-sm text-center"
+                                style={{
+                                  pageBreakInside: "avoid",
+                                  breakInside: "avoid",
+                                }}
+                              >
                                 {item.item_name}
                               </td>
-                              <td className={`border-b border-black px-2 py-2 flex text-center justify-center ${!columnVisibility.box ? "border-r":""}`}>
+                              <td
+                                className="border-b  border-black px-2 py-2 flex text-center justify-center"
+                                style={{
+                                  pageBreakInside: "avoid",
+                                  breakInside: "avoid",
+                                }}
+                              >
                                 <img
                                   src={
                                     item.item_image
@@ -741,7 +723,7 @@ const CategoryStock = () => {
                                       : NO_IMAGE_URL
                                   }
                                   alt={"Category Image"}
-                                  className="w-auto h-40 object-contain"
+                                  className="w-auto h-40 object-contain border border-red-900"
                                 />
                               </td>
 
@@ -751,22 +733,30 @@ const CategoryStock = () => {
                               (singlebranch == "No" &&
                                 doublebranch == "Yes") ? (
                                 <td
-                                  className={`border-b border-r border-l border-black px-2 py-2 text-right text-sm ${
+                                  className={`border border-black px-2 py-2 text-right text-sm ${
                                     total == "0" ? "opacity-50" : ""
                                   }`}
+                                  style={{
+                                    pageBreakInside: "avoid",
+                                    breakInside: "avoid",
+                                  }}
                                 >
                                   {item.total}{" "}
                                 </td>
                               ) : null}
 
                               {columnVisibility.box &&
-                                singlebranch == "Yes" &&
-                                doublebranch == "Yes" && (
+                                singlebranch === "Yes" &&
+                                doublebranch === "Yes" && (
                                   <>
                                     <td
                                       className={`border border-black px-2 py-2 text-right text-sm ${
                                         totalBP.box == "0" ? "opacity-50" : ""
                                       }`}
+                                      style={{
+                                        pageBreakInside: "avoid",
+                                        breakInside: "avoid",
+                                      }}
                                     >
                                       {" "}
                                       {totalBP.box}
@@ -775,6 +765,10 @@ const CategoryStock = () => {
                                       className={`border border-black px-2 py-2 text-right ${
                                         totalBP.piece == "0" ? "opacity-50" : ""
                                       }`}
+                                      style={{
+                                        pageBreakInside: "avoid",
+                                        breakInside: "avoid",
+                                      }}
                                     >
                                       {" "}
                                       {totalBP.piece}
@@ -794,7 +788,7 @@ const CategoryStock = () => {
                           }}
                         >
                           <td
-                            className="border-r border-l border-b border-black px-2 py-2 text-center text-lg"
+                            className="border border-black px-2 py-2 text-center text-lg"
                             colSpan={2}
                           >
                             Total:
