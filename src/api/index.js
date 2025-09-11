@@ -24,12 +24,10 @@ export const PURCHASE_RETURN_EDIT_LIST = `/purchases-return`;
 export const PURCHASE_RETURN_CREATE = `/purchases-return`;
 export const PURCHASE_RETURN_SUB_DELETE = `/purchases-return-sub`;
 
-//DISPATCH
+//PRE_BOOKING
 export const PRE_BOOKING_LIST = `/pre-booking-list`;
-// export const DISPATCH_EDIT_LIST = `/pre-booking`;
 export const PRE_BOOKING_CREATE = `/pre-booking`;
 export const PRE_BOOKING_SUB_DELETE = `/pre-booking-sub`;
-// export const DISPATCH_STATUS = `/dispatch-status`;
 //DISPATCH
 export const DISPATCH_LIST = `/dispatch-list`;
 export const DISPATCH_EDIT_LIST = `/dispatch`;
