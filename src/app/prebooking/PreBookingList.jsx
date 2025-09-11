@@ -49,7 +49,8 @@ import {
   navigateTODispatchView,
   navigateToPreBookingEdit,
   navigateToPreBookingView,
-  PRE_BOOKING_LIST
+  PRE_BOOKING_CREATE,
+  PRE_BOOKING_LIST,
 } from "@/api";
 import apiClient from "@/api/axios";
 import usetoken from "@/api/usetoken";
@@ -96,12 +97,9 @@ const PreBookingList = () => {
   const UserId = useSelector((state) => state.auth.user_type);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteItemId, setDeleteItemId] = useState(null);
-  const whatsapp = useSelector((state) => state.auth.whatsapp_number);
   const singlebranch = useSelector((state) => state.auth.branch_s_unit);
   const doublebranch = useSelector((state) => state.auth.branch_d_unit);
 
-  // const doublebranch = "Yes";
-  // console.log(singlebranch, doublebranch);
   const queryClient = useQueryClient();
 
   const { toast } = useToast();
@@ -112,7 +110,7 @@ const PreBookingList = () => {
   const confirmDelete = async () => {
     try {
       const response = await apiClient.delete(
-        `${DISPATCH_EDIT_LIST}/${deleteItemId}`,
+        `${PRE_BOOKING_CREATE}/${deleteItemId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
