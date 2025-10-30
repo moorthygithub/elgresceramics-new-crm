@@ -89,7 +89,13 @@ const DispatchReport = () => {
     `,
   });
   const downloadExcel = async () => {
-    if (reportData?.dispatch?.length == 0) {
+    if (
+      !reportData ||
+      (reportData.dispatch?.length === 0 &&
+        reportData.dispatchNew?.length === 0 &&
+        reportData.dispatchReturn?.length === 0 &&
+        reportData.dispatchReturnNew?.length === 0)
+    ) {
       toast({
         title: "No Data",
         description: "No data available to export",
@@ -98,51 +104,136 @@ const DispatchReport = () => {
       return;
     }
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Dispatch");
 
-    // Add title and metadata
-    worksheet.addRow([`Dispatch Report`]);
-    worksheet.addRow([
-      `From: ${moment(formData.from_date).format("DD-MM-YYYY")} To: ${moment(
-        formData.to_date
-      ).format("DD-MM-YYYY")}`,
-    ]);
-    worksheet.addRow([]);
+    // helper to create styled sheet
+    const addSheet = (sheetName, headers, rows) => {
+      const worksheet = workbook.addWorksheet(sheetName);
 
-    // Add headers
-    const headers = ["Ref", "Date", "Buyer", "Vehicle No","Item Name", "Box"];
-    const headerRow = worksheet.addRow(headers);
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "F3F4F6" },
-      };
-      cell.alignment = { horizontal: "center" };
-    });
-
-    // Add transactions
-    reportData?.dispatch?.forEach((transaction) => {
+      // Title rows
+      worksheet.addRow([`${sheetName} Report`]);
       worksheet.addRow([
-        transaction.dispatch_ref_no,
-        moment(transaction.dispatch_date).format("DD MMM YYYY"),
-        transaction.buyer_name,
-        transaction.dispatch_vehicle_no,
-        transaction.item_name,
-        transaction.sum_dispatch_sub_box,
+        `From: ${moment(formData.from_date).format("DD-MM-YYYY")}  To: ${moment(
+          formData.to_date
+        ).format("DD-MM-YYYY")}`,
       ]);
-    });
+      worksheet.addRow([]);
 
-    // Generate and download Excel file
+      // Headers
+      const headerRow = worksheet.addRow(headers);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "F3F4F6" },
+        };
+        cell.alignment = { horizontal: "center" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
+
+      // Rows
+      rows.forEach((rowData) => {
+        const row = worksheet.addRow(rowData);
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+        });
+      });
+
+      // Auto column width
+      worksheet.columns.forEach((col) => {
+        let maxLength = 10;
+        col.eachCell({ includeEmpty: true }, (cell) => {
+          const cellLength = cell.value ? cell.value.toString().length : 0;
+          if (cellLength > maxLength) maxLength = cellLength;
+        });
+        col.width = maxLength + 2;
+      });
+    };
+
+    // ✅ Sheet 1: Dispatch
+    if (reportData.dispatch?.length > 0) {
+      addSheet(
+        "Dispatch",
+        ["Ref", "Date", "Buyer", "Vehicle No", "Box"],
+        reportData.dispatch.map((t) => [
+          t.dispatch_ref_no,
+          moment(t.dispatch_date).format("DD MMM YYYY"),
+          t.buyer_name,
+          t.dispatch_vehicle_no,
+          t.sum_dispatch_sub_box ?? "",
+        ])
+      );
+    }
+
+    // ✅ Sheet 2: Dispatch Details
+    if (reportData.dispatchNew?.length > 0 && formData.sale_buyer) {
+      addSheet(
+        "Dispatch Details",
+        ["Item", "Size", "Box"],
+        reportData.dispatchNew.map((t) => [
+          t.item_name,
+          t.item_size,
+          t.dispatch_sub_box ?? "",
+        ])
+      );
+    }
+    if (reportData.dispatchReturn?.length > 0) {
+      addSheet(
+        "Dispatch Return",
+        ["Ref", "Date", "Buyer", "Vehicle No", "Box"],
+        reportData.dispatchReturn.map((t) => [
+          t.dispatch_ref_no,
+          moment(t.dispatch_date).format("DD MMM YYYY"),
+          t.buyer_name,
+          t.dispatch_vehicle_no,
+          t.sum_dispatch_sub_box ?? "",
+        ])
+      );
+    }
+
+    // ✅ Sheet 2: Dispatch Details
+    if (reportData.dispatchReturnNew?.length > 0 && formData.sale_buyer) {
+      addSheet(
+        "Dispatch Details Return",
+        ["Item", "Size", "Box"],
+        reportData.dispatchReturnNew.map((t) => [
+          t.item_name,
+          t.item_size,
+          t.dispatch_sub_box ?? "",
+        ])
+      );
+    }
+
+    // ✅ Check: If no data
+    if (workbook.worksheets.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // ✅ Generate file
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `dispatch.xlsx`;
+    link.download = "dispatch_report.xlsx";
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -176,12 +267,12 @@ const DispatchReport = () => {
       );
     }
 
-    if (reportData?.dispatch?.length > 0) {
-      return (
-        <div ref={containerRef} className="mt-4">
+    return (
+      <div ref={containerRef} className="mt-4">
+        {reportData?.dispatch?.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm p-0 md:p-4">
             <div className="flex justify-between">
-              <h2 className="text-lg font-bold mb-4">Dispatch Report</h2>
+              <h2 className="text-lg font-bold mb-4">Dispatch</h2>
 
               <div className="hidden print:block">
                 <h2 className="text-lg font-bold mb-4 flex justify-center">
@@ -190,6 +281,7 @@ const DispatchReport = () => {
                 </h2>
               </div>
             </div>
+
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-300 text-[11px]">
                 <thead className="bg-gray-100">
@@ -208,15 +300,11 @@ const DispatchReport = () => {
                       Vehicle No
                     </th>
                     <th className="border border-gray-300 px-2 py-2 text-right">
-                      Item Name
-                    </th>
-                    <th className="border border-gray-300 px-2 py-2 text-right">
                       Box{" "}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Transactions */}
                   {reportData?.dispatch?.map((transaction, index) => (
                     <tr key={index}>
                       <td className="border border-gray-300 px-2 py-1 text-center border-l border-r">
@@ -234,8 +322,110 @@ const DispatchReport = () => {
                       <td className="border border-gray-300 px-2 py-1 text-right">
                         {transaction?.dispatch_vehicle_no}
                       </td>
-                      <td className="border border-gray-300 px-2 py-1 text-right">
+                      <td className="border border-gray-300 px-2 py-1 text-right font-medium">
+                        {transaction?.sum_dispatch_sub_box}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {reportData?.dispatchNew?.length > 0 && formData.sale_buyer && (
+          <div className="bg-white rounded-lg shadow-sm p-0 md:p-4">
+            <div className="flex justify-between">
+              <h2 className="text-lg font-bold mb-4">Dispatch Details</h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-[11px]">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Item
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Size
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Box
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData?.dispatchNew?.map((transaction, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 px-2 py-1 text-left border-l border-r">
                         {transaction?.item_name}
+                      </td>
+
+                      <td className="border border-gray-300 px-2 py-1">
+                        {transaction?.item_size}
+                      </td>
+
+                      <td className="border border-gray-300 px-2 py-1 text-right">
+                        {transaction?.dispatch_sub_box}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {reportData?.dispatchReturn?.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm p-0 md:p-4">
+            <div className="flex justify-between">
+              <h2 className="text-lg font-bold mb-4">Dispatch Return</h2>
+
+              <div className="hidden print:block">
+                <h2 className="text-lg font-bold mb-4 flex justify-center">
+                  From Date - {moment(formData.from_date).format("DD MMM YYYY")}{" "}
+                  To -{moment(formData.to_date).format("DD MMM YYYY")}{" "}
+                </h2>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-[11px]">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-300 px-2 py-2 text-center">
+                      Ref No
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Date
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Buyer Name
+                    </th>
+
+                    <th className="border border-gray-300 px-2 py-2 text-right">
+                      Vehicle No
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-right">
+                      Box{" "}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData?.dispatchReturn?.map((transaction, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 px-2 py-1 text-center border-l border-r">
+                        {transaction?.dispatch_ref_no}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 font-medium">
+                        {moment(transaction?.dispatch_date).format(
+                          "DD MMM YYYY"
+                        )}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1">
+                        {transaction?.buyer_name}
+                      </td>
+
+                      <td className="border border-gray-300 px-2 py-1 text-right">
+                        {transaction?.dispatch_vehicle_no}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-right font-medium">
                         {transaction?.sum_dispatch_sub_box}
@@ -246,13 +436,52 @@ const DispatchReport = () => {
               </table>
             </div>
           </div>
-        </div>
-      );
-    }
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-        <Search className="h-12 w-12 mb-2 opacity-30" />
-        <p className="text-md">Search for an item to view dispatch details</p>
+        )}
+
+        {reportData?.dispatchReturnNew?.length > 0 && formData.sale_buyer && (
+          <div className="bg-white rounded-lg shadow-sm p-0 md:p-4">
+            <div className="flex justify-between">
+              <h2 className="text-lg font-bold mb-4">
+                Dispatch Return Details
+              </h2>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 text-[11px]">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Item
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Size
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-left">
+                      Box
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData?.dispatchReturnNew?.map((transaction, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 px-2 py-1 text-left border-l border-r">
+                        {transaction?.item_name}
+                      </td>
+
+                      <td className="border border-gray-300 px-2 py-1">
+                        {transaction?.item_size}
+                      </td>
+
+                      <td className="border border-gray-300 px-2 py-1 text-right">
+                        {transaction?.dispatch_sub_box}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
