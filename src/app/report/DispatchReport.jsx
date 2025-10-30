@@ -110,7 +110,7 @@ const DispatchReport = () => {
     worksheet.addRow([]);
 
     // Add headers
-    const headers = ["Ref", "Date", "Buyer", "Vehicle No", "Box"];
+    const headers = ["Ref", "Date", "Buyer", "Vehicle No","Item Name", "Box"];
     const headerRow = worksheet.addRow(headers);
     headerRow.eachCell((cell) => {
       cell.font = { bold: true };
@@ -129,7 +129,7 @@ const DispatchReport = () => {
         moment(transaction.dispatch_date).format("DD MMM YYYY"),
         transaction.buyer_name,
         transaction.dispatch_vehicle_no,
-
+        transaction.item_name,
         transaction.sum_dispatch_sub_box,
       ]);
     });
@@ -208,6 +208,9 @@ const DispatchReport = () => {
                       Vehicle No
                     </th>
                     <th className="border border-gray-300 px-2 py-2 text-right">
+                      Item Name
+                    </th>
+                    <th className="border border-gray-300 px-2 py-2 text-right">
                       Box{" "}
                     </th>
                   </tr>
@@ -230,6 +233,9 @@ const DispatchReport = () => {
 
                       <td className="border border-gray-300 px-2 py-1 text-right">
                         {transaction?.dispatch_vehicle_no}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-1 text-right">
+                        {transaction?.item_name}
                       </td>
                       <td className="border border-gray-300 px-2 py-1 text-right font-medium">
                         {transaction?.sum_dispatch_sub_box}
